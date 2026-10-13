@@ -88,13 +88,17 @@ import { parseSlides } from '@chronicle/shared/src/utils'
 import type { ParsedSlide } from '@chronicle/shared/src/utils'
 import { renderPreview } from '../utils/markdownPreview'
 import { Icons } from '../utils/icons'
-import Marp from '@marp-team/marp-core'
+import * as MarpCore from '@marp-team/marp-core'
 import { chronicleLightTheme, chronicleDarkTheme } from '../composables/editor/slides/chronicleThemes'
+import { resolveMarpCore } from '../composables/editor/slides/useMarpEngine'
 import { initSlideStore, lastOpFlags, focusOrCreateDirective as _focusOrCreateDirective, insertNewSlide as _insertNewSlide } from '../composables/editor/slides/useSlideDirectives'
 import { flashCMLines } from '../composables/editor/markdown/useEditorFlash'
 
 // Marp engine with Chronicle themes (default accent)
+// marp-core 是 CJS 包：Vite 预打包后 default 导出是 module.exports 对象而非类，
+// 必须用 resolveMarpCore 剥壳，否则会抛 “Marp is not a constructor”。
 const { t } = useI18n()
+const Marp = resolveMarpCore(MarpCore)
 const marp = new Marp({ html: true, markdown: { breaks: false } })
 try { marp.themeSet.add(chronicleLightTheme('#2563eb')); marp.themeSet.add(chronicleDarkTheme('#58a6ff')) } catch { }
 

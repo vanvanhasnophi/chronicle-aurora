@@ -7,11 +7,36 @@
 
 import { chronicleLightTheme, chronicleDarkTheme } from './chronicleThemes'
 
+/**
+ * 解析 @marp-team/marp-core 的 Marp 构造函数。
+ *
+ * marp-core 只发布 CJS（main: lib/marp.js，导出 `{ Marp, default }`），
+ * 但不同运行 / 打包环境在外面套的壳层数并不一致：
+ *   - Node / Astro SSR：default import === module.exports，类在 `.default` 或 `.Marp`
+ *   - Vite(rolldown) 预打包：产物结尾是 `export default require_marp()`，
+ *     于是 `import Marp from ...` 拿到的是 module.exports 对象本身（不是构造函数），
+ *     直接 `new Marp()` 会抛 “Marp is not a constructor”。
+ * 所以这里逐层剥壳，直到取出可构造函数，兼容以上所有导出形状。
+ */
+export function resolveMarpCore(mod: any): any {
+  let cur = mod
+  for (let depth = 0; depth < 5 && cur && typeof cur !== 'function'; depth++) {
+    const next = cur.Marp ?? cur.default
+    if (!next || next === cur) break
+    cur = next
+  }
+  if (typeof cur !== 'function') {
+    const shape = mod && typeof mod === 'object' ? Object.keys(mod).join(', ') : String(mod)
+    throw new TypeError(`[useMarpEngine] 无法解析 Marp 构造函数，模块导出形状: ${shape || '(empty)'}`)
+  }
+  return cur
+}
+
 let _marpCore: any = null
 export async function getMarpCore() {
   if (_marpCore) return _marpCore
   const mod = await import('@marp-team/marp-core')
-  _marpCore = (mod as any).default || mod
+  _marpCore = resolveMarpCore(mod)
   return _marpCore
 }
 
