@@ -185,8 +185,9 @@
 .chr-md th,
 .chr-md td {
   border: 1px solid var(--border-color);
-  padding: 8px 12px;
+  padding: .5em .75em;
   text-align: left;
+  font-size: .9em;
 }
 
 .chr-md th {
@@ -382,13 +383,15 @@
 .chr-md .code-chunk-container {
   display: flex;
   flex-direction: column;
-  background: var(--comp-bg-glass);
+  /* inset 材质：暗色更黑、亮色更白；边框 + 内阴影暗示“压在纸面里”。 */
+  background: var(--comp-bg-inset);
   border: 1px solid var(--border-color);
   color: var(--app-text-pri);
   font-family: var(--app-font-stack-mono);
   border-radius: 8px;
   overflow: hidden;
   margin: 8px 0;
+  box-shadow: var(--comp-inset-shadow);
 }
 
 .chr-md .editor-header {

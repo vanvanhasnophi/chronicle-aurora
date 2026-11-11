@@ -1,8 +1,8 @@
 {
   "name": "@chronicle/gen",
-  "version": "3.0.4",
+  "version": "3.1.0-snapshot.1",
   "private": true,
-  "description": "Chronicle Gen \u2014 content generation: Astro builds, post indexing",
+  "description": "Chronicle Gen — content generation: Astro builds, post indexing",
   "type": "module",
   "main": "./src/index.ts",
   "bin": {

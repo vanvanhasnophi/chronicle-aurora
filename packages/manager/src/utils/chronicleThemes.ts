@@ -24,7 +24,7 @@ section ul,section ol{padding-left:2em;margin:8px 0 14px}
 section li{margin:4px 0}
 section li::marker{color:#111a}
 section table{border-collapse:collapse;margin:8px 0}
-section table th,section table td{padding:8px 12px;text-align:left}
+section table th,section table td{padding:.5em .75em; font-size:.9em; text-align:left}
 section table th{background:${cardBg};color:${cardFg};border:1px solid ${cardBorder};font-weight:bold;font-variation-settings:'wght' 600}
 section table td{border:1px solid #1119}
 section blockquote{border-left:4px solid ${accent};color:#444;padding:0 0 0 24px;margin:8px 0}
@@ -85,7 +85,7 @@ section ul,section ol{padding-left:2em;margin:8px 0 14px}
 section li{margin:4px 0}
 section li::marker{color:#eeea}
 section table{border-collapse:collapse;margin:8px 0}
-section table th,section table td{padding:8px 12px;text-align:left}
+section table th,section table td{padding:.5em .75em; font-size:.9em; text-align:left}
 section table th{background:${cardBg};color:${cardFg};border:1px solid ${cardBorder};font-weight:bold;font-variation-settings:'wght' 600}
 section table td{border:1px solid #eee9}
 section blockquote{border-left:4px solid ${accent};color:#bbb;padding:0 0 0 24px;margin:8px 0}

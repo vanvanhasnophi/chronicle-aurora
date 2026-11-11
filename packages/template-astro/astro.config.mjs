@@ -447,9 +447,66 @@ export default defineConfig({
           }
         }
 
+        /**
+         * Build the body-inclusive search index from the light index.
+         * Shared by the production closeBundle hook and the dev middleware so
+         * `astro dev` serves the same /posts/full_index.json the client expects.
+         */
+        function buildFullIndex(entries) {
+          const postsDir = join(DATA_DIR, 'posts');
+          const fullIndex = [];
+          for (const entry of entries) {
+            if (entry.status !== 'published') continue;
+            const mdPath = join(postsDir, entry.id, 'index.md');
+            if (!existsSync(mdPath)) continue;
+            const body = markdownToPlainText(stripFrontmatter(readFileSync(mdPath, 'utf-8')));
+            fullIndex.push({
+              id: entry.id,
+              title: entry.title || '',
+              date: entry.date || '',
+              summary: entry.summary || '',
+              tags: entry.tags || [],
+              body,
+            });
+          }
+          return fullIndex;
+        }
+
         return {
           name: 'chronicle-asset-pipeline',
           enforce: 'post',
+
+          // Astro dev never runs closeBundle, so the client-fetched search
+          // indexes (/posts/index.json, /posts/full_index.json) would 404 —
+          // the tag cloud stays empty and full-text search silently falls back
+          // to nothing. Serve both from data/ in dev with the same shape the
+          // build writes to dist/.
+          configureServer(server) {
+            server.middlewares.use((req, res, next) => {
+              let pathname = '';
+              try { pathname = new URL(req.url || '/', 'http://localhost').pathname; } catch { return next(); }
+              if (pathname !== '/posts/index.json' && pathname !== '/posts/full_index.json') return next();
+              try {
+                const indexSrc = join(DATA_DIR, 'posts', 'index.json');
+                if (!existsSync(indexSrc)) { res.statusCode = 404; res.end('Not found'); return; }
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.setHeader('Cache-Control', 'no-store');
+                if (pathname === '/posts/index.json') {
+                  res.end(readFileSync(indexSrc, 'utf-8'));
+                  return;
+                }
+                const rawIndex = JSON.parse(readFileSync(indexSrc, 'utf-8'));
+                const entries = Array.isArray(rawIndex)
+                  ? rawIndex
+                  : Object.entries(rawIndex).map(([id, v]) => ({ id, ...v }));
+                res.end(JSON.stringify(buildFullIndex(entries)));
+              } catch (e) {
+                res.statusCode = 500;
+                res.end('Failed to build search index');
+              }
+            });
+          },
+
           async closeBundle() {
             const sharp = await loadSharp();
             const distDir = join(__dirname, 'dist');
@@ -541,21 +598,7 @@ export default defineConfig({
                 const entries = Array.isArray(rawIndex)
                   ? rawIndex
                   : Object.entries(rawIndex).map(([id, v]) => ({ id, ...v }));
-                const fullIndex = [];
-                for (const entry of entries) {
-                  if (entry.status !== 'published') continue;
-                  const mdPath = join(postsDir, entry.id, 'index.md');
-                  if (!existsSync(mdPath)) continue;
-                  const body = markdownToPlainText(stripFrontmatter(readFileSync(mdPath, 'utf-8')));
-                  fullIndex.push({
-                    id: entry.id,
-                    title: entry.title || '',
-                    date: entry.date || '',
-                    summary: entry.summary || '',
-                    tags: entry.tags || [],
-                    body,
-                  });
-                }
+                const fullIndex = buildFullIndex(entries);
                 const fullDest = join(distDir, 'posts', 'full_index.json');
                 mkdirSync(dirname(fullDest), { recursive: true });
                 writeFileSync(fullDest, JSON.stringify(fullIndex));

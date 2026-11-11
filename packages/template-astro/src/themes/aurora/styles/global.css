@@ -51,6 +51,8 @@
   --comp-bg-alt: color-mix(in srgb, var(--bg-offset) 20%, var(--bg-base));
   --comp-bg-hvr: color-mix(in srgb, var(--bg-offset) 24%, var(--bg-base));
   --comp-bg-hl: color-mix(in srgb, var(--hl-offset) 24%, var(--bg-base));
+  /* Inset material — recessed well, pushed toward black/white via --overlay */
+  --comp-bg-inset: color-mix(in srgb, var(--app-bg-pri) 78%, var(--overlay));
   --blur-alpha: 90%;
   --glass-alpha: 50%;
   --glass-opaque: color-mix(in srgb, var(--bg-offset) 47%, var(--bg-base));
@@ -96,6 +98,7 @@
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-elev-2: 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-elev-3: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
   --glass-shadow-elev-0: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.6), 0 0 0 transparent;
   --glass-shadow-elev-1: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(0, 0, 0, 0.07);
   --glass-shadow-elev-2: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.8), 0 3px 10px -2px rgba(0, 0, 0, 0.09), 0 1px 3px -1px rgba(0, 0, 0, 0.05);
@@ -164,6 +167,7 @@
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.2);
   --shadow-elev-2: 0 4px 12px rgba(0, 0, 0, 0.16);
   --shadow-elev-3: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   --toc-divider-color: rgba(28, 28, 28, 0.08);
   --code-keyword: #0000ff;
   --code-string: #a31515;
@@ -304,19 +308,24 @@ h6{
     border: 1px solid var(--border-color-blur);
     box-shadow: var(--shadow-elev-1);
   }
+  .mtl-inset{
+    background: var(--comp-bg-inset);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--comp-inset-shadow);
+  }
   html:not(.is-mobile) .mtl-container.interactive:hover{
-    background: var(--comp-bg-glass-hvr);
-    box-shadow: var(--glass-shadow-elev-2);
+    background: var(--comp-bg-blur-hvr);
+    box-shadow: var(--shadow-elev-2);
   }
   html.is-mobile .mtl-container.interactive:active{
-    background: var(--comp-bg-glass-active);
-    box-shadow: var(--glass-shadow-elev-3);
+    background: var(--comp-bg-blur-active);
+    box-shadow: var(--shadow-elev-3);
   }
   html:not(.is-mobile) .mtl-container.interactive.glowable:hover{
-    box-shadow: var(--card-glow), var(--glass-shadow-elev-2);
+    box-shadow: var(--card-glow), var(--shadow-elev-2);
   }
   html.is-mobile .mtl-container.interactive.glowable:active{
-    box-shadow: var(--card-glow), var(--glass-shadow-elev-3);
+    box-shadow: var(--card-glow), var(--shadow-elev-3);
   }
   button{
     border-radius: 8px;

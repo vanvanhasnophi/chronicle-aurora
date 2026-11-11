@@ -39,6 +39,8 @@
   --app-bg-sec: color-mix(in srgb, var(--bg-offset) 11%, var(--bg-base));
   --comp-bg: color-mix(in srgb, var(--bg-offset) 12%, var(--bg-base));
   --comp-bg-alt: color-mix(in srgb, var(--bg-offset) 20%, var(--bg-base));
+  /* Inset material — recessed well, pushed toward black/white via --overlay */
+  --comp-bg-inset: color-mix(in srgb, var(--app-bg-pri) 78%, var(--overlay));
 
   /* Transparency compensation — per-theme alpha knobs */
   --blur-alpha: 90%;
@@ -68,6 +70,7 @@
 
   /* Shadows */
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 
   /* Overlays */
   --frontend-bg-overlay: var(--frontend-bg-overlay-dark, transparent);
@@ -103,6 +106,7 @@
   --featured-bg: rgba(242, 234, 212, 0.9);
 
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 
   --frontend-bg-overlay: var(--frontend-bg-overlay-light);
 
@@ -134,6 +138,7 @@
     --featured-bg: rgba(242, 234, 212, 0.9);
 
     --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.2);
+    --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 
     --frontend-bg-overlay: var(--frontend-bg-overlay-light);
 

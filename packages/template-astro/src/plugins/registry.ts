@@ -24,7 +24,10 @@ const uniqueSlots = new Map<string, string>();
 
 export function registerPlugin(manifest: PluginManifest): void {
   if (registry.has(manifest.id)) {
-    throw new Error(`[plugins] 重复注册插件: ${manifest.id}`);
+    // HMR / 重复 import 时 generated-registry 会再次执行；注册表是模块级
+    // 单例，同一 manifest 的重复注册应幂等跳过，而不是中断 dev server。
+    // 真正的配置冲突（不同插件抢同一个 bottom 槽位）仍在下面报错。
+    return;
   }
   // 置底唯一校验：同一 slot 的 position:'bottom' 只允许一个组件（如 post-end-of-article
   // 置底——重复注册即构建期报错，不静默取首个）；置顶不校验（可多组件）
