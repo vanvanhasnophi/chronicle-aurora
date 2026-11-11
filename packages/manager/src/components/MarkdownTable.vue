@@ -540,7 +540,8 @@ function autoResize(e: Event) {
 }
 .readonly-table th, .readonly-table td {
   border: 1px solid #555;
-  padding: 8px 12px;
+  padding: .5em .75em;
+  font-size: .9em;
   text-align: left;
   vertical-align: top;
   line-height: 1.5;

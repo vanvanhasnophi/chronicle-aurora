@@ -93,6 +93,10 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--comp-bg-blur);
   border: 1px solid var(--border-color-blur);
 }
+.mtl-inset {
+  background: var(--comp-bg-inset);
+  border: 1px solid var(--border-color);
+}
 
 
 /* ── Scrollbar (universal) — mirror global.css: default 15px→8px at async

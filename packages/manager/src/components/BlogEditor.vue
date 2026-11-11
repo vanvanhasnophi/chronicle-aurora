@@ -2255,11 +2255,12 @@ onUnmounted(() => {
     box-sizing: border-box;
     padding: 8px 12px;
     font-size: .95rem;
-    background: var(--app-bg-sec);
+    background: var(--comp-bg-inset);
     border: 1px solid var(--border-color);
     color: var(--app-text-pri);
     border-radius: 8px;
     outline: none;
+    box-shadow: var(--comp-inset-shadow);
 }
 
 .modal-input:focus {
@@ -2270,6 +2271,7 @@ onUnmounted(() => {
     opacity: .5;
     cursor: not-allowed;
     background: var(--comp-bg);
+    box-shadow: none;
 }
 
 .modal-input.input-error {

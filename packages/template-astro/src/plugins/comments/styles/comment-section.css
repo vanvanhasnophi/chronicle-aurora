@@ -280,9 +280,10 @@
     font-size: 0.9rem;
     font-family: inherit;
     color: var(--app-text-pri);
-    background: var(--comp-bg);
+    background: var(--comp-bg-inset);
     border: 1px solid var(--border-color);
     border-radius: 8px;
+    box-shadow: var(--comp-inset-shadow);
     transition: border-color 0.15s, box-shadow 0.15s;
   }
 
@@ -296,7 +297,7 @@
   .cs-form-textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-bg);
+    box-shadow: var(--comp-inset-shadow), 0 0 0 3px var(--accent-bg);
   }
 
   .cs-form-textarea {

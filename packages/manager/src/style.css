@@ -88,6 +88,8 @@
   --comp-bg-alt: color-mix(in srgb, var(--bg-offset) 20%, var(--bg-base));
   --comp-bg-hvr: color-mix(in srgb, var(--bg-offset) 24%, var(--bg-base));
   --comp-bg-hl: color-mix(in srgb, var(--hl-offset) 24%, var(--bg-base));
+  /* Inset material — recessed well, pushed toward black/white via --overlay */
+  --comp-bg-inset: color-mix(in srgb, var(--app-bg-pri) 78%, var(--overlay));
 
   /* Transparency compensation — per-theme alpha knobs */
   --blur-alpha: 90%;
@@ -154,6 +156,7 @@
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-elev-2: 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-elev-3: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
   --glass-shadow-elev-0:
     inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.6),
     0 0 0 transparent;
@@ -288,6 +291,7 @@
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.2);
   --shadow-elev-2: 0 4px 12px rgba(0, 0, 0, 0.16);
   --shadow-elev-3: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   --toc-divider-color: rgba(28, 28, 28, 0.08);
 
   color: var(--app-text-pri);
@@ -356,6 +360,7 @@
   --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.2);
   --shadow-elev-2: 0 4px 12px rgba(0, 0, 0, 0.16);
   --shadow-elev-3: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   --toc-divider-color: rgba(28, 28, 28, 0.08);
 
   color: var(--app-text-pri);
@@ -404,6 +409,7 @@
     --shadow-elev-1: 0 4px 12px rgba(0, 0, 0, 0.2);
     --shadow-elev-2: 0 4px 12px rgba(0, 0, 0, 0.16);
     --shadow-elev-3: 0 10px 30px rgba(0, 0, 0, 0.25);
+    --comp-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
     --toc-divider-color: rgba(28, 28, 28, 0.08);
 
     color: var(--app-text-pri);
@@ -1373,15 +1379,17 @@ html {
   box-sizing: border-box;
   padding: 10px 14px;
   font-size: .95rem;
-  background: var(--app-bg-pri);
+  background: var(--comp-bg-inset);
   border: 1px solid var(--border-color);
   color: var(--app-text-pri);
   border-radius: 8px;
   outline: none;
+  box-shadow: var(--comp-inset-shadow);
 }
 
 .modern-input:read-only {
   background: var(--comp-bg-glass);
+  box-shadow: none;
 }
 
 
@@ -1395,16 +1403,18 @@ html {
   box-sizing: border-box;
   padding: 10px 14px;
   font-size: .95rem;
-  background: var(--app-bg-pri);
+  background: var(--comp-bg-inset);
   border: 1px solid var(--border-color);
   color: var(--app-text-pri);
   border-radius: 8px;
   outline: none;
   resize: vertical;
+  box-shadow: var(--comp-inset-shadow);
 }
 
 .modern-textarea:read-only {
   background: var(--comp-bg-glass);
+  box-shadow: none;
 }
 
 .modern-textarea:focus:not(:read-only) {
@@ -1413,7 +1423,8 @@ html {
 
 
 .login-input {
-  background: var(--app-bg-pri);
+  background: var(--comp-bg-inset);
+  box-shadow: var(--comp-inset-shadow);
   width: 100%;
   margin: 4px 0 6px 0;
   transition: all .2s ease;
