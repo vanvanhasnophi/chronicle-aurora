@@ -74,8 +74,15 @@
 .chr-md h2 { font-size: 1.75rem; margin-top: 2.2rem; }
 .chr-md h3 { font-size: 1.5rem; margin-top: 1.8rem; }
 .chr-md h4 { font-size: 1.3rem; margin-top: 1.6rem; }
-.chr-md h5 { font-size: 1.2rem; margin-top: 1.4rem; }
-.chr-md h6 { font-size: 1.1rem; margin-top: 1.2rem; }
+.chr-md h5 { font-size: 1.15rem; margin-top: 1.4rem; }
+/* h6 lands on body size: differentiate by tone + tracking instead of size
+   (the old 1.1rem was only 1.6px above body and read as bold text). */
+.chr-md h6 {
+  font-size: 1rem;
+  margin-top: 1.2rem;
+  color: var(--app-text-sec);
+  letter-spacing: 0.02em;
+}
 
 /* ═══════════════════════════════════════════════════════════
    3. Paragraphs & Lists
@@ -107,16 +114,17 @@
    4. Inline Elements
    ═══════════════════════════════════════════════════════════ */
 
-/* Inline code (not inside code-chunk) */
+/* Inline code (not inside code-chunk)
+   No chip background — the accent-tinted ink alone marks it as code.
+   --code-bg / --code-text stay reserved for editor syntax highlighting
+   (CmEditor .cm-md-code) and danger tints, not prose. */
 .chr-md code:not(.code-chunk-container code):not(pre code) {
-  background: var(--code-bg);
-  color: var(--code-text);
-  border-radius: 5px;
-  padding: 0.2em 0.5em;
-  font-size: 0.85em;
+  color: color-mix(in srgb, var(--accent) 20%, var(--app-text-pri));
+  padding: 0.2em 0.3em;
+  font-size: 0.9em;
   font-family: var(--app-font-stack-mono);
   font-weight: 500;
-  vertical-align: middle;
+  vertical-align: baseline;
 }
 
 .chr-md i,
@@ -135,8 +143,13 @@
   opacity: .6;
 }
 
+/* Links — --accent is tuned for dark surfaces and --accent-dark for light
+   ones, so pick per used color-scheme (both apps set `color-scheme`).
+   The plain declarations before each light-dark() are the fallback for
+   engines without light-dark(): same colors as before this rule. */
 .chr-md a {
   color: var(--accent);
+  color: light-dark(var(--accent-dark), var(--accent));
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -144,6 +157,10 @@
 .chr-md a:hover {
   text-decoration: underline;
   color: var(--accent-dark);
+  color: light-dark(
+    color-mix(in srgb, var(--accent) 65%, #000),
+    color-mix(in srgb, var(--accent) 80%, #fff)
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -169,13 +186,123 @@
   margin: 1.5em 0;
 }
 
+/* Collapsible sections — mirror .toc-inline exactly: same glass surface,
+   10px radius, 10/14 padding, 1em/600 title, 16px secondary chevron on the
+   right, 0.25s open animation.  The chevron is the TOC's SVG path turned
+   into a mask so it can inherit --app-text-sec. */
+.chr-md details {
+  margin: 1.5rem 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color-blur);
+  border-radius: 10px;
+  background: var(--comp-bg-glass);
+  box-shadow: var(--glass-shadow-elev-1);
+  overflow: hidden;
+}
+
+/* Summary keeps the normal 1em title size; the ::details-content box carries
+   the 0.9em for the revealed body, so headings inside keep their own scale. */
+.chr-md details::details-content {
+  font-size: 0.9em;
+}
+
+.chr-md summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  list-style: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--app-text-pri);
+  user-select: none;
+}
+
+.chr-md summary::-webkit-details-marker {
+  display: none;
+}
+
+.chr-md summary::marker {
+  content: '';
+}
+
+.chr-md .md-details-chevron {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--app-text-sec);
+  transform: rotate(-90deg);
+  transition: transform .18s ease;
+}
+
+.chr-md details[open] .md-details-chevron {
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chr-md .md-details-chevron {
+    transition: none;
+  }
+}
+
+.chr-md summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* TOC body starts 8px below its summary; details has no wrapper, so put the
+   gap on the first content block instead of ::details-content padding
+   (padding would leak into the closed height). */
+.chr-md details > summary + * {
+  margin-top: 8px;
+}
+
+.chr-md details > :last-child {
+  margin-bottom: 0;
+}
+
+/* Native equivalent of the TOC's 0fr→1fr + fade.  Browsers without
+   ::details-content / interpolate-size fall back to an instant toggle. */
+.chr-md details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  opacity: 0;
+  interpolate-size: allow-keywords;
+  transition: block-size .25s ease, opacity .25s ease, content-visibility .25s;
+  transition-behavior: allow-discrete;
+}
+
+.chr-md details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chr-md details::details-content {
+    transition: none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    6. Tables
    ═══════════════════════════════════════════════════════════ */
 
+/* Rounded frame — needs `separate` borders: with `collapse`, the table's
+   own 1px border is painted square over the radius (and the square cell
+   borders merge into it).  Outer cell edges are dropped, inner grid stays. */
 .chr-md table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  box-sizing: border-box;
   margin: 1.8rem 0;
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
@@ -184,21 +311,43 @@
 
 .chr-md th,
 .chr-md td {
-  border: 1px solid var(--border-color);
+  border: 0;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   padding: .5em .75em;
   text-align: left;
   font-size: .9em;
 }
 
 .chr-md th {
-  background: color-mix(in srgb, #808080 50%, var(--comp-bg-blur));
+  background: color-mix(in srgb, var(--app-text-pri) 8%, transparent);
   font-weight: 600;
   font-variation-settings: 'wght' 600;
   color: var(--app-text-pri);
 }
 
+/* Border + header tint define the table; body rows sit on the page surface
+   (the site's background overlay already carries text contrast), so no
+   per-cell fill — and no tbody/td double-alpha question. */
 .chr-md td {
-  background: var(--comp-bg-glass);
+  background: transparent;
+}
+
+.chr-md th:last-child,
+.chr-md td:last-child {
+  border-right: 0;
+}
+
+.chr-md tr:last-child th,
+.chr-md tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Table cells run at .9em; keep inline code there at cell size instead of
+   compounding to .9 × .9 = .81em (~13px). */
+.chr-md th code,
+.chr-md td code {
+  font-size: 1em;
 }
 
 /* ═══════════════════════════════════════════════════════════

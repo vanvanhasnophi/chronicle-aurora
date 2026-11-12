@@ -482,8 +482,13 @@
   }
 
   .cs-form-preview :where(code) {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.85em;
+    font-family: var(--app-font-stack-mono);
+  }
+
+  .cs-form-preview :where(code):not(:where(pre code)) {
+    color: color-mix(in srgb, var(--accent) 20%, var(--app-text-pri));
+    padding: 0.2em 0.3em;
+    font-size: 0.9em;
   }
 
   .cs-form-note {

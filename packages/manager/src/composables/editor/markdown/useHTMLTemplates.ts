@@ -42,6 +42,14 @@ export const EXPORT_OVERRIDE = `
 --comp-bg-hvr:#f3f4f690;--comp-bg-hl:#e5e7eb90;--comp-bg-active:#d1d5db90;
 --comp-text-pri:#111;--comp-text-sec:#6b7280;
 --status-error:#dc2626;--status-warning:#f59e0b;--featured:#f59e0b;
+--status-error-bg:rgba(220,38,38,.12);
+--active:rgba(17,17,17,.06);--hover:rgba(17,17,17,.04);
+--border-color-blur:rgba(17,17,17,.12);
+--comp-bg-inset:#f3f4f6;--comp-inset-shadow:inset 0 1px 2px rgba(0,0,0,.06);
+--comp-bg-glass-hl:rgba(245,245,245,.85);
+--glass-shadow-elev-1:0 2px 8px rgba(0,0,0,.08);
+--shadow-elev-1:0 4px 12px rgba(0,0,0,.1);
+--app-font-stack-inter:'InterVariable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif;
 --toc-scroll-offset:100px;
 }
 body{max-width:800px;margin:0 auto;padding:40px 48px;font-family:var(--app-font-stack);background:var(--comp-bg);color:var(--app-text-pri)}
@@ -54,12 +62,28 @@ pre{margin-block:0}
 img,.md-image{display:block;max-width:100%;margin-left:auto;margin-right:auto;cursor:default!important;opacity:1!important;filter:none!important;transition:none!important}
 [data-theme="dark"]{--app-text-pri:#e5e7eb;--app-text-sec:#9ca3af;--app-text-pri:#e5e7eb;--border-color:#333;--accent:#3b82f6;--accent-dark:#60a5fa;--accent-contrast:#111;--code-bg:#1a1a1ac0;--code-inline:#1f1f1f;--code-keyword:#a78bfa;--code-string:#34d399;--code-comment:#6b7280;--code-number:#fbbf24;--code-type:#60a5fa;--code-tag:#60a5fa;--code-attribute:#a78bfa;--code-property:#34d399;--code-selector:#fbbf24;--code-operator:#9ca3af;--code-variable:#e5e7eb;--code-text:#e5e7eb;--code-quote:#34d399;--code-link:#60a5fa;--code-boolean:#fbbf24;--code-preprocessor:#f87171;--code-section:#60a5fa;--code-directive:#a78bfa;--code-parameter:#9ca3af;--code-cmdlet:#a78bfa;--code-katexcommand:#60a5fa;--comp-bg:#1a1a1a;--comp-bg-blur:rgba(40,40,40,.9);--comp-bg-glass:rgba(60,60,60,.7);--comp-bg-hvr:#fff2;
 --comp-bg-hl:#fff2;--comp-bg-active:#fff3;
---comp-text-pri:#e5e7eb;--comp-text-sec:#9ca3af}
+--comp-text-pri:#e5e7eb;--comp-text-sec:#9ca3af;--status-error-bg:rgba(248,113,113,.16);--active:rgba(255,255,255,.08);--hover:rgba(255,255,255,.06);--border-color-blur:rgba(255,255,255,.14);--comp-bg-inset:#141414;--comp-inset-shadow:inset 0 1px 2px rgba(0,0,0,.45);--comp-bg-glass-hl:rgba(60,60,60,.8);--glass-shadow-elev-1:0 2px 8px rgba(0,0,0,.35);--shadow-elev-1:0 4px 12px rgba(0,0,0,.4)}
 .theme-toggle{position:fixed;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border-color);background:var(--comp-bg);color:var(--app-text-pri);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:background .2s}
 .theme-toggle svg{width:16px;height:16px;display:block}
 .theme-toggle:hover{background:var(--hover)}
-@media print{body{padding:16px;max-width:none}.no-print{display:none!important}img,.md-image{opacity:1!important;filter:none!important;display:block!important;max-width:100%!important}}
-@media (prefers-color-scheme:dark){:root:not([data-theme]){--app-text-pri:#e5e7eb;--app-text-sec:#9ca3af;--app-text-pri:#e5e7eb;--border-color:#333;--accent:#3b82f6;--accent-dark:#60a5fa;--code-bg:#1a1a1a;--code-inline:#1f1f1f;--code-keyword:#a78bfa;--code-string:#34d399;--code-comment:#6b7280;--code-number:#fbbf24;--code-type:#60a5fa;--code-tag:#60a5fa;--code-attribute:#a78bfa;--code-property:#34d399;--code-selector:#fbbf24;--code-operator:#9ca3af;--code-variable:#e5e7eb;--code-text:#e5e7eb;--code-quote:#34d399;--code-link:#60a5fa;--code-boolean:#fbbf24;--code-preprocessor:#f87171;--code-section:#60a5fa;--code-directive:#a78bfa;--code-parameter:#9ca3af;--code-cmdlet:#a78bfa;--code-katexcommand:#60a5fa;--comp-bg:#1a1a1a;--comp-bg-blur:rgba(26,26,26,.9);--comp-bg-glass:rgba(30,30,30,.7);--comp-bg-hvr:#222;--comp-bg-hl:#2a2a2a;--comp-bg-active:#333;--comp-text-pri:#e5e7eb;--comp-text-sec:#9ca3af}}
+@page{margin:16mm 14mm}
+@media print{
+  body{padding:0;max-width:760px;margin:0 auto;background:#fff}
+  .no-print{display:none!important}
+  img,.md-image{opacity:1!important;filter:none!important;display:block!important;max-width:100%!important}
+  .chr-md pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+  .chr-md .code-chunk-container{overflow:visible;break-inside:avoid}
+  .chr-md .code-chunk-container .syntax-hl{overflow:visible}
+  .chr-md tr{break-inside:avoid}
+  .chr-md thead{display:table-header-group}
+  .chr-md details,.chr-md .mermaid-prerendered,.chr-md img,.chr-md .md-image-container{break-inside:avoid}
+  .chr-md h1,.chr-md h2,.chr-md h3,.chr-md h4{break-after:avoid}
+  .chr-md p{orphans:3;widows:3}
+  .chr-md .md-details-chevron{display:none}
+  .chr-md details{box-shadow:none}
+  .chr-md .code-chunk-container,.chr-md th,.chr-md details{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--app-text-pri:#e5e7eb;--app-text-sec:#9ca3af;--app-text-pri:#e5e7eb;--border-color:#333;--accent:#3b82f6;--accent-dark:#60a5fa;--code-bg:#1a1a1a;--code-inline:#1f1f1f;--code-keyword:#a78bfa;--code-string:#34d399;--code-comment:#6b7280;--code-number:#fbbf24;--code-type:#60a5fa;--code-tag:#60a5fa;--code-attribute:#a78bfa;--code-property:#34d399;--code-selector:#fbbf24;--code-operator:#9ca3af;--code-variable:#e5e7eb;--code-text:#e5e7eb;--code-quote:#34d399;--code-link:#60a5fa;--code-boolean:#fbbf24;--code-preprocessor:#f87171;--code-section:#60a5fa;--code-directive:#a78bfa;--code-parameter:#9ca3af;--code-cmdlet:#a78bfa;--code-katexcommand:#60a5fa;--comp-bg:#1a1a1a;--comp-bg-blur:rgba(26,26,26,.9);--comp-bg-glass:rgba(30,30,30,.7);--comp-bg-hvr:#222;--comp-bg-hl:#2a2a2a;--comp-bg-active:#333;--comp-text-pri:#e5e7eb;--comp-text-sec:#9ca3af;--status-error-bg:rgba(248,113,113,.16);--active:rgba(255,255,255,.08);--hover:rgba(255,255,255,.06);--border-color-blur:rgba(255,255,255,.14);--comp-bg-inset:#141414;--comp-inset-shadow:inset 0 1px 2px rgba(0,0,0,.45);--comp-bg-glass-hl:rgba(60,60,60,.8);--glass-shadow-elev-1:0 2px 8px rgba(0,0,0,.35);--shadow-elev-1:0 4px 12px rgba(0,0,0,.4)}}
 /* KaTeX 离线字体兜底——各系统自带数学字体 */
 .katex,.katex .mord,.katex .mbin,.katex .mrel,.katex .mopen,.katex .mclose,.katex .mpunct,.katex .minner,.katex .mathit,.katex .mathbf,.katex .mainit{font-family:KaTeX_Main,Cambria Math,STIX Two Math,Latin Modern Math,serif}
 .katex .amsrm,.katex .mathbb{font-family:KaTeX_AMS,Cambria Math,STIX Two Math,serif}

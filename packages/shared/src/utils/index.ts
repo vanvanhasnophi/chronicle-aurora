@@ -4,6 +4,7 @@ export type { ParsedSlide, SlideMeta } from "./marpParser.js"
 export { extractBodySummary } from "./summary.js"
 export { formatRelativeTime } from "./relativeTime.js"
 export { hexToRgbString, darkenHex } from "./colorUtils.js"
+export { DETAILS_CHEVRON_SVG, injectDetailsChevrons, openAllDetails } from "./markdownDetails.js"
 /**
  * Chronicle Shared Utilities
  *

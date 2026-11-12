@@ -80,10 +80,18 @@ export async function renderStaticHTML(md: string): Promise<string> {
 
   // 代码块去交互化，Mermaid 特殊处理：预渲染为 SVG
   for (const chunk of Array.from(root.querySelectorAll('.code-chunk-container'))) {
-    const langEl = chunk.querySelector('.language-selector option[selected]')
-    const lang = langEl?.getAttribute('value') || langEl?.textContent || 'plain'
+    // renderPreview() emits a static CodeChunk (span.language-label + pre code),
+    // not the interactive CodeChunk (select + textarea).  Support both so the
+    // language label is right and Mermaid actually reaches the SVG branch.
+    const langEl =
+      chunk.querySelector('.language-selector option[selected]') ||
+      chunk.querySelector('.language-label')
+    const lang = (langEl?.getAttribute('value') || langEl?.textContent || 'plain').trim().toLowerCase() || 'plain'
     const textarea = chunk.querySelector('textarea')
-    const rawCode = textarea ? textarea.value || textarea.textContent || '' : ''
+    const codeEl = chunk.querySelector('pre code')
+    const rawCode = textarea
+      ? (textarea.value || textarea.textContent || '')
+      : (codeEl?.textContent || '')
 
     // Mermaid：预渲染为静态 SVG
     if (lang === 'mermaid' && rawCode.trim()) {

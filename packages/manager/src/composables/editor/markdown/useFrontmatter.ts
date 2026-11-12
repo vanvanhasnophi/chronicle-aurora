@@ -115,7 +115,9 @@ export function localFileToApiFormat(
  * @param detail 云端 API 返回的文章详情 JSON
  */
 export function cloudDetailToApiPost(detail: Record<string, any>): ApiPost {
-  const rawContent: string = String(detail.content || '')
+  // Dev server returns the raw .md file (CRLF on Windows) — normalise so the
+  // frontmatter block is stripped and the body is LF for CodeMirror.
+  const rawContent: string = String(detail.content || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n')
   const rawMeta: Record<string, any> = {
     type: detail.type || detail.meta?.type,
     marp: detail.marp,
@@ -423,8 +425,10 @@ export function extractMarpKeys(
   discardKeys?: Set<string>,
 ): { marp: Record<string, any>; cleanBody: string } {
   const marp: Record<string, any> = {}
+  // Workspace files are CRLF on Windows — normalise before matching.
+  const normalized = body.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n')
   // 匹配 ---\n...\n---\n，后置最多带走 1 个空行
-  const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n\n?/)
+  const fmMatch = normalized.match(/^---\n([\s\S]*?)\n---\n\n?/)
   if (fmMatch) {
     const rawFm = fmMatch[1]
     // Always strip the frontmatter block, regardless of Marp keys.
@@ -439,9 +443,9 @@ export function extractMarpKeys(
         marp[k] = v === 'true' ? true : v === 'false' ? false : v
       }
     })
-    return { marp, cleanBody: body.slice(fmMatch[0].length) }
+    return { marp, cleanBody: normalized.slice(fmMatch[0].length) }
   }
-  return { marp, cleanBody: body }
+  return { marp, cleanBody: normalized }
 }
 
 // ══════════════════════════════════════════════════════

@@ -30,9 +30,12 @@ const FM_DELIM = '---'
  * Returns { meta, content } — meta is empty {} if no frontmatter found.
  */
 export function parseFrontmatter(raw: string): { meta: PostFrontmatter; content: string } {
-  const trimmed = raw.trimStart()
+  // Workspace files on Windows are CRLF; normalise before matching so the
+  // frontmatter block is actually stripped instead of leaking into the body.
+  const normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n')
+  const trimmed = normalized.trimStart()
   if (!trimmed.startsWith(FM_DELIM)) {
-    return { meta: {}, content: raw }
+    return { meta: {}, content: normalized }
   }
 
   // Find closing ---
@@ -40,7 +43,7 @@ export function parseFrontmatter(raw: string): { meta: PostFrontmatter; content:
   const closeIdx = afterFirst.indexOf('\n' + FM_DELIM)
   if (closeIdx === -1) {
     // No closing delimiter — treat whole thing as content
-    return { meta: {}, content: raw }
+    return { meta: {}, content: normalized }
   }
 
   const yamlBlock = afterFirst.slice(0, closeIdx).trim()

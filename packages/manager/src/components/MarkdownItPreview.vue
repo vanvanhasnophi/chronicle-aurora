@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { renderBlockHtml, renderFootnoteHtml, getBlockRanges, getChangedSegIndices, getSegIndexAtLine } from '../utils/markdownPreview'
 import type { ContentBlock } from '../utils/markdownPreview'
 import { debounce } from '../utils/debounce'
@@ -42,6 +42,8 @@ const props = defineProps<{
   markdown: string
   cursorLine?: number
   changeRange?: { from: number; to: number } | null
+  /** Print preview: render every <details> already open (no post-mount toggle). */
+  openDetails?: boolean
 }>()
 
 const { openImagePreview, openPreview } = usePreview()
@@ -71,17 +73,24 @@ const blocks = ref<KeyedBlock[]>([])
 const activeBlockIndex = ref(-1)
 const footnoteHtml = ref('')
 
+const emit = defineEmits<{ (e: 'rendered'): void }>()
+
+function notifyRendered() {
+  void nextTick(() => emit('rendered'))
+}
+
 // ── Incremental update ───────────────────────────────────
 
 const updateBlocks = debounce(() => {
   if (!props.markdown || !props.markdown.trim()) {
     blocks.value = []
     footnoteHtml.value = ''
+    notifyRendered()
     return
   }
   try {
     // Build ContentBlocks from markdown tokens + render each block to HTML
-    const raw = renderBlockHtml(props.markdown)
+    const raw = renderBlockHtml(props.markdown, { openDetails: props.openDetails })
     footnoteHtml.value = renderFootnoteHtml(props.markdown)
     const prev = blocks.value
     const ranges = getBlockRanges(props.markdown)
@@ -108,8 +117,10 @@ const updateBlocks = debounce(() => {
       }
     }
     blocks.value = next
+    notifyRendered()
   } catch {
     blocks.value = [{ type: 'html', content: `<pre>${escapeHtml(props.markdown || '')}</pre>`, _memo: 'err' }]
+    notifyRendered()
   }
 }, 100)
 

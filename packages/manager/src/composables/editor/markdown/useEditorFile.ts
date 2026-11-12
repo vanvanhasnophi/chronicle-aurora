@@ -12,6 +12,7 @@
 import { ref, type Ref, type ComputedRef } from 'vue'
 import type { SavedFm } from './useFrontmatter'
 import { extractMarpKeys } from './useFrontmatter'
+import { openAllDetails } from '@chronicle/shared/src/utils'
 import { triggerBuild } from '../../useAstroBuild'
 import { settingsStore } from '../../settingsApi'
 import pptxgen from 'pptxgenjs'
@@ -585,7 +586,9 @@ export function useEditorFile(options: EditorFileOptions) {
         printHtml = buildSlidesPrintHtml(postTitle.value || '', html, css, locale.value || 'en')
       } else {
         const renderedHtml = await renderStaticHTML(localValue.value || '')
-        printHtml = buildStandalonePrintHtml(postTitle.value || '', renderedHtml, locale.value || 'en', postFont.value)
+        // Print output exposes every <details> — same spirit as Mermaid fences
+        // being prerendered instead of printed as code.
+        printHtml = buildStandalonePrintHtml(postTitle.value || '', openAllDetails(renderedHtml), locale.value || 'en', postFont.value)
       }
       // 确保页面有 @media print 规则隐藏编辑器，只暴露打印层
       const printStyleId = 'chronicle-print-media-style'
@@ -608,17 +611,38 @@ export function useEditorFile(options: EditorFileOptions) {
       doc.open()
       doc.write(printHtml)
       doc.close()
-      // 等图片全部加载完成后打印（防重入）
+      // 等字体 / 外链 CSS / 图片就绪后再打印（防重入）
       let printed = false
       const doPrint = () => {
         if (printed) return
         printed = true
-        if (printOptions?.autoPrint !== false) {
-          try { frame.contentWindow?.print() } catch {}
+        try {
+          if (printOptions?.autoPrint !== false) {
+            try { frame.contentWindow?.print() } catch {}
+          }
+        } finally {
+          overlay.remove()
         }
-        overlay.remove()
       }
-      // 监听 iframe 内所有图片加载
+      const waitForFontsAndStyles = async () => {
+        try {
+          const fonts = frame.contentWindow?.document.fonts
+          if (fonts?.ready) await fonts.ready
+        } catch {}
+        const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'))
+        await Promise.all(links.map((link) => new Promise<void>((resolve) => {
+          if ((link as HTMLLinkElement).sheet) { resolve(); return }
+          const done = () => resolve()
+          link.addEventListener('load', done, { once: true })
+          link.addEventListener('error', done, { once: true })
+          setTimeout(done, 3000)
+        })))
+        // Google Fonts is imported via CSS @import, not a <link>; give it a tick.
+        await new Promise<void>((resolve) => setTimeout(resolve, 100))
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        })
+      }
       const waitImages = () => {
         const imgs = frame.contentDocument?.querySelectorAll('img')
         if (!imgs || imgs.length === 0) { setTimeout(doPrint, 300); return }
@@ -632,9 +656,19 @@ export function useEditorFile(options: EditorFileOptions) {
           img.addEventListener('error', done, { once: true })
         })
       }
-      frame.onload = () => waitImages()
-      setTimeout(waitImages, 200)
-    } catch (e) { console.error('[useEditorFile] failed to open print preview', e) }
+      let started = false
+      const startPrint = async () => {
+        if (started) return
+        started = true
+        await waitForFontsAndStyles()
+        waitImages()
+      }
+      frame.onload = () => { void startPrint() }
+      setTimeout(() => { void startPrint() }, 200)
+    } catch (e) {
+      console.error('[useEditorFile] failed to open print preview', e)
+      try { overlay.remove() } catch {}
+    }
   }
 
   // ══════════════════════════════════════════════════════
