@@ -23,7 +23,9 @@
         <MarkdownItPreview
           v-if="snapshot"
           :markdown="snapshot.content || ''"
+          :open-details="true"
           class="print-content"
+          @rendered="handleRendered"
         />
       </div>
     </div>
@@ -31,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 // Pipeline A disabled; using Pipeline B for print preview
@@ -59,6 +61,7 @@ const snapshot = ref<PrintSnapshot | null>(null)
 const loadError = ref('')
 const rendered = ref(false)
 const autoPrintHandled = ref(false)
+let detailObserver: MutationObserver | null = null
 
 const autoPrintEnabled = computed(() => String(route.query.autoPrint || '') === '1')
 
@@ -74,6 +77,14 @@ function forceLightTheme() {
     document.body.setAttribute('data-backend-theme', 'light')
     document.body.classList.add('backend')
   } catch (e) { }
+}
+
+/** Print preview always shows the content of every <details>, including a
+ *  browser-initiated Ctrl+P that bypasses triggerPrint. */
+function expandAllDetails() {
+  document.querySelectorAll<HTMLDetailsElement>('.print-body details').forEach((d) => {
+    d.open = true
+  })
 }
 
 function loadSnapshot() {
@@ -110,6 +121,7 @@ async function triggerPrint() {
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     })
+    expandAllDetails()
     window.print()
   } catch (e) {
   }
@@ -122,6 +134,7 @@ async function maybeAutoPrint() {
 }
 
 function handleRendered() {
+  expandAllDetails()
   rendered.value = true
   void maybeAutoPrint()
 }
@@ -137,10 +150,24 @@ onMounted(async () => {
   loadSnapshot()
   // Pipeline B renders synchronously; mark as rendered after DOM flush
   await nextTick()
+  expandAllDetails()
+  // ...but MarkdownItPreview rebuilds its blocks through a debounce, so the
+  // <details> nodes can arrive after the first flush.  Watch for them.
+  const printBody = document.querySelector('.print-body')
+  if (printBody) {
+    detailObserver = new MutationObserver(() => expandAllDetails())
+    detailObserver.observe(printBody, { childList: true, subtree: true })
+  }
   rendered.value = true
+  window.addEventListener('beforeprint', expandAllDetails)
   if (autoPrintEnabled.value) {
     void maybeAutoPrint()
   }
+})
+
+onBeforeUnmount(() => {
+  detailObserver?.disconnect()
+  window.removeEventListener('beforeprint', expandAllDetails)
 })
 </script>
 

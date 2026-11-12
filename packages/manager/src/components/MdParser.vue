@@ -842,15 +842,16 @@ hr {
   padding: 0 0.1em;
 }
 
+/* Inline code — keep in sync with chronicle-markdown.css (.chr-md code).
+   No chip background: accent-tinted ink only.  --code-bg / --code-text
+   remain reserved for editor syntax highlighting and danger tints. */
 code {
-  background: var(--code-bg);
-  color:  var(--code-text);
-  border-radius: 5px;
-  padding: 0.2em 0.5em;
-  font-size: 0.85em;
+  color: color-mix(in srgb, var(--accent) 20%, var(--app-text-pri));
+  padding: 0.2em 0.3em;
+  font-size: 0.9em;
   font-family: var(--app-font-stack-mono);
   font-weight: 500;
-  vertical-align: middle;
+  vertical-align: baseline;
 }
 
 .text-block p {

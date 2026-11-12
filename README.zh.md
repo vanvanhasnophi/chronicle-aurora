@@ -1,4 +1,4 @@
-# Chronicle Aurora — v3.0.5
+# Chronicle Aurora — v3.0.6
 
 中文 [English](README.md)
 

@@ -125,8 +125,6 @@
 
     .toc-inline {
       padding: 10px 14px;
-      border: 1px solid var(--border-color);
-      background: var(--comp-bg-glass);
       border-radius: 10px;
       margin-bottom: 24px;
     }
@@ -193,6 +191,10 @@
       list-style: none;
       padding: 0;
       margin: 0;
+      font-size: 0.9em;
+      max-height: min(55vh, 520px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .toc-inline .toc-list li {

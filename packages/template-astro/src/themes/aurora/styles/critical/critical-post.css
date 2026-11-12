@@ -25,7 +25,7 @@
 .tag { padding:0.25rem 0.75rem; border-radius:1rem; font-size:0.8rem; border:1px solid var(--border-color-blur); }
 
 /* ── Inline TOC ── */
-.toc-inline { padding:10px 14px; margin-bottom:24px; border-radius:10px; border:1px solid var(--border-color); }
+.toc-inline { padding:10px 14px; margin-bottom:24px; border-radius:10px; }
 .toc-inline .toc-summary { width:100%; padding:0; border:none; color:inherit; background:transparent; display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:0; }
 .toc-inline .toc-title { font-weight:600; }
 .toc-inline .toc-toggle-icon { width:16px; height:16px; flex:0 0 auto; transform:rotate(-90deg); display:inline-flex; align-items:center; justify-content:center; }
@@ -56,8 +56,8 @@
 .chr-md h2 { font-size: 1.75rem; margin-top: 2.2rem; line-height: 1.3;}
 .chr-md h3 { font-size: 1.5rem; margin-top: 1.8rem; line-height: 1.3;}
 .chr-md h4 { font-size: 1.3rem; margin-top: 1.6rem; line-height: 1.3;}
-.chr-md h5 { font-size: 1.2rem; margin-top: 1.4rem; line-height: 1.3;}
-.chr-md h6 { font-size: 1.1rem; margin-top: 1.2rem; line-height: 1.3;}
+.chr-md h5 { font-size: 1.15rem; margin-top: 1.4rem; line-height: 1.3;}
+.chr-md h6 { font-size: 1rem; margin-top: 1.2rem; line-height: 1.3; color: var(--app-text-sec); letter-spacing: 0.02em;}
 
 /* ── Mobile (≤768px) ── */
 @media (max-width:768px) {

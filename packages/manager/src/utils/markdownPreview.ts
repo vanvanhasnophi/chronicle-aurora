@@ -12,7 +12,7 @@ import MarkdownIt from 'markdown-it';
 import markdownItFootnote from 'markdown-it-footnote';
 import { Icons } from './icons';
 import DOMPurify from 'dompurify';
-import { SANITIZE_CONFIG, isSafeIframeSrc } from '@chronicle/shared/src/utils';
+import { SANITIZE_CONFIG, isSafeIframeSrc, injectDetailsChevrons, openAllDetails } from '@chronicle/shared/src/utils';
 
 // iframe 视频嵌入（网易云/哔哩哔哩/YouTube）——非白名单 src 的 iframe 直接移除
 // （与 template-astro 的 chronicleMarkdown.ts 同逻辑，CMS 预览与 SSG 输出一致）
@@ -588,7 +588,7 @@ export function renderPreview(markdown: string): string {
 
   html = postProcessHtml(html);
 
-  return html;
+  return injectDetailsChevrons(html);
 }
 
 // ── Segmented render (for editor preview) ──────────────────
@@ -623,7 +623,7 @@ function renderForSegments(markdown: string): string {
       return renderImageWrapper(src, extractAttr(_m, 'alt'), extractAttr(_m, 'title'), extractAttr(_m, 'width'), extractAttr(_m, 'height'));
     }
   );
-  return html;
+  return injectDetailsChevrons(html);
 }
 
 export function splitMarkdownSegments(markdown: string): MarkdownSegment[] {
@@ -681,8 +681,18 @@ export interface ContentBlock {
   language?: string
 }
 
+/** Net <details> nesting delta in a raw HTML block. */
+function detailsDelta(html: string): number {
+  const opens = (html.match(/<details\b/gi) || []).length
+  const closes = (html.match(/<\/details\s*>/gi) || []).length
+  return opens - closes
+}
+
 /** Parse markdown → ContentBlock[] with each block's HTML pre-rendered. */
-export function renderBlockHtml(markdown: string): ContentBlock[] {
+export function renderBlockHtml(
+  markdown: string,
+  options: { openDetails?: boolean } = {},
+): ContentBlock[] {
   const blocks: ContentBlock[] = []
   const { text, mathBlocks } = protectMath(markdown)
   const tokens = md.parse(text, {})
@@ -783,6 +793,24 @@ export function renderBlockHtml(markdown: string): ContentBlock[] {
       i = j; continue
     }
 
+    // ── <details> container ──
+    // markdown-it emits the opening tag, the inner paragraph/list, and the
+    // closing tag as separate tokens.  Rendering them as separate preview
+    // blocks orphans the content outside the <details> box, so render the
+    // whole token span as one block.
+    if (t.type === 'html_block' && detailsDelta(t.content) > 0) {
+      let depth = detailsDelta(t.content)
+      let j = i + 1
+      while (j < tokens.length && depth > 0) {
+        if (tokens[j].type === 'html_block') depth += detailsDelta(tokens[j].content)
+        j++
+      }
+      const raw = md.renderer.render(tokens.slice(i, j), md.options, {})
+      blocks.push({ type: 'html', content: postProcessInlineBlocks(restoreMathBlock(raw, mathBlocks)) })
+      i = j
+      continue
+    }
+
     // ── Standalone HTML / math placeholder ──
     if (t.type === 'html_block' || t.type === 'inline') {
       const raw = t.type === 'inline' ? md.renderer.render([t], md.options, {}) : t.content
@@ -791,6 +819,11 @@ export function renderBlockHtml(markdown: string): ContentBlock[] {
     }
 
     i++
+  }
+
+  for (const b of blocks) {
+    if (b.type !== 'html') continue
+    b.content = injectDetailsChevrons(options.openDetails ? openAllDetails(b.content) : b.content)
   }
 
   return blocks
@@ -914,6 +947,21 @@ export function getBlockRanges(markdown: string): BlockRange[] {
         i++
       }
       i--
+    } else if (t.type === 'html_block' && detailsDelta(t.content) > 0) {
+      // Keep in sync with renderBlockHtml: the whole <details> span is one block.
+      const startLine = t.map ? t.map[0] + 1 : 0
+      let endLine = t.map ? t.map[1] : startLine
+      let depth = detailsDelta(t.content)
+      let j = i + 1
+      while (j < tokens.length && depth > 0) {
+        if (tokens[j].type === 'html_block') {
+          depth += detailsDelta(tokens[j].content)
+          if (tokens[j].map) endLine = tokens[j].map[1]
+        }
+        j++
+      }
+      ranges.push({ segIndex: segIndex++, startLine, endLine })
+      i = j - 1
     } else if (t.type === 'html_block') {
       // 与 renderBlockHtml 对齐：html_block（裸 HTML/iframe）会生成块——
       // 必须分配 segIndex，否则后续块索引错位（active-block 加错/不加）

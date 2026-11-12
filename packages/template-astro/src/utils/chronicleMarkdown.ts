@@ -15,7 +15,7 @@ import katex from 'katex';
 import { Icons } from './icons';
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
-import { SANITIZE_CONFIG, isSafeIframeSrc } from '@chronicle/shared/src/utils';
+import { SANITIZE_CONFIG, isSafeIframeSrc, injectDetailsChevrons } from '@chronicle/shared/src/utils';
 import { buildTocFromHtml, type TocItem } from './toc';
 import { getLocalImageSize } from './imageSize';
 
@@ -762,7 +762,7 @@ export function renderChronicleMarkdown(content: string, locale?: string): strin
   // Happens AFTER sanitize so the wrapper attributes added here are trusted.
   html = postProcessHtml(html);
 
-  return html;
+  return injectDetailsChevrons(html);
 }
 
 /**
