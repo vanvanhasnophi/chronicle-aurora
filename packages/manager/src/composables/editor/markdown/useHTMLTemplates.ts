@@ -71,6 +71,8 @@ img,.md-image{display:block;max-width:100%;margin-left:auto;margin-right:auto;cu
   body{padding:0;max-width:760px;margin:0 auto;background:#fff}
   .no-print{display:none!important}
   img,.md-image{opacity:1!important;filter:none!important;display:block!important;max-width:100%!important}
+  .chr-md img{max-height:235mm}
+  .chr-md .mermaid-prerendered svg{max-height:235mm;max-width:100%;height:auto}
   .chr-md pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
   .chr-md .code-chunk-container{overflow:visible;break-inside:avoid}
   .chr-md .code-chunk-container .syntax-hl{overflow:visible}
