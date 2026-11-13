@@ -22,11 +22,29 @@ const t = (key: string) => getTranslation(locale, key);
 const allPublished = dataSource.getPublishedPosts();
 const sorted = [...allPublished].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+const normalizeTag = (tag: unknown) =>
+  String(tag || '')
+    .trim()
+    .replace(/^#+/, '')
+    .toLowerCase();
+
+const isFeaturedTag = (tag: unknown) => {
+  const normalized = normalizeTag(tag);
+  return normalized === 'featured' || normalized === '精选';
+};
+
+const postTags = (post: any) =>
+  (Array.isArray(post.tags) ? post.tags : [])
+    .map((tag: unknown) => {
+      const normalized = normalizeTag(tag);
+      return normalized === '精选' ? 'featured' : normalized;
+    })
+    .filter(Boolean);
+
 // Featured = posts with 'featured' or '精选' tag
-const featured = sorted.filter(p => (p.tags || []).some((t: string) => {
-  const nt = String(t).trim().toLowerCase();
-  return nt === 'featured' || nt === '精选';
-}));
+const featured = sorted.filter((p: any) => postTags(p).some(isFeaturedTag));
+const featuredPreview = featured.slice(0, 3);
+const hasFeaturedPosts = featured.length > 0;
 
 const settings = await loadSiteSettings();
 
@@ -58,57 +76,161 @@ const buildArchiveGroups = (posts: any[]) => {
     .map(([year, monthMap]) => {
       const months = [...monthMap.entries()].sort(([a], [b]) => b - a);
       return { year, months };
-    })
-    ;
+    });
 };
 
 const archiveGroups = buildArchiveGroups(sorted);
-const hasFeaturedPosts = featured.length > 0;
+const resultsCountText = t('blog.resultsCount').replace('{count}', String(sorted.length));
 const metaDescription = locale === 'zh-CN'
   ? '浏览 Chronicle 的全部博客文章、精选内容和归档列表。'
   : 'Browse Chronicle blog posts, featured content, and the full archive.';
+
+const blogI18n = {
+  allPosts: t('blog.allPosts'),
+  featured: t('blog.featured'),
+  resultsCount: t('blog.resultsCount'),
+  noMatchingPosts: t('blog.noMatchingPosts'),
+  timeline: t('blog.timeline'),
+  exitTimeline: t('blog.exitTimeline'),
+};
 ---
 
 <Layout title={t('nav.posts')} settings={settings} locale={locale} meta={{ description: metaDescription }}>
+  <Fragment slot="head">
+    <script is:inline>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var sort = params.get('sort');
+          if (params.get('tags') === 'featured' || (sort && sort !== 'newest')) {
+            document.documentElement.classList.add('blogs-query-loading');
+            window.setTimeout(function () {
+              document.documentElement.classList.remove('blogs-query-loading');
+            }, 4000);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <noscript>
+      <style>
+        html.blogs-query-loading #all-posts,
+        html.blogs-query-loading #featured-section {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      </style>
+    </noscript>
+  </Fragment>
   <div class="blog-container">
     <main class="blog-main">
-      <section class="section-block" id="featured-section" style={`display:${hasFeaturedPosts ? 'block' : 'none'};`}>
-        <div class="section-header featured">
-          <h2 class="section-title">{t('blog.featured')}</h2>
-          <button
-            type="button"
-            class="toggle-btn"
-            id="featured-toggle"
-            aria-expanded="false"
-            style={`display:${featured.length > 3 ? 'inline-block' : 'none'};`}
-            data-expand-text={t('blog.expand')}
-            data-collapse-text={t('blog.collapse')}
-          >
-            {t('blog.expand')}
-          </button>
-        </div>
-        <div class="featured-grid" id="featured-grid">
-          {featured.map((post) => <BlogPostCard post={post} locale={locale} routeLang={routeLang} featured={true} />)}
-        </div>
-      </section>
+      {hasFeaturedPosts && (
+        <section class="section-block" id="featured-section">
+          <div class="section-header featured">
+            <h2 class="section-title">{t('blog.featured')}</h2>
+            <a class="view-all" href="?tags=featured#all-posts" data-view-all>
+              {t('blog.viewAll')}
+            </a>
+          </div>
+          <div class="featured-grid" id="featured-grid">
+            {featuredPreview.map((post: any) => <BlogPostCard post={post} locale={locale} routeLang={routeLang} featured={true} />)}
+          </div>
+        </section>
+      )}
 
-      <section class="section-block">
-        <h2 class="section-title">{t('blog.allPosts')}</h2>
+      <section class="section-block" id="all-posts">
+        <div class="section-header">
+          <h2 class="section-title" id="all-posts-title">{t('blog.allPosts')}</h2>
+          <div class="section-meta">
+            <button type="button" class="timeline-toggle" id="blog-timeline" aria-pressed="false">{t('blog.timeline')}</button>
+            <div class="sort-group" role="group" aria-label={t('blog.sort')}>
+              <button
+                type="button"
+                class="sort-btn is-active"
+                data-sort="newest"
+                aria-pressed="true"
+                aria-label={t('blog.sortNewest')}
+                title={t('blog.sortNewest')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 4v16M5 13l7 7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="sort-btn"
+                data-sort="oldest"
+                aria-pressed="false"
+                aria-label={t('blog.sortOldest')}
+                title={t('blog.sortOldest')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20V4M5 11l7-7 7 7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="sort-btn"
+                data-sort="title"
+                aria-pressed="false"
+                aria-label={t('blog.sortTitle')}
+                title={t('blog.sortTitle')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 18 8 6l4 12M5.5 14h5" />
+                  <path d="M14 8h6l-6 8h6" />
+                </svg>
+              </button>
+            </div>
+            <span class="blog-count" id="blog-count">{resultsCountText}</span>
+            <button type="button" class="back-filter" id="blog-clear" aria-hidden="true" tabindex="-1">{t('blog.back')}</button>
+          </div>
+        </div>
+
         <div class="archive-list" id="archive-list">
           {archiveGroups.map(({ year, months }) => (
             <div class="year-block" data-year={year}>
-              <h3 class="year-header">{year}</h3>
-              {months.map(([monthIndex, monthInfo]) => (
-                <div class="month-row" data-month={monthInfo.monthName} data-month-index={monthIndex}>
-                  <div class="month-label"><span>{monthInfo.monthName}</span></div>
-                  <div class="month-posts">
-                    {monthInfo.posts.map((post) => <BlogPostCard post={post} locale={locale} routeLang={routeLang} />)}
+              <h3 class="year-header">
+                <button
+                  type="button"
+                  class="year-toggle"
+                  aria-expanded="true"
+                  aria-controls={`year-months-${year}`}
+                  data-year={year}
+                >{year}</button>
+              </h3>
+              <div class="year-months" id={`year-months-${year}`}>
+                {months.map(([monthIndex, monthInfo]) => (
+                  <div class="month-row" data-month={monthInfo.monthName} data-month-index={monthIndex} data-year={year} data-month-key={`${year}-${monthIndex}`}>
+                    <button
+                      type="button"
+                      class="month-label month-toggle"
+                      aria-expanded="true"
+                      aria-controls={`month-posts-${year}-${monthIndex}`}
+                      data-month-key={`${year}-${monthIndex}`}
+                    >
+                      <span class="month-name">{monthInfo.monthName}</span>
+                      <span class="month-count">{monthInfo.posts.length}</span>
+                    </button>
+                    <div class="month-posts" id={`month-posts-${year}-${monthIndex}`}>
+                      {monthInfo.posts.map((post: any) => (
+                        <div
+                          class="post-card-item"
+                          data-tags={JSON.stringify(postTags(post))}
+                          data-title={String(post.title || '')}
+                          data-date={String(post.date || '')}
+                        >
+                          <BlogPostCard post={post} locale={locale} routeLang={routeLang} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ))}
         </div>
+
+        <div class="empty" id="blog-filter-empty" hidden>{t('blog.noMatchingPosts')}</div>
         {sorted.length === 0 && (
           <div class="empty">{t('blog.noPostsStartWriting')}</div>
         )}
@@ -116,26 +238,426 @@ const metaDescription = locale === 'zh-CN'
     </main>
   </div>
   <BackToTop />
-  
+
+  <script type="application/json" id="blog-i18n" set:html={JSON.stringify(blogI18n)}></script>
 </Layout>
 
-
-
-
 <script>
-  // Featured expand/collapse — pure client toggle over SSR-rendered DOM (no fetching).
-  // Delegated on document so it survives ViewTransitions client navigation.
-  if (!window.__chronicleBlogsFeaturedToggle) {
-    window.__chronicleBlogsFeaturedToggle = true;
-    document.addEventListener('click', (event) => {
-      const btn = event.target instanceof Element ? event.target.closest<HTMLElement>('#featured-toggle') : null;
-      if (!btn) return;
-      const grid = document.getElementById('featured-grid');
-      if (!grid) return;
-      const expanded = grid.classList.toggle('expanded');
-      btn.textContent = expanded ? (btn.dataset.collapseText ?? '') : (btn.dataset.expandText ?? '');
-      btn.setAttribute('aria-expanded', String(expanded));
-    });
-  }
-</script>
+  (() => {
+    const initBlogs = () => {
+      const archive = document.getElementById('archive-list');
+      if (!archive || archive.dataset.blogInit === '1') return;
+      archive.dataset.blogInit = '1';
 
+      const sortButtons = Array.from(document.querySelectorAll('[data-sort]'));
+      const clearBtn = document.getElementById('blog-clear');
+      const countEl = document.getElementById('blog-count');
+      const titleEl = document.getElementById('all-posts-title');
+      const allPostsSection = document.getElementById('all-posts');
+      const featuredSection = document.getElementById('featured-section');
+      const emptyEl = document.getElementById('blog-filter-empty');
+      const i18nEl = document.getElementById('blog-i18n');
+      const i18n = i18nEl ? JSON.parse(i18nEl.textContent || '{}') : {};
+
+      const original = archive.innerHTML;
+      const normalize = (value: string | null) => {
+        const normalized = String(value || '').trim().replace(/^#+/, '').toLowerCase();
+        return normalized === '精选' ? 'featured' : normalized;
+      };
+      const state = { tag: '', sort: 'newest' };
+      const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const timelineBtn = document.getElementById('blog-timeline');
+      const collapsedMonths = new Set();
+
+      let featuredAnim = null;
+
+      const resetFeaturedStyles = () => {
+        if (!featuredSection) return;
+        featuredSection.style.height = '';
+        featuredSection.style.overflow = '';
+        featuredSection.style.opacity = '';
+        featuredSection.style.transform = '';
+        featuredSection.style.marginBottom = '';
+      };
+
+      // Collapse/expand the whole featured block (height + fade + slight shrink),
+      // so the All Posts section below travels with it instead of jumping.
+      const animateFeatured = (show) => {
+        if (!featuredSection) return;
+        if (featuredAnim) {
+          featuredAnim.cancel();
+          featuredAnim = null;
+          resetFeaturedStyles();
+        }
+        if (show === !featuredSection.hidden) return;
+
+        if (reduceMotion()) {
+          featuredSection.hidden = !show;
+          resetFeaturedStyles();
+          return;
+        }
+
+        if (show) {
+          featuredSection.hidden = false;
+          const height = featuredSection.getBoundingClientRect().height;
+          const margin = getComputedStyle(featuredSection).marginBottom;
+          featuredSection.style.overflow = 'hidden';
+          const anim = featuredSection.animate(
+            [
+              { height: '0px', opacity: 0, transform: 'scale(0.96)', marginBottom: '0px' },
+              { height: `${height}px`, opacity: 1, transform: 'scale(1)', marginBottom: margin },
+            ],
+            { duration: 280, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+          );
+          featuredAnim = anim;
+          anim.finished.then(() => {
+            if (featuredAnim !== anim) return;
+            resetFeaturedStyles();
+            featuredAnim = null;
+          }).catch(() => {});
+        } else {
+          const height = featuredSection.getBoundingClientRect().height;
+          const margin = getComputedStyle(featuredSection).marginBottom;
+          if (height <= 0) {
+            featuredSection.hidden = true;
+            return;
+          }
+          featuredSection.style.overflow = 'hidden';
+          const anim = featuredSection.animate(
+            [
+              { height: `${height}px`, opacity: 1, transform: 'scale(1)', marginBottom: margin },
+              { height: '0px', opacity: 0, transform: 'scale(0.96)', marginBottom: '0px' },
+            ],
+            { duration: 280, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+          );
+          featuredAnim = anim;
+          anim.finished.then(() => {
+            if (featuredAnim !== anim) return;
+            featuredSection.hidden = true;
+            resetFeaturedStyles();
+            featuredAnim = null;
+          }).catch(() => {});
+        }
+      };
+
+      const items = () => Array.from(archive.querySelectorAll('.post-card-item'));
+
+      const monthRows = () => Array.from(archive.querySelectorAll('.month-row'));
+      const rowKey = (row) => row.getAttribute('data-month-key') || '';
+      const monthPosts = (row) => row.querySelector('.month-posts');
+      const monthToggle = (row) => row.querySelector('.month-toggle');
+
+      const scrollMonthToTop = (row) => {
+        const btn = monthToggle(row);
+        if (!btn) return;
+        btn.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+      };
+
+      const collapseMonth = (row, animate) => {
+        const posts = monthPosts(row);
+        const btn = monthToggle(row);
+        if (!posts || !btn || posts.hidden) return;
+        btn.setAttribute('aria-expanded', 'false');
+        if (!animate || reduceMotion()) {
+          posts.hidden = true;
+          posts.style.overflow = '';
+          return;
+        }
+        const height = posts.getBoundingClientRect().height;
+        posts.style.overflow = 'hidden';
+        posts.getAnimations().forEach((animation) => animation.cancel());
+        const anim = posts.animate(
+          [
+            { height: `${height}px`, opacity: 1 },
+            { height: '0px', opacity: 0 },
+          ],
+          { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+        );
+        anim.finished.then(() => {
+          posts.hidden = true;
+          posts.style.overflow = '';
+        }).catch(() => {});
+        window.setTimeout(() => {
+          if (btn.getAttribute('aria-expanded') === 'false' && !posts.hidden) {
+            posts.hidden = true;
+            posts.style.overflow = '';
+          }
+        }, 220);
+      };
+
+      const expandMonth = (row, animate) => {
+        const posts = monthPosts(row);
+        const btn = monthToggle(row);
+        if (!posts || !btn) return;
+        btn.setAttribute('aria-expanded', 'true');
+        posts.hidden = false;
+        if (!animate || reduceMotion()) {
+          posts.style.overflow = '';
+          return;
+        }
+        const height = posts.getBoundingClientRect().height;
+        posts.style.overflow = 'hidden';
+        posts.getAnimations().forEach((animation) => animation.cancel());
+        const anim = posts.animate(
+          [
+            { height: '0px', opacity: 0 },
+            { height: `${height}px`, opacity: 1 },
+          ],
+          { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+        );
+        anim.finished.then(() => {
+          posts.style.overflow = '';
+        }).catch(() => {});
+      };
+
+      const updateTimelineButton = () => {
+        if (!timelineBtn) return;
+        const rows = monthRows();
+        if (!rows.length || state.sort === 'title') {
+          timelineBtn.hidden = true;
+          archive.classList.remove('is-timeline');
+          return;
+        }
+        const allCollapsed = rows.every((row) => collapsedMonths.has(rowKey(row)));
+        timelineBtn.hidden = false;
+        timelineBtn.textContent = allCollapsed
+          ? (i18n.exitTimeline || 'Exit timeline')
+          : (i18n.timeline || 'Timeline');
+        timelineBtn.setAttribute('aria-pressed', String(allCollapsed));
+        archive.classList.toggle('is-timeline', allCollapsed);
+      };
+
+      const updateYearButtons = () => {
+        archive.querySelectorAll('.year-block').forEach((block) => {
+          const btn = block.querySelector('.year-toggle');
+          if (!btn) return;
+          const rows = Array.from(block.querySelectorAll('.month-row'));
+          const allCollapsed = rows.length > 0 && rows.every((row) => collapsedMonths.has(rowKey(row)));
+          btn.setAttribute('aria-expanded', String(!allCollapsed));
+          btn.setAttribute('aria-disabled', String(allCollapsed));
+          btn.tabIndex = allCollapsed ? -1 : 0;
+        });
+      };
+
+      const setAllMonthsCollapsed = (collapsed, animate) => {
+        const rows = monthRows();
+        collapsedMonths.clear();
+        if (collapsed) {
+          rows.forEach((row) => collapsedMonths.add(rowKey(row)));
+          // Measure while the archive is still in its expanded layout.
+          void archive.offsetHeight;
+          rows.forEach((row) => collapseMonth(row, animate));
+          updateTimelineButton();
+          updateYearButtons();
+          return;
+        }
+
+        // Expanding: drop the timeline-only layout first, then measure/animate
+        // against the final card widths so the end height doesn't jump.
+        updateTimelineButton();
+        updateYearButtons();
+        void archive.offsetHeight;
+        rows.forEach((row) => expandMonth(row, animate));
+      };
+
+      const applyMonthStates = () => {
+        monthRows().forEach((row) => {
+          const posts = monthPosts(row);
+          const btn = monthToggle(row);
+          if (!posts || !btn) return;
+          const collapsed = collapsedMonths.has(rowKey(row));
+          btn.setAttribute('aria-expanded', String(!collapsed));
+          posts.hidden = collapsed;
+          posts.style.overflow = '';
+          const countEl = row.querySelector('.month-count');
+          if (countEl) countEl.textContent = String(row.querySelectorAll('.post-card-item').length);
+        });
+        updateTimelineButton();
+        updateYearButtons();
+      };
+
+      const render = (pushHistory: boolean) => {
+        archive.classList.remove('is-updating');
+        archive.innerHTML = original;
+        archive.hidden = false;
+
+        let visible = items();
+        if (state.tag) {
+          visible = visible.filter((item) => {
+            try {
+              const tags = JSON.parse(item.dataset.tags || '[]');
+              return Array.isArray(tags) && tags.includes(state.tag);
+            } catch {
+              return false;
+            }
+          });
+          const keep = new Set(visible);
+          items().forEach((item) => {
+            if (!keep.has(item)) item.remove();
+          });
+          archive.querySelectorAll('.month-row').forEach((row) => {
+            if (!row.querySelector('.post-card-item')) row.remove();
+          });
+          archive.querySelectorAll('.year-block').forEach((year) => {
+            if (!year.querySelector('.month-row')) year.remove();
+          });
+        }
+
+        if (state.sort === 'oldest') {
+          const years = Array.from(archive.querySelectorAll('.year-block')).reverse();
+          years.forEach((year) => {
+            archive.appendChild(year);
+            const months = Array.from(year.querySelectorAll('.month-row')).reverse();
+            months.forEach((month) => {
+              year.appendChild(month);
+              const posts = month.querySelector('.month-posts');
+              if (!posts) return;
+              const cards = Array.from(posts.querySelectorAll('.post-card-item')).reverse();
+              cards.forEach((card) => posts.appendChild(card));
+            });
+          });
+        } else if (state.sort === 'title') {
+          const sortedItems = items().sort((a, b) =>
+            String(a.dataset.title || '').localeCompare(String(b.dataset.title || ''), undefined, {
+              numeric: true,
+              sensitivity: 'base',
+            }),
+          );
+          const flat = document.createElement('div');
+          flat.className = 'flat-list';
+          sortedItems.forEach((item) => flat.appendChild(item));
+          archive.innerHTML = '';
+          archive.appendChild(flat);
+        }
+
+        const count = items().length;
+        if (countEl) {
+          countEl.textContent = (i18n.resultsCount || '{count}').replace('{count}', String(count));
+        }
+        if (featuredSection) {
+          if (pushHistory) animateFeatured(state.tag !== 'featured');
+          else featuredSection.hidden = state.tag === 'featured';
+        }
+        if (allPostsSection) allPostsSection.classList.toggle('is-featured-filter', state.tag === 'featured');
+        if (titleEl) {
+          if (!state.tag) titleEl.textContent = i18n.allPosts || 'All Posts';
+          else titleEl.textContent = i18n.featured || 'Featured';
+        }
+        if (sortButtons.length) {
+          sortButtons.forEach((button) => {
+            const active = button.dataset.sort === state.sort;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+          });
+        }
+        if (clearBtn) {
+          const visible = !!state.tag;
+          clearBtn.classList.toggle('is-visible', visible);
+          clearBtn.setAttribute('aria-hidden', String(!visible));
+          clearBtn.tabIndex = visible ? 0 : -1;
+        }
+
+        if (emptyEl) emptyEl.hidden = count !== 0;
+        archive.hidden = count === 0;
+
+        applyMonthStates();
+
+        if (pushHistory && count > 0) {
+          void archive.offsetWidth;
+          archive.classList.add('is-updating');
+          window.setTimeout(() => archive.classList.remove('is-updating'), 320);
+        }
+
+        const url = new URL(window.location.href);
+        if (state.tag) url.searchParams.set('tags', state.tag);
+        else url.searchParams.delete('tags');
+        if (state.sort !== 'newest') url.searchParams.set('sort', state.sort);
+        else url.searchParams.delete('sort');
+        if (pushHistory) window.history.pushState({}, '', url);
+        else window.history.replaceState({}, '', url);
+      };
+
+      const readUrl = () => {
+        const params = new URL(window.location.href).searchParams;
+        state.tag = normalize(params.get('tags')) === 'featured' ? 'featured' : '';
+        const sort = params.get('sort');
+        state.sort = sort === 'oldest' || sort === 'title' ? sort : 'newest';
+      };
+
+      readUrl();
+      render(false);
+      if (document.documentElement.classList.contains('blogs-query-loading')) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => document.documentElement.classList.remove('blogs-query-loading'));
+        });
+      }
+
+      sortButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          state.sort = button.dataset.sort || 'newest';
+          render(true);
+        });
+      });
+      clearBtn?.addEventListener('click', () => {
+        collapsedMonths.clear();
+        state.tag = '';
+        render(true);
+      });
+
+      archive.addEventListener('click', (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+
+        const yearBtn = target?.closest('.year-toggle');
+        if (yearBtn && archive.contains(yearBtn)) {
+          const rows = monthRows();
+          const allCollapsed = rows.length > 0 && rows.every((row) => collapsedMonths.has(rowKey(row)));
+          if (!allCollapsed) setAllMonthsCollapsed(true, true);
+          return;
+        }
+
+        const btn = target?.closest('.month-toggle');
+        if (!btn || !archive.contains(btn)) return;
+        const row = btn.closest('.month-row');
+        if (!row) return;
+        const allCollapsed = monthRows().every((monthRow) => collapsedMonths.has(rowKey(monthRow)));
+        if (allCollapsed) {
+          setAllMonthsCollapsed(false, true);
+          window.setTimeout(() => scrollMonthToTop(row), reduceMotion() ? 0 : 240);
+        } else {
+          // In the expanded state, month/year headers are entry points into the
+          // timeline; they do not navigate (you can already see the month).
+          setAllMonthsCollapsed(true, true);
+        }
+      });
+
+      timelineBtn?.addEventListener('click', () => {
+        const rows = monthRows();
+        if (!rows.length) return;
+        const allCollapsed = rows.every((row) => collapsedMonths.has(rowKey(row)));
+        setAllMonthsCollapsed(!allCollapsed, true);
+      });
+
+      document.querySelectorAll('[data-view-all]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          collapsedMonths.clear();
+          state.tag = 'featured';
+          state.sort = 'newest';
+          render(true);
+          window.setTimeout(() => {
+            document.getElementById('all-posts')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, reduceMotion() ? 0 : 300);
+        });
+      });
+
+      window.addEventListener('popstate', () => {
+        readUrl();
+        render(false);
+      });
+    };
+
+    document.addEventListener('astro:page-load', initBlogs);
+    if (document.readyState !== 'loading') initBlogs();
+    else document.addEventListener('DOMContentLoaded', initBlogs);
+  })();
+</script>

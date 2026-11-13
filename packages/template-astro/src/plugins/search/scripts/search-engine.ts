@@ -247,6 +247,14 @@ export function initSearchExperience(config: SearchEngineConfig) {
   }
 
   function initSearchFromURL() {
+    // Only the Search page owns keyword/tags URL state. The overlay can be
+    // opened from any page (e.g. /blogs?tags=featured); it must not inherit
+    // that page's params or rewrite its URL.
+    if (mode !== 'page') return;
+    const currentPath = window.location.pathname.replace(/\/+$/, '');
+    const searchPath = `${routePrefix}/search`.replace(/\/+$/, '');
+    if (currentPath !== searchPath) return;
+
     const urlParams = new URLSearchParams(window.location.search);
     const keyword = urlParams.get("keyword") || "";
     const tags = urlParams.get("tags") || "";

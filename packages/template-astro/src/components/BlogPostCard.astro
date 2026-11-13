@@ -73,20 +73,27 @@ const tags = sortTagsList(post.tags);
       </div>
     ) : (
       <>
-        <div class="post-card-line">
-          <span class="post-card-time">{dateText}</span>
-          {tags.some((tag) => isFeaturedTag(String(tag))) ? <span class="post-featured-star" aria-hidden="true">★</span> : null}
-          <h4 class="card-post-title">{typeBadge && <span class="type-badge" title={typeBadge.label} set:html={typeBadge.icon || typeBadge.label} />}{post.title}</h4>
-        </div>
-        {tags.length ? (
-          <div class="post-tags">
-            {tags.map((tag) => (
-              <span class:list={['tag', isFeaturedTag(String(tag)) ? 'featured' : '']}>
-                # {isFeaturedTag(String(tag)) ? locale === 'zh-CN' ? '精选' : 'Featured' : tag}
-              </span>
-            ))}
+        <div class="compact-card-layout">
+          <div class="compact-card-time">
+            <span class="post-card-time">{dateText}</span>
+            <time class="post-card-full-date" datetime={post.date}>{date.toLocaleDateString(locale)}</time>
           </div>
-        ) : null}
+          <div class="compact-card-body">
+            <div class="compact-card-title-row">
+              {tags.some((tag) => isFeaturedTag(String(tag))) ? <span class="post-featured-star" aria-hidden="true">★</span> : null}
+              <h4 class="card-post-title">{typeBadge && <span class="type-badge" title={typeBadge.label} set:html={typeBadge.icon || typeBadge.label} />}{post.title}</h4>
+            </div>
+            {tags.length ? (
+              <div class="post-tags">
+                {tags.map((tag) => (
+                  <span class:list={['tag', isFeaturedTag(String(tag)) ? 'featured' : '']}>
+                    # {isFeaturedTag(String(tag)) ? locale === 'zh-CN' ? '精选' : 'Featured' : tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
       </>
     )}
   </article>
