@@ -277,7 +277,8 @@ const COLLECTION_FILE = path.join(DATA_DIR, 'collections.yml');
  * 合集归属实时查询（collections.yml 反查，与 CollectionNav 的 matched 同源）。
  * post.collection/collectionPath 不再依赖 frontmatter 或 index.json 快照字段——
  * collections.yml 改动（如文章移出合集）即时生效，避免陈旧快照导致"无合集文章
- * 仍挂合集导航/正文让位"。每篇文章映射到包含它的合集（多合集取最后一个）。
+ * 仍挂合集导航/正文让位"。每篇文章映射到第一个包含它的合集（多合集按
+ * collections.yml 顺序取第一个，合集内上下篇也以该合集为准）。
  */
 let _colAssignmentCache: Map<string, { collection: string; collectionPath: string }> | null = null;
 let _colAssignmentMtime = 0;
@@ -297,7 +298,10 @@ function resolveCollectionAssignments(): Map<string, { collection: string; colle
           const collectionPath = parents.length > 0
             ? `${colName} / ${parents.join(' / ')}`
             : colName;
-          map.set(String(node.id), { collection: colName, collectionPath });
+          const id = String(node.id);
+          if (!map.has(id)) {
+            map.set(id, { collection: colName, collectionPath });
+          }
         }
         if (node?.type === 'group' && Array.isArray(node.children)) {
           walk(node.children, colName, [...parents, node.title || 'Untitled']);

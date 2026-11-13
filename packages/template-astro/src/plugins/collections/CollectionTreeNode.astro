@@ -1,0 +1,51 @@
+---
+import CollectionTreeNode from './CollectionTreeNode.astro';
+
+interface Props {
+  node: any;
+  postTitles: Record<string, string>;
+  postTypes: Record<string, string>;
+  routePrefix: string;
+}
+
+const { node, postTitles, postTypes, routePrefix } = Astro.props;
+
+const isGroup = node?.type === 'group';
+const postId = String(node?.id || '');
+const postTitle = postTitles[postId] || postId;
+const postType = postTypes[postId] || 'article';
+const groupTitle = node?.title || node?.name || 'Group';
+const children = Array.isArray(node?.children) ? node.children : [];
+
+const ICON_ARTICLE = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/></svg>';
+const ICON_SLIDES = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 2 12 L 2 22 L 14 22 L 14 12 Z"></path><path d="M 6 10 L 6 8 L 18 8 L 18 18 L 16 18"></path><path d="M 10 6 L 10 4 L 22 4 L 22 14 L 20 14"></path></svg>';
+const ICON_GROUP = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+---
+
+<li class:list={[isGroup ? 'node-group' : 'node-post']}>
+  {isGroup ? (
+    <>
+      <button type="button" class="mini-card group-header" aria-expanded="false" data-group>
+        <span class="mini-icon" set:html={ICON_GROUP} />
+        <span class="mini-title">{groupTitle}</span>
+      </button>
+      <div class="children-container" hidden>
+        <ul>
+          {children.map((child: any) => (
+            <CollectionTreeNode
+              node={child}
+              postTitles={postTitles}
+              postTypes={postTypes}
+              routePrefix={routePrefix}
+            />
+          ))}
+        </ul>
+      </div>
+    </>
+  ) : (
+    <a class="mini-card post" href={`${routePrefix}/post/${encodeURIComponent(postId)}`}>
+      <span class="mini-icon" set:html={postType === 'slides' ? ICON_SLIDES : ICON_ARTICLE} />
+      <span class="mini-title">{postTitle}</span>
+    </a>
+  )}
+</li>

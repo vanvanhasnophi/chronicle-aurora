@@ -2,6 +2,7 @@
 import './styles/collection.css';
 import Layout from "../../layouts/Layout.astro";
 import collectionCritical from "./styles/critical.css?raw";
+import CollectionTreeNode from "./CollectionTreeNode.astro";
 import { getTranslation, getLocale } from "../../utils/i18n";
 import { loadSiteSettings } from "../../utils/siteSettings";
 import { dataSource } from "../../data";
@@ -20,21 +21,65 @@ const metaDescription =
     ? "浏览 Chronicle 的合集页面，查看分组内容与关联文章。"
     : "Browse Chronicle collections, grouped content, and related posts.";
 
-// ── Local data: embed collections + posts for client-side use ──
-let embeddedCollections: any[] = [];
-let embeddedPostTitles: Record<string, string> = {};
-let embeddedPostTypes: Record<string, string> = {};
-try {
-  const collectionsData = dataSource.getCollections();
-  embeddedCollections = (collectionsData as any)?.collections || [];
-  const posts = dataSource.getPublishedPosts();
-  for (const p of posts) {
-    embeddedPostTitles[String(p.id)] = String(p.title || "").trim();
-    embeddedPostTypes[String(p.id)] = String(p.type || "article").trim();
-  }
-} catch (e) {
-  console.error("[collection] Failed to load local data:", e);
+const slugify = (value: unknown) =>
+  String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const rawCollections = (dataSource.getCollections?.() as any) || [];
+const collectionSource: any[] = Array.isArray(rawCollections)
+  ? rawCollections
+  : Array.isArray(rawCollections?.collections)
+    ? rawCollections.collections
+    : [];
+
+const publishedPosts = dataSource.getPublishedPosts();
+const postTitles: Record<string, string> = {};
+const postTypes: Record<string, string> = {};
+for (const post of publishedPosts) {
+  const id = String(post.id);
+  postTitles[id] = String(post.title || "").trim();
+  postTypes[id] = String(post.type || "article").trim();
 }
+
+const usedSlugs = new Set<string>();
+const collections = collectionSource.map((collection: any, index: number) => {
+  const name = String(collection?.name || "").trim() || `Collection ${index + 1}`;
+  let slug = String(collection?.slug || "").trim() || slugify(name) || `collection-${index + 1}`;
+  const baseSlug = slug;
+  let suffix = 2;
+  while (usedSlugs.has(slug)) slug = `${baseSlug}-${suffix++}`;
+  usedSlugs.add(slug);
+
+  let posts = 0;
+  let groups = 0;
+  const walk = (nodes: any[]) => {
+    if (!Array.isArray(nodes)) return;
+    for (const node of nodes) {
+      if (!node) continue;
+      if (node.type === "post" && node.id && postTitles[String(node.id)]) posts += 1;
+      if (node.type === "group") {
+        groups += 1;
+        walk(node.children);
+      }
+    }
+  };
+  const nodes = Array.isArray(collection?.nodes) ? collection.nodes : [];
+  walk(nodes);
+
+  return {
+    name,
+    description: String(collection?.description || "").trim(),
+    cover: String(collection?.cover || "").trim(),
+    slug,
+    panelId: `collection-${slug}`,
+    nodes,
+    posts,
+    groups,
+  };
+});
 ---
 
 <Layout
@@ -46,130 +91,104 @@ try {
   <div class="collection-container">
     <main class="collection-main">
       <section class="layer-list" id="collection-list-layer">
-        <h2 class="section-title">{t("collection.title")}</h2>
+        <h1 class="section-title" tabindex="-1">{t("collection.title")}</h1>
         <div
           class="collections-grid"
           id="collections-grid"
-          aria-label="Collections"
+          aria-label={t("collection.title")}
         >
+          {collections.length ? collections.map((collection: any, index: number) => (
+            <a
+              class="collection-card-link"
+              href={`#${collection.panelId}`}
+              data-collection-id={collection.panelId}
+            >
+              <article class="post-card mtl-surface interactive glowable scalable collection-card">
+                <div
+                  class:list={["collection-card-cover", collection.cover ? "has-image" : "is-empty"]}
+                >
+                  {collection.cover ? (
+                    <img
+                      src={collection.cover}
+                      alt={collection.name}
+                      width="640"
+                      height="360"
+                      loading={index === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                    />
+                  ) : null}
+                </div>
+                <div class="collection-card-content">
+                  <div class="collection-card-heading">
+                    <h3 class="collection-card-title">{collection.name}</h3>
+                    <span class="collection-card-meta">
+                      {t("collection.postsCount").replace("{count}", String(collection.posts))}
+                    </span>
+                  </div>
+                  {collection.description ? (
+                    <p class="collection-card-desc">{collection.description}</p>
+                  ) : null}
+                </div>
+              </article>
+            </a>
+          )) : (
+            <div class="collections-empty">{t("collection.empty")}</div>
+          )}
         </div>
       </section>
 
-      <section
-        class="layer-detail"
-        id="collection-detail-layer"
-        style="display:none;"
-      >
-        <div class="detail-header">
-          <button class="back-btn" id="collection-back-btn" type="button">
-            {t("collection.backToList")}
-          </button>
-        </div>
-        <h1 id="collection-title">{t("collection.title")}</h1>
-        <p id="collection-desc"></p>
-        <div id="collection-tree" class="collection-tree"></div>
-      </section>
+      <div class="layer-detail" id="collection-detail-layer" hidden>
+        {collections.map((collection: any) => (
+          <section
+            class="collection-detail-panel"
+            id={collection.panelId}
+            data-name={collection.name}
+            data-slug={collection.slug}
+            data-cover={collection.cover}
+            hidden
+          >
+            <div class="detail-header">
+              <a class="back-btn" href="#">{t("collection.backToList")}</a>
+            </div>
+            <h2 class="collection-title" tabindex="-1">{collection.name}</h2>
+            {collection.description ? (
+              <p class="collection-desc">{collection.description}</p>
+            ) : null}
+            <div class="collection-tree">
+              {collection.nodes.length ? (
+                <ul>
+                  {collection.nodes.map((node: any) => (
+                    <CollectionTreeNode
+                      node={node}
+                      postTitles={postTitles}
+                      postTypes={postTypes}
+                      routePrefix={routePrefix}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <div class="collection-tree-empty">{t("collection.emptyCollection")}</div>
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
     </main>
   </div>
 
-  <!-- Collection专属临时背景层 -->
+  <!-- Collection 专属临时背景层 -->
   <div id="collection-temp-bg" class="collection-temp-bg">
     <div class="collection-temp-bg-image"></div>
     <div class="collection-temp-bg-overlay"></div>
   </div>
 
-  
-
-  <!-- Embedded data for local/static mode -->
-  <div
-    id="chronicle-embedded-data"
-    style="display:none"
-    data-json={JSON.stringify({
-      collections: embeddedCollections,
-      postTitles: embeddedPostTitles,
-      postTypes: embeddedPostTypes,
-    })}
-  >
-  </div>
-
   <script>
-    // @ts-nocheck
-    (function () {
-      // Check for embedded build-time data (local/static mode)
-      const embeddedEl = document.getElementById("chronicle-embedded-data");
-      const embeddedData = embeddedEl
-        ? JSON.parse(embeddedEl.getAttribute("data-json") || "{}")
-        : null;
-      const hasEmbedded =
-        embeddedData &&
-        Array.isArray(embeddedData.collections) &&
-        embeddedData.collections.length > 0;
+    (() => {
+      const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      let initialized = false;
-      let collections = [];
-      let postTitleById = new Map();
-      let postTypeById = new Map();
-
-      // Pre-populate from embedded data
-      if (hasEmbedded) {
-        collections = embeddedData.collections;
-        if (embeddedData.postTitles) {
-          Object.entries(embeddedData.postTitles).forEach(([id, title]) => {
-            postTitleById.set(id, (title as string) || id);
-          });
-        }
-        if (embeddedData.postTypes) {
-          Object.entries(embeddedData.postTypes).forEach(([id, type]) => {
-            postTypeById.set(id, (type as string) || "article");
-          });
-        }
-      }
-
-      function formatCollectionName(name) {
-        return (
-          String(name || "")
-            .replace(/[-_]+/g, " ")
-            .trim() || defaultTitle
-        );
-      }
-
-      function resolvePostTitle(postId) {
-        const id = String(postId || "");
-        return postTitleById.get(id) || id;
-      }
-
-      function resolvePostType(postId) {
-        return postTypeById.get(String(postId || "")) || "article";
-      }
-
-      const ICON_ARTICLE =
-        '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/></svg>';
-      const ICON_SLIDES =
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 2 12 L 2 22 L 14 22 L 14 12 Z"></path><path d="M 6 10 L 6 8 L 18 8 L 18 18 L 16 18"></path><path d="M 10 6 L 10 4 L 22 4 L 22 14 L 20 14"></path></svg>';
-      function iconFor(pid) {
-        return resolvePostType(pid) === "slides" ? ICON_SLIDES : ICON_ARTICLE;
-      }
-
-      function safeDecodeHash(hash) {
-        try {
-          if (!hash) return "";
-          if (hash.startsWith("#")) hash = hash.slice(1);
-          return decodeURIComponent(hash);
-        } catch (e) {
-          return "";
-        }
-      }
-
-      // ── Page lifecycle scope ──
-      let scope = createScope();
       function createScope() {
-        const listeners = [],
-          bodyNodes = [];
+        const listeners = [];
         return {
-          on(ev, fn, opts) {
-            document.addEventListener(ev, fn, opts);
-            listeners.push({ t: document, ev, fn, opts });
-          },
           onEl(el, ev, fn, opts) {
             el.addEventListener(ev, fn, opts);
             listeners.push({ t: el, ev, fn, opts });
@@ -179,379 +198,158 @@ try {
             listeners.push({ t: window, ev, fn, opts });
           },
           destroy() {
-            listeners.forEach((l) =>
-              l.t.removeEventListener(l.ev, l.fn, l.opts),
-            );
+            listeners.forEach((l) => l.t.removeEventListener(l.ev, l.fn, l.opts));
             listeners.length = 0;
-            bodyNodes.forEach((el) => el.remove());
-            bodyNodes.length = 0;
           },
         };
       }
 
+      let scope = null;
+      let listScrollY = 0;
+
       function initCollectionPage() {
         if (scope) scope.destroy();
         scope = createScope();
-        const listLayerEl = document.getElementById("collection-list-layer");
-        const detailLayerEl = document.getElementById(
-          "collection-detail-layer",
+
+        const listLayer = document.getElementById("collection-list-layer");
+        const detailLayer = document.getElementById("collection-detail-layer");
+        const grid = document.getElementById("collections-grid");
+        const listTitle = listLayer?.querySelector(".section-title");
+        const tempBg = document.getElementById("collection-temp-bg");
+        const tempBgImage = tempBg?.querySelector(".collection-temp-bg-image");
+        const panels = Array.from(
+          document.querySelectorAll(".collection-detail-panel"),
         );
-        const gridEl = document.getElementById("collections-grid");
-        const backBtn = document.getElementById("collection-back-btn");
-        const titleEl = document.getElementById("collection-title");
-        const descEl = document.getElementById("collection-desc");
-        const treeEl = document.getElementById("collection-tree");
-        if (
-          !listLayerEl ||
-          !detailLayerEl ||
-          !gridEl ||
-          !backBtn ||
-          !titleEl ||
-          !descEl ||
-          !treeEl
-        )
-          return;
+        if (!listLayer || !detailLayer || !grid || !tempBg) return;
 
-        const routePrefix = location.pathname.includes("/zh") ? "/zh" : "/en";
-        const defaultTitle = routePrefix === "/zh" ? "合集" : "Collection";
+        listScrollY = 0;
+        // The pagehide handler may have hidden the layer; a bfcache restore must reset it.
+        tempBg.hidden = false;
 
-        function showListLayer() {
-          listLayerEl.style.display = "";
-          detailLayerEl.style.display = "none";
+        const decodeHash = () => {
+          try {
+            return decodeURIComponent(location.hash.replace(/^#/, ""));
+          } catch {
+            return "";
+          }
+        };
 
-          // 隐藏临时背景层
-          const tempBg = document.getElementById("collection-temp-bg");
-          if (tempBg) {
+        const findPanel = (hash) =>
+          panels.find(
+            (panel) =>
+              panel.id === hash ||
+              panel.dataset.name === hash ||
+              panel.dataset.slug === hash,
+          );
+
+        const setBackground = (panel) => {
+          const cover = panel?.dataset.cover || "";
+          if (cover && tempBgImage) {
+            tempBgImage.style.backgroundImage = `url("${cover.replace(/"/g, "%22")}")`;
+            tempBg.classList.add("visible");
+          } else {
             tempBg.classList.remove("visible");
           }
-        }
+        };
 
-        function showDetailLayer() {
-          listLayerEl.style.display = "none";
-          detailLayerEl.style.display = "";
-        }
+        const showList = (options = {}) => {
+          listLayer.hidden = false;
+          detailLayer.hidden = true;
+          panels.forEach((panel) => { panel.hidden = true; });
+          tempBg.classList.remove("visible");
+          if (options.focus) listTitle?.focus();
+          if (options.restore) {
+            window.scrollTo({ top: listScrollY, behavior: reduceMotion() ? "auto" : "smooth" });
+          }
+        };
 
-        function renderCollectionCards() {
-          gridEl.innerHTML = "";
-          if (!collections.length) {
-            // 无合集 placeholder
-            const empty = document.createElement("div");
-            empty.className = "collections-empty";
-            empty.textContent =
-              routePrefix === "/zh" ? "暂无合集" : "No collections yet";
-            gridEl.appendChild(empty);
+        const openPanel = (panel, options = {}) => {
+          if (detailLayer.hidden) listScrollY = window.scrollY;
+          listLayer.hidden = true;
+          detailLayer.hidden = false;
+          panels.forEach((item) => { item.hidden = item !== panel; });
+          setBackground(panel);
+
+          const nextUrl = `${location.pathname}${location.search}#${encodeURIComponent(panel.id)}`;
+          if (options.push) {
+            history.pushState({ collection: panel.id, fromList: true }, "", nextUrl);
+          } else {
+            history.replaceState({ collection: panel.id, fromList: false }, "", nextUrl);
+          }
+
+          if (options.focus) {
+            panel.querySelector(".collection-title")?.focus();
+            window.scrollTo({ top: 0, behavior: reduceMotion() ? "auto" : "smooth" });
+          }
+        };
+
+        const handleHash = (restore = false) => {
+          const hash = decodeHash();
+          const panel = hash ? findPanel(hash) : undefined;
+          if (panel) openPanel(panel, { push: false, focus: false });
+          else showList({ restore });
+        };
+
+        const showListFromDetail = () => {
+          if (history.state?.fromList) {
+            history.back();
             return;
           }
-          collections.forEach((c) => {
-            const link = document.createElement("a");
-            link.className = "collection-card-link";
-            link.href = `#${encodeURIComponent(c.name)}`;
-            link.setAttribute("data-collection-name", c.name);
+          showList({ focus: true, restore: true });
+          history.pushState({}, "", `${location.pathname}${location.search}`);
+        };
 
-            const card = document.createElement("article");
-            card.className = "post-card mtl-surface interactive glowable scalable collection-card";
+        scope.onEl(grid, "click", (event) => {
+          const target = event.target instanceof Element ? event.target : null;
+          const link = target?.closest(".collection-card-link");
+          if (!link) return;
+          const id = (link.getAttribute("href") || "").replace(/^#/, "");
+          const panel = panels.find((item) => item.id === id);
+          if (!panel) return;
+          event.preventDefault();
+          openPanel(panel, { push: true, focus: true });
+        });
 
-            // 添加封面图 — multi-source for internal rasters (mirror ChronicleImage):
-            // asset:///assets 源有 .avif/.webp 变体（asset pipeline 全量生成），
-            // <picture> 让浏览器按支持度选最优格式，LCP 只下最小字节。
-            if (c.cover) {
-              const coverWrapper = document.createElement("div");
-              coverWrapper.className = "collection-card-cover";
-              coverWrapper.style.width = "100%";
-              coverWrapper.style.height = "140px";
+        scope.onEl(detailLayer, "click", (event) => {
+          const target = event.target instanceof Element ? event.target : null;
 
-              const isExternal = /^https?:\/\//i.test(c.cover);
-              const isRaster = /\.(jpg|jpeg|png|gif)$/i.test(c.cover);
-              const imgStyle = "width:100%;height:100%;object-fit:cover;border-top-left-radius:12px;border-top-right-radius:12px;";
-
-              if (!isExternal && isRaster) {
-                const picture = document.createElement("picture");
-                const srcAvif = document.createElement("source");
-                srcAvif.srcset = c.cover.replace(/\.(jpg|jpeg|png|gif)$/i, ".avif");
-                srcAvif.type = "image/avif";
-                const srcWebp = document.createElement("source");
-                srcWebp.srcset = c.cover.replace(/\.(jpg|jpeg|png|gif)$/i, ".webp");
-                srcWebp.type = "image/webp";
-                picture.appendChild(srcAvif);
-                picture.appendChild(srcWebp);
-                const coverImg = document.createElement("img");
-                coverImg.src = c.cover;
-                coverImg.alt = formatCollectionName(c.name);
-                coverImg.loading = "lazy";
-                coverImg.style.cssText = imgStyle;
-                picture.appendChild(coverImg);
-                coverWrapper.appendChild(picture);
-              } else {
-                const coverImg = document.createElement("img");
-                coverImg.src = c.cover;
-                coverImg.alt = formatCollectionName(c.name);
-                coverImg.loading = "lazy";
-                coverImg.style.cssText = imgStyle;
-                coverWrapper.appendChild(coverImg);
-              }
-              card.appendChild(coverWrapper);
-            }
-
-            const contentWrapper = document.createElement("div");
-            contentWrapper.className = "collection-card-content";
-            card.appendChild(contentWrapper);
-
-            const title = document.createElement("h3");
-            title.className = "collection-card-title";
-            title.textContent = formatCollectionName(c.name);
-
-            const desc = document.createElement("p");
-            desc.className = "collection-card-desc";
-            desc.textContent = c.description || "";
-
-            contentWrapper.appendChild(title);
-            contentWrapper.appendChild(desc);
-            link.appendChild(card);
-            gridEl.appendChild(link);
-          });
-        }
-
-        function clearDetail() {
-          titleEl.textContent = defaultTitle;
-          descEl.textContent = "";
-          treeEl.innerHTML = "";
-        }
-
-        function renderTreeNodes(container, nodes) {
-          if (!nodes || !Array.isArray(nodes)) return;
-          const ul = document.createElement("ul");
-          nodes.forEach((node) => {
-            const li = document.createElement("li");
-            li.className = node.type === "group" ? "node-group" : "node-post";
-
-            if (node.type === "post") {
-              const card = document.createElement("div");
-              card.className = "mini-card post";
-              card.tabIndex = 0;
-              card.setAttribute("role", "link");
-              card.dataset.postId = node.id;
-              const icon = document.createElement("span");
-              icon.className = "mini-icon";
-              icon.innerHTML = iconFor(node.id);
-              const title = document.createElement("span");
-              title.className = "mini-title";
-              title.textContent = resolvePostTitle(node.id);
-              card.appendChild(icon);
-              card.appendChild(title);
-              li.appendChild(card);
-            } else if (node.type === "group") {
-              const header = document.createElement("div");
-              header.className = "mini-card group-header";
-              header.tabIndex = 0;
-              header.setAttribute("role", "button");
-              header.dataset.type = "group";
-
-              const icon = document.createElement("span");
-              icon.className = "mini-icon";
-              icon.innerHTML =
-                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
-
-              const title = document.createElement("span");
-              title.className = "mini-title";
-              title.textContent = node.title || node.name || "Group";
-              header.appendChild(icon);
-              header.appendChild(title);
-
-              li.appendChild(header);
-
-              const childrenWrap = document.createElement("div");
-              childrenWrap.className = "children-container";
-              childrenWrap.hidden = true;
-              if (Array.isArray(node.children))
-                renderTreeNodes(childrenWrap, node.children);
-              li.appendChild(childrenWrap);
-            }
-
-            ul.appendChild(li);
-          });
-          container.appendChild(ul);
-        }
-
-        function showCollectionByName(name) {
-          clearDetail();
-          if (!name) {
-            showListLayer();
+          const back = target?.closest(".back-btn");
+          if (back) {
+            event.preventDefault();
+            showListFromDetail();
             return;
           }
-          const found = collections.find((c) => c.name === name);
-          if (!found) {
-            showListLayer();
-            return;
+
+          const group = target?.closest(".group-header");
+          if (group) {
+            const children = group.parentElement?.querySelector(".children-container");
+            if (!children) return;
+            const expanded = group.getAttribute("aria-expanded") === "true";
+            group.setAttribute("aria-expanded", String(!expanded));
+            children.hidden = expanded;
           }
-          titleEl.textContent = formatCollectionName(found.name);
-          descEl.textContent = found.description || "";
-          renderTreeNodes(treeEl, found.nodes);
-          // 空合集 placeholder（合集存在但无文章/分组）
-          if (!found.nodes || !Array.isArray(found.nodes) || !found.nodes.length) {
-            const empty = document.createElement("div");
-            empty.className = "collection-tree-empty";
-            empty.textContent =
-              routePrefix === "/zh" ? "该合集暂无文章" : "This collection has no posts yet";
-            treeEl.appendChild(empty);
-          }
+        });
 
-          // 显示临时背景层
-          const tempBg = document.getElementById("collection-temp-bg");
-          if (tempBg) {
-            if (found.cover) {
-              const tempBgImage = tempBg.querySelector(
-                ".collection-temp-bg-image",
-              );
-              if (tempBgImage) {
-                tempBgImage.style.backgroundImage = `url(${found.cover})`;
-              }
-              tempBg.classList.add("visible");
-            } else {
-              tempBg.classList.remove("visible");
-            }
-          }
+        scope.onWindow("popstate", () => handleHash(true));
+        scope.onWindow("hashchange", () => handleHash());
+        scope.onWindow("pagehide", () => { tempBg.hidden = true; });
 
-          showDetailLayer();
-        }
-
-        function handleHash() {
-          const raw = safeDecodeHash(location.hash);
-          if (!raw) {
-            showCollectionByName("");
-            return;
-          }
-          const exists = collections.some((c) => c.name === raw);
-          if (!exists) {
-            showCollectionByName("");
-            return;
-          }
-          showCollectionByName(raw);
-        }
-
-        async function load() {
-          // SSG 静态构建：合集数据在构建时注入（chronicle-embedded-data），无远程 API 回退
-          renderCollectionCards();
-          handleHash();
-        }
-
-        if (!gridEl.dataset.bound) {
-          gridEl.dataset.bound = "1";
-          gridEl.addEventListener("click", (e) => {
-            const target = e.target;
-            const link =
-              target && target.closest
-                ? target.closest(".collection-card-link")
-                : null;
-            if (!link) return;
-            e.preventDefault();
-            const name = link.getAttribute("data-collection-name") || "";
-            if (!name) return;
-            // Render immediately so one click always opens detail, then sync URL hash.
-            showCollectionByName(name);
-            const nextHash = `#${encodeURIComponent(name)}`;
-            if (location.hash !== nextHash) {
-              history.replaceState(
-                null,
-                "",
-                `${location.pathname}${location.search}${nextHash}`,
-              );
-            }
-          });
-        }
-
-        // Tree interactions: delegation for toggle and post activation
-        if (!treeEl.dataset.bound) {
-          treeEl.dataset.bound = "1";
-          treeEl.addEventListener("click", (e) => {
-            const hdr =
-              e.target && e.target.closest
-                ? e.target.closest(".group-header")
-                : null;
-            if (hdr) {
-              const li = hdr.parentElement;
-              const children = li && li.querySelector(".children-container");
-              if (!children) return;
-              const wasHidden = children.hidden;
-              children.hidden = !wasHidden;
-              const expanded = !children.hidden;
-              hdr.classList.toggle("active", expanded);
-              return;
-            }
-
-            const postCard =
-              e.target && e.target.closest
-                ? e.target.closest(".mini-card.post")
-                : null;
-            if (postCard) {
-              const id = postCard.dataset.postId;
-              if (!id) return;
-              location.href = `${routePrefix}/post/${encodeURIComponent(id)}`;
-            }
-          });
-
-          treeEl.addEventListener("keydown", (e) => {
-            if (e.key !== "Enter" && e.key !== " ") return;
-            const hdr =
-              e.target && e.target.closest
-                ? e.target.closest(".group-header")
-                : null;
-            if (hdr) {
-              e.preventDefault();
-              hdr.click();
-              return;
-            }
-            const postCard =
-              e.target && e.target.closest
-                ? e.target.closest(".mini-card.post")
-                : null;
-            if (postCard) {
-              e.preventDefault();
-              postCard.click();
-            }
-          });
-        }
-
-        if (!backBtn.dataset.bound) {
-          backBtn.dataset.bound = "1";
-          backBtn.addEventListener("click", () => {
-            history.replaceState(null, "", location.pathname + location.search);
-            showCollectionByName("");
-          });
-        }
-
-        scope.onWindow("hashchange", handleHash);
-
-        load();
-        // 页面卸载时隐藏临时背景层
-        function hideTempBackground() {
-          const tempBg = document.getElementById("collection-temp-bg");
-          if (tempBg) {
-            tempBg.hidden = true;
-          }
-        }
-
-        // 监听页面卸载事件
-        window.addEventListener("beforeunload", hideTempBackground);
-        window.addEventListener("pagehide", hideTempBackground);
+        handleHash();
       }
 
       document.addEventListener("astro:page-load", initCollectionPage);
-      if (
-        document.readyState === "complete" ||
-        document.readyState === "interactive"
-      ) {
+      if (document.readyState === "complete" || document.readyState === "interactive") {
         initCollectionPage();
       } else {
-        document.addEventListener("DOMContentLoaded", initCollectionPage, {
-          once: true,
-        });
+        document.addEventListener("DOMContentLoaded", initCollectionPage, { once: true });
       }
+
+      document.addEventListener("astro:before-swap", () => {
+        if (scope) {
+          scope.destroy();
+          scope = null;
+        }
+      });
     })();
-    document.addEventListener("astro:before-swap", () => {
-      if (scope) {
-        scope.destroy();
-        scope = null;
-      }
-    });
   </script>
 </Layout>

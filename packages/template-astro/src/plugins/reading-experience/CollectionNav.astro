@@ -110,7 +110,7 @@ const matched = postId ? find(collections, postId) : [];
 // 文章不在任何合集（matched 空）→ 不渲染合集导航（此前 activeCol 回退第一个合集，
 // 无 collection 文章也显示侧栏——误挂）；正文让位（body 类）同样只在有匹配时挂。
 const activeCol = matched.length > 0 ? matched[0] : null;
-const treeHtml = activeCol ? tree(activeCol.nodes, "r", postId) : "";
+const treeByCollection = matched.map((c: any) => tree(c.nodes, "r", postId));
 const navTitle = activeCol ? String(activeCol.name || "") : "";
 const hasMultiple = matched.length > 1;
 const isSidebar = variant === "sidebar";
@@ -146,9 +146,9 @@ const rootId = isSidebar ? "collection-nav-root" : "collection-nav-inline";
       >
       {
         hasMultiple ? (
-          <select class="cn-switcher">
+          <select class="cn-switcher" aria-label="Collection">
             {matched.map((c: any, i: number) => (
-              <option value={String(i)} data-name={c.name}>
+              <option value={String(i)} data-name={c.name} selected={i === 0}>
                 {c.name}
               </option>
             ))}
@@ -161,8 +161,15 @@ const rootId = isSidebar ? "collection-nav-root" : "collection-nav-inline";
   </div>
   <div class="cn-body">
     {
-      treeHtml ? (
-        <div class="cn-tree" set:html={treeHtml} />
+      treeByCollection.length ? (
+        treeByCollection.map((html: string, i: number) => (
+          <div
+            class="cn-tree"
+            data-collection-index={String(i)}
+            hidden={i !== 0}
+            set:html={html}
+          />
+        ))
       ) : (
         <div class="cn-empty">{t("collection.emptyCollection")}</div>
       )
@@ -254,6 +261,17 @@ const rootId = isSidebar ? "collection-nav-root" : "collection-nav-inline";
             a.click();
           }
         });
+        const switcher = r.querySelector(".cn-switcher") as HTMLSelectElement | null;
+        if (switcher) {
+          switcher.addEventListener("change", () => {
+            const index = String(switcher.value);
+            r.querySelectorAll(".cn-tree[data-collection-index]").forEach((el) => {
+              if (el instanceof HTMLElement) {
+                el.hidden = el.dataset.collectionIndex !== index;
+              }
+            });
+          });
+        }
       });
     }
     document.addEventListener("astro:before-swap",()=>{_roots.forEach(r=>{if(r.parentElement)r.parentElement.removeChild(r)});_roots.clear()});

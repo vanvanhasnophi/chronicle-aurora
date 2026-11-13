@@ -45,7 +45,8 @@
     "backToList": "Back to collections",
     "navTitlePattern": "Collection: {name}",
     "empty": "No collections yet",
-    "emptyCollection": "This collection has no posts yet"
+    "emptyCollection": "This collection has no posts yet",
+    "postsCount": "{count} posts"
   },
   "misc": {
     "backToTop": "Back to Top"

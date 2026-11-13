@@ -45,7 +45,8 @@
     "backToList": "返回合集列表",
     "navTitlePattern": "合集：{name}",
     "empty": "暂无合集",
-    "emptyCollection": "该合集暂无文章"
+    "emptyCollection": "该合集暂无文章",
+    "postsCount": "{count} 篇"
   },
   "misc": {
     "backToTop": "回到顶部"
