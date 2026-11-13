@@ -21,6 +21,7 @@
   --accent-bg: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-hvr: color-mix(in srgb, var(--accent) 80%, transparent);
   --recommended-accent-text: #fff;
+  --text-on-accent: #111;
   --featured: #ffd700;
   --featured-bg: color-mix(in srgb, var(--featured) 15%, transparent);
   --warning: #ff4d50;
@@ -140,6 +141,7 @@
   --code-bg: rgba(255, 0, 0, 0.12);
   --code-text: #c7254e;
   --recommended-accent-text: #fff;
+  --text-on-accent: #fff;
   --bg-base: #f9f9f9;
   --bg-offset: #aaa;
   --fg-base: #111111;

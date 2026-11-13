@@ -1,617 +1,782 @@
-/* ── 页面样式：[lang]/blogs.astro ──
-   自 src/pages/[lang]/blogs.astro <style> 迁出（与 critical 同值+附加细化，bundled 后加载赢平局，安全）。 */
-  .blog-container{
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 40px;
-    color: var(--app-text-pri);
-    box-sizing: border-box;
-    scroll-behavior: smooth;
+/* ── 页面样式：[lang]/blogs.astro ── */
+
+.blog-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px;
+  color: var(--app-text-pri);
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+.blog-container .section-block {
+  margin-bottom: 60px;
+}
+
+/* Deep-linked filter/sort state: hide until JS has applied the query, then fade. */
+.blog-container #all-posts {
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+html.blogs-query-loading .blog-container #all-posts {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+html.blogs-query-loading .blog-container #featured-section {
+  opacity: 0;
+}
+
+.blog-container .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 10px;
+}
+
+.blog-container .section-header.featured {
+  border-bottom: 2px solid var(--featured);
+}
+
+/* All Posts header is a plain toolbar row; the divider is transparent until
+   the list is filtered to Featured, then it becomes the featured color. */
+.blog-container #all-posts .section-header {
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.25s ease;
+}
+
+.blog-container #all-posts.is-featured-filter .section-header {
+  border-bottom-color: var(--featured);
+}
+
+.blog-container #all-posts.is-featured-filter .month-label {
+  color: var(--featured);
+}
+
+.blog-container .section-title {
+  font-size: 1.8em;
+  margin: 0;
+  color: var(--app-text-pri);
+  padding-bottom: 0;
+  border-bottom: none;
+  display: inline-block;
+  min-width: 0;
+}
+
+.blog-container .blog-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  color: var(--comp-text-sec);
+  font-size: 0.9em;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.blog-container .view-all {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  box-sizing: border-box;
+  line-height: 1;
+  color: var(--featured);
+  text-decoration: none;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 0.95em;
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+}
+
+.blog-container .view-all:hover {
+  background: var(--featured-bg);
+  color: var(--featured);
+}
+
+.blog-container .view-all:focus-visible {
+  outline: 2px solid var(--featured);
+  outline-offset: 2px;
+}
+
+/* ── Featured preview ── */
+
+.blog-container .featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.blog-container .featured-card .card-post-title {
+  font-size: 1.1em;
+  margin-bottom: 0;
+}
+
+.blog-container .featured-card .tag {
+  font-size: 0.7em;
+}
+
+/* ── Header meta: sort + count ── */
+
+.blog-container .section-meta {
+  --meta-gap: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--meta-gap);
+  min-height: 34px;
+  min-width: 0;
+}
+
+.blog-container .sort-group {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  box-sizing: border-box;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--comp-bg);
+}
+
+.blog-container .timeline-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  box-sizing: border-box;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  padding: 0 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95em;
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+}
+
+.blog-container .timeline-toggle[hidden] {
+  display: none;
+}
+
+.blog-container .timeline-toggle:hover {
+  background: var(--accent-bg);
+  color: var(--accent-dark);
+}
+
+.blog-container .timeline-toggle[aria-pressed="true"],
+.blog-container .timeline-toggle[aria-pressed="true"]:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.blog-container .timeline-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.blog-container #all-posts.is-featured-filter .timeline-toggle {
+  color: var(--featured);
+}
+
+.blog-container #all-posts.is-featured-filter .timeline-toggle:hover {
+  background: var(--featured-bg);
+  color: var(--featured);
+}
+
+.blog-container #all-posts.is-featured-filter .timeline-toggle[aria-pressed="true"],
+.blog-container #all-posts.is-featured-filter .timeline-toggle[aria-pressed="true"]:hover {
+  background: var(--featured);
+  color: var(--text-on-accent);
+}
+
+.blog-container #all-posts.is-featured-filter .timeline-toggle:focus-visible {
+  outline-color: var(--featured);
+}
+
+.blog-container .sort-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--comp-text-sec);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.blog-container .sort-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.blog-container .sort-btn:hover {
+  color: var(--comp-text-pri);
+  background: var(--comp-bg-hvr);
+}
+
+.blog-container .sort-btn:active {
+  transform: scale(0.94);
+}
+
+.blog-container .sort-btn.is-active svg {
+  transform: scale(1.08);
+}
+
+.blog-container .sort-btn.is-active {
+  color: var(--text-on-accent);
+  background: var(--accent);
+}
+
+.blog-container .sort-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Featured filter is the only state that switches the sort group to the
+   featured palette. */
+.blog-container #all-posts.is-featured-filter .sort-group {
+  border-color: var(--featured);
+}
+
+.blog-container #all-posts.is-featured-filter .sort-btn {
+  color: var(--featured);
+}
+
+.blog-container #all-posts.is-featured-filter .sort-btn:hover {
+  color: var(--featured);
+  background: var(--featured-bg);
+}
+
+.blog-container #all-posts.is-featured-filter .sort-btn.is-active {
+  color: var(--text-on-accent);
+  background: var(--featured);
+}
+
+.blog-container #all-posts.is-featured-filter .sort-btn:focus-visible {
+  outline-color: var(--featured);
+}
+
+/* Same hit area / radius / type scale as .view-all. The button lives in the
+   row permanently and animates its own width/margin, so the sort group and
+   count slide left instead of snapping. */
+.blog-container .back-filter {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  box-sizing: border-box;
+  line-height: 1;
+  max-width: 0;
+  margin-left: calc(-1 * var(--meta-gap));
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--featured);
+  border-radius: 6px;
+  font-size: 0.95em;
+  white-space: nowrap;
+  transition:
+    max-width 0.16s ease,
+    margin-left 0.16s ease,
+    padding 0.16s ease,
+    opacity 0.12s ease,
+    background 0.14s,
+    color 0.14s;
+}
+
+.blog-container .back-filter.is-visible {
+  max-width: 80px;
+  margin-left: 0;
+  padding: 0 9px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.blog-container .back-filter:hover {
+  background: var(--featured-bg);
+  color: var(--featured);
+}
+
+.blog-container .back-filter:focus-visible {
+  outline: 2px solid var(--featured);
+  outline-offset: 2px;
+}
+
+/* ── Archive ── */
+
+.blog-container .archive-list {
+  margin-top: 20px;
+}
+
+.blog-container .archive-list.is-updating {
+  animation: blogs-list-in 0.3s ease;
+}
+
+.blog-container .flat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.blog-container .year-block {
+  margin-bottom: 40px;
+}
+
+.blog-container h3.year-header {
+  font-size: 3em;
+  font-weight: 800 !important;
+  font-variation-settings: 'wght' 800;
+  color: var(--comp-text-sec);
+  opacity: 0.3;
+  margin-top: 2px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.blog-container h3.year-header:hover {
+  opacity: 0.55;
+}
+
+.blog-container .year-toggle {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  font-variation-settings: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.blog-container .year-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* In timeline mode the year label is a static heading, not a control. */
+.blog-container .archive-list.is-timeline .year-header:hover {
+  opacity: 0.3;
+}
+
+.blog-container .archive-list.is-timeline .year-toggle {
+  pointer-events: none;
+  cursor: default;
+}
+
+.blog-container .month-row {
+  display: flex;
+  margin-bottom: 20px;
+  scroll-margin-top: 96px;
+}
+
+.blog-container .month-label {
+  width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+  padding: 14px 20px 0 0;
+  font-weight: 500;
+  font-variation-settings: 'wght' 500;
+  color: var(--accent);
+  font-size: 1.1em;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.blog-container .month-name {
+  line-height: 1.1;
+}
+
+.blog-container .month-count {
+  font-size: 0.62em;
+  font-weight: 500;
+  font-variation-settings: 'wght' 500;
+  color: var(--comp-text-sec);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.blog-container .month-label:hover .month-name {
+  color: var(--accent-dark);
+}
+
+.blog-container .month-label:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.blog-container .month-label[aria-expanded="false"] .month-name {
+  color: var(--comp-text-sec);
+}
+
+.blog-container #all-posts.is-featured-filter .month-label .month-name {
+  color: var(--featured);
+}
+
+/* Timeline-only state: months collapse to labelled nodes with a rail. */
+/* Timeline-only state: months collapse into full-width labelled rows. */
+.blog-container .archive-list.is-timeline .month-row {
+  margin-bottom: 6px;
+}
+
+.blog-container .archive-list.is-timeline .month-label {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.blog-container .archive-list.is-timeline .month-label:hover {
+  background: var(--comp-bg-hvr);
+}
+
+.blog-container .archive-list.is-timeline .month-count {
+  font-size: 0.8em;
+}
+
+.blog-container .month-posts {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.blog-container .month-posts[hidden] {
+  display: none;
+}
+
+.blog-container .post-card-item {
+  display: block;
+  min-width: 0;
+}
+
+.blog-container .post-card {
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.blog-container .compact-card {
+  padding: 14px 16px;
+  margin-bottom: 0;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+/* Compact card: time on the left, title/tags on the right. */
+.blog-container .compact-card-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.blog-container .compact-card-time {
+  flex: 0 0 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  color: var(--comp-text-sec);
+  padding-top: 1px;
+}
+
+.blog-container .compact-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.blog-container .compact-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.blog-container .compact-card-title-row .card-post-title {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.blog-container .featured-card-layout {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.blog-container .featured-card-date {
+  color: var(--comp-text-sec);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.blog-container .card-post-title {
+  font-size: 1.1em;
+  margin: 0;
+  font-weight: 600;
+  font-variation-settings: 'wght' 600;
+  color: var(--comp-text-pri);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.blog-container .post-card-time {
+  font-size: 0.85em;
+  color: var(--comp-text-sec);
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-width: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.blog-container .post-card-full-date {
+  display: none;
+  color: var(--comp-text-sec);
+  font-size: 0.85em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Title sort drops the year/month archive context: the time column moves to
+   the far right and shows the full date instead of a bare day number. */
+.blog-container .flat-list .compact-card-layout {
+  flex-direction: row-reverse;
+}
+
+.blog-container .flat-list .compact-card-time {
+  flex-basis: 96px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.blog-container .flat-list .post-card-full-date {
+  display: inline;
+}
+
+.blog-container .flat-list .post-card-time {
+  display: none;
+}
+
+.blog-container .compact-card .post-featured-star {
+  display: none;
+  color: var(--featured);
+  font-size: 0.95em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.blog-container .compact-card .post-tags {
+  margin-top: 6px;
+  margin-left: 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.blog-container .post-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.blog-container .tag {
+  background: var(--accent-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  color: var(--accent);
+  display: inline-block;
+  line-height: 1;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.blog-container .tag.featured {
+  font-weight: 500;
+  font-variation-settings: 'wght' 500;
+  background: var(--featured-bg);
+  color: var(--featured);
+}
+
+.blog-container .empty {
+  text-align: center;
+  padding: 60px;
+  color: var(--comp-text-sec);
+}
+
+/* ── Mobile ── */
+
+@media (max-width: 768px) {
+  .blog-container {
+    padding: 24px 20px;
   }
 
-  .blog-container .section-block{
-    margin-bottom: 60px;
-  }
-
-  .blog-container .section-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    border-bottom: 2px solid var(--accent);
-    padding-bottom: 10px;
-  }
-
-  .blog-container .section-header.featured{
-    border-bottom: 2px solid var(--featured);
-  }
-
-  .blog-container .section-title{
-    font-size: 1.8em;
-    margin: 0;
-    color: var(--app-text-pri);
-    padding-bottom: 0px;
-    border-bottom: none;
-    display: inline-block;
-  }
-
-  .blog-container .toggle-btn{
-    background: transparent;
-    border: none;
-    color: var(--comp-text-sec);
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: all 0.3s;
-  }
-
-  .blog-container .toggle-btn:hover{
-    color: var(--comp-text-pri-hvr);
-    border: none;
-  }
-
-  .blog-container .featured-grid{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  /* Featured collapse: show the first 3, reveal the rest when expanded */
-  .blog-container #featured-grid > :nth-child(n+4){ display: none; }
-  .blog-container #featured-grid.expanded > :nth-child(n+4){ display: block; }
-
-  .blog-container .featured-card .card-post-title{
-    font-size: 1.1em;
-    margin-bottom: 0;
-  }
-
-  .blog-container .featured-card .tag{
-    font-size: 0.7em;
-  }
-
-  .blog-container .archive-list{
-    margin-top: 20px;
-  }
-
-  .blog-container .year-block{
-    margin-bottom: 40px;
-  }
-
-  .blog-container h3.year-header{
-    font-size: 3em;
-    font-weight: 800 !important;
-    font-variation-settings: 'wght' 800;
-    color: var(--comp-text-sec);
-    opacity: 0.3;
-    margin-top: 2px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    line-height: 1;
-  }
-
-  .blog-container .month-row{
-    display: flex;
-    margin-bottom: 20px;
-  }
-
-  .blog-container .month-label{
-    width: 60px;
-    flex-shrink: 0;
-    text-align: right;
-    padding-right: 20px;
-    padding-top: 14px;
-    font-weight: medium;
-    font-variation-settings: 'wght' 500;
-    color: var(--accent);
-    font-size: 1.1em;
-  }
-
-  .blog-container .month-posts{
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .blog-container .post-card{
-    padding: 16px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  }
-
-
-  .blog-container .compact-card{
-    padding: 14px 16px;
-    margin-bottom: 0;
-    border-radius: 12px;
-    transition: all 0.2s;
-  }
-
-  .blog-container .post-card-line{
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .blog-container .featured-card-layout{
-    display: grid;
-    gap: 10px;
-    min-width: 0;
-  }
-
-  .blog-container .featured-card-date{
-    color: var(--comp-text-sec);
-    font-size: 0.85em;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .blog-container .card-post-title{
-    font-size: 1.1em;
-    margin: 0;
-    font-weight: 600;
-    font-variation-settings: 'wght' 600;
-    color: var(--comp-text-pri);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1 1 0;
-    width: auto;
-    min-width: 0;
-    line-height: 1.4;
-  }
-
-  .blog-container .post-card-time{
-    font-size: 0.85em;
-    color: var(--comp-text-sec);
-    flex-shrink: 0;
-    white-space: nowrap;
-    min-width: 24px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .blog-container .compact-card .post-featured-star{
-    display: none;
-    color: var(--featured);
-    font-size: 0.95em;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .blog-container .compact-card .post-tags{
-    margin-top: 6px;
-    margin-left: 30px;
-    display: flex;
-    gap: 8px;
+  .blog-container .section-header {
+    align-items: flex-end;
     flex-wrap: wrap;
   }
 
-  .blog-container .post-tags{
-    display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
-    overflow-x: hidden;
-  }
-
-  .blog-container .tag{
-    background: var(--accent-bg);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75em;
-    color: var(--accent);
-    display: inline-block;
-    line-height: 1;
-    overflow-wrap: break-word;
-    word-break: break-word;
-  }
-
-  .blog-container .tag.featured{
-    font-weight: 500;
-    font-variation-settings: 'wght' 500;
-    background: var(--featured-bg);
-    color: var(--featured);
-  }
-
-  .blog-container .empty{
-    text-align: center;
-    padding: 60px;
-    color: var(--comp-text-sec);
-  }
-
-  @media (max-width: 768px) {
-    .blog-container .month-label{
-      width: 38px;
-      padding-right: 12px;
-      padding-top: 10px;
-    }
-
-    .blog-container .card-post-title{
-      width: 0;
-    }
-
-    .blog-container .featured-grid{
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    .blog-container h3.year-header{
-      font-size: 2.2em;
-    }
-
-    .blog-container .post-card{
-      padding: 12px 14px;
-    }
-
-    .blog-container .featured-card{
-      border-radius: 12px;
-      transition: all 0.3s ease;
-    }
-
-    .featured-card .card-post-title,
-    .blog-container .compact-card .card-post-title{
-      font-size: 0.98rem;
-      font-weight: 500;
-      font-variation-settings: 'wght' 500;
-    }
-
-    .blog-container .featured-card-layout{
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .blog-container .featured-card-date{
-      order: 2;
-      font-size: 0.75rem;
-    }
-
-    .featured-card .card-post-title,
-    .blog-container .compact-card .card-post-title{
-      order: 1;
-      white-space: nowrap;
-    }
-
-    .blog-container .featured-card .post-tags{
-      display: none;
-    }
-
-    .blog-container .post-card-line{
-      gap: 10px;
-    }
-
-    .blog-container .post-card-line .post-card-time{
-      order: 1;
-      margin-right: 0;
-    }
-
-    .blog-container .compact-card .post-featured-star{
-      order: 2;
-      display: inline-flex;
-    }
-
-    .blog-container .post-card-line .card-post-title{
-      order: 3;
-      flex: 1 1 0;
-      min-width: 0;
-    }
-
-    .blog-container .post-card-time{
-      font-size: 0.76rem;
-      min-width: 16px;
-      color: var(--comp-text-sec);
-    }
-
-    /* 0-2-0: must beat .compact-card .post-tags (0-2-0, earlier) — plain .post-tags would lose */
-    .blog-container .post-card .post-tags{
-      display: none;
-    }
-  }
-  .blog-container .section-block{
-    margin-bottom: 60px;
-  }
-
-  .blog-container .section-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    border-bottom: 2px solid var(--accent);
-    padding-bottom: 10px;
-  }
-
-  .blog-container .section-header.featured{
-    border-bottom: 2px solid var(--featured);
-  }
-
-  .blog-container .section-title{
-    font-size: 1.8em;
-    margin: 0;
-    color: var(--app-text-pri);
-    padding-bottom: 0px;
-    border-bottom: none;
-    display: inline-block;
-  }
-
-  .blog-container .toggle-btn{
-    background: transparent;
-    border: none;
-    color: var(--comp-text-sec);
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: all 0.3s;
-  }
-
-  .blog-container .toggle-btn:hover{
-    color: var(--comp-text-pri-hvr);
-    border: none;
-  }
-
-  .blog-container .featured-grid{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  /* Featured collapse: show the first 3, reveal the rest when expanded */
-  .blog-container #featured-grid > :nth-child(n+4){ display: none; }
-  .blog-container #featured-grid.expanded > :nth-child(n+4){ display: block; }
-
-  .blog-container .featured-card .card-post-title{
-    font-size: 1.1em;
-    margin-bottom: 0;
-  }
-
-  .blog-container .featured-card .tag{
-    font-size: 0.7em;
-  }
-
-  .blog-container .archive-list{
-    margin-top: 20px;
-  }
-
-  .blog-container .year-block{
-    margin-bottom: 40px;
-  }
-
-  .blog-container h3.year-header{
-    font-size: 3em;
-    font-weight: 800 !important;
-    font-variation-settings: 'wght' 800;
-    color: var(--comp-text-sec);
-    opacity: 0.3;
-    margin-top: 2px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    line-height: 1;
-  }
-
-  .blog-container .month-row{
-    display: flex;
-    margin-bottom: 20px;
-  }
-
-  .blog-container .month-label{
-    width: 60px;
-    flex-shrink: 0;
-    text-align: right;
-    padding-right: 20px;
-    padding-top: 14px;
-    font-weight: medium;
-    font-variation-settings: 'wght' 500;
-    color: var(--accent);
-    font-size: 1.1em;
-  }
-
-  .blog-container .month-posts{
-    flex-grow: 1;
-    display: flex;
+  #all-posts .section-header {
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-start;
   }
 
-  .blog-container .post-card{
-    padding: 16px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  }
-
-
-  .blog-container .compact-card{
-    padding: 14px 16px;
-    margin-bottom: 0;
-    border-radius: 12px;
-    transition: all 0.2s;
-  }
-
-  .blog-container .post-card-line{
-    display: flex;
+  #all-posts .section-meta {
+    width: 100%;
     justify-content: flex-start;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
   }
 
-  .blog-container .featured-card-layout{
-    display: grid;
+  .blog-container .section-meta {
+    --meta-gap: 14px;
+    gap: var(--meta-gap);
+  }
+
+  .blog-container .back-filter {
+    align-self: flex-start;
+  }
+
+  .blog-container .month-label {
+    width: 50px;
+    padding: 10px 10px 0 0;
+  }
+
+  .blog-container .featured-grid {
+    grid-template-columns: 1fr;
     gap: 10px;
-    min-width: 0;
   }
 
-  .blog-container .featured-card-date{
-    color: var(--comp-text-sec);
-    font-size: 0.85em;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+  .blog-container h3.year-header {
+    font-size: 2.2em;
   }
 
-  .blog-container .card-post-title{
-    font-size: 1.1em;
-    margin: 0;
-    font-weight: 600;
-    font-variation-settings: 'wght' 600;
-    color: var(--comp-text-pri);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1 1 0;
-    width: auto;
-    min-width: 0;
-    line-height: 1.4;
+  .blog-container .post-card {
+    padding: 12px 14px;
   }
 
-  .blog-container .post-card-time{
-    font-size: 0.85em;
-    color: var(--comp-text-sec);
-    flex-shrink: 0;
-    white-space: nowrap;
-    min-width: 24px;
-    font-variant-numeric: tabular-nums;
+  .blog-container .featured-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
   }
 
-  .blog-container .compact-card .post-featured-star{
-    display: none;
-    color: var(--featured);
-    font-size: 0.95em;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .blog-container .compact-card .post-tags{
-    margin-top: 6px;
-    margin-left: 30px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .blog-container .post-tags{
-    display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
-    overflow-x: hidden;
-  }
-
-  .blog-container .tag{
-    background: var(--accent-bg);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75em;
-    color: var(--accent);
-    display: inline-block;
-    line-height: 1;
-    overflow-wrap: break-word;
-    word-break: break-word;
-  }
-
-  .blog-container .tag.featured{
+  .featured-card .card-post-title,
+  .blog-container .compact-card .card-post-title {
+    font-size: 0.98rem;
     font-weight: 500;
     font-variation-settings: 'wght' 500;
-    background: var(--featured-bg);
-    color: var(--featured);
+    white-space: nowrap;
   }
 
-  .blog-container .empty{
-    text-align: center;
-    padding: 60px;
+  /* Featured: date stays on top, title below (no side-by-side row). */
+  .blog-container .featured-card-layout {
+    display: grid;
+    gap: 6px;
+  }
+
+  .blog-container .featured-card-date {
+    font-size: 0.75rem;
+  }
+
+  .blog-container .featured-card .post-tags {
+    display: none;
+  }
+
+  .blog-container .compact-card-layout {
+    gap: 10px;
+  }
+
+  .blog-container .compact-card-time {
+    flex-basis: 22px;
+  }
+
+  .blog-container .compact-card .post-featured-star {
+    display: inline-flex;
+  }
+
+  .blog-container .post-card-time {
+    font-size: 0.76rem;
+    min-width: 16px;
     color: var(--comp-text-sec);
   }
 
-  @media (max-width: 768px) {
-    .blog-container .month-label{
-      width: 38px;
-      padding-right: 12px;
-      padding-top: 10px;
-    }
-
-    .blog-container .card-post-title{
-      width: 0;
-    }
-
-    .blog-container .featured-grid{
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    .blog-container h3.year-header{
-      font-size: 2.2em;
-    }
-
-    .blog-container .post-card{
-      padding: 12px 14px;
-    }
-
-    .blog-container .featured-card{
-      border-radius: 12px;
-      transition: all 0.3s ease;
-    }
-
-    .featured-card .card-post-title,
-    .blog-container .compact-card .card-post-title{
-      font-size: 0.98rem;
-      font-weight: 500;
-      font-variation-settings: 'wght' 500;
-    }
-
-    .blog-container .featured-card-layout{
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .blog-container .featured-card-date{
-      order: 2;
-      font-size: 0.75rem;
-    }
-
-    .featured-card .card-post-title,
-    .blog-container .compact-card .card-post-title{
-      order: 1;
-      white-space: nowrap;
-    }
-
-    .blog-container .featured-card .post-tags{
-      display: none;
-    }
-
-    .blog-container .post-card-line{
-      gap: 10px;
-    }
-
-    .blog-container .post-card-line .post-card-time{
-      order: 1;
-      margin-right: 0;
-    }
-
-    .blog-container .compact-card .post-featured-star{
-      order: 2;
-      display: inline-flex;
-    }
-
-    .blog-container .post-card-line .card-post-title{
-      order: 3;
-      flex: 1 1 0;
-      min-width: 0;
-    }
-
-    .blog-container .post-card-time{
-      font-size: 0.76rem;
-      min-width: 16px;
-      color: var(--comp-text-sec);
-    }
-
-    /* 0-2-0: must beat .compact-card .post-tags (0-2-0, earlier) — plain .post-tags would lose */
-    .blog-container .post-card .post-tags{
-      display: none;
-    }
+  .blog-container .post-card .post-tags {
+    display: none;
   }
+}
+
+@keyframes blogs-list-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-container .archive-list.is-updating {
+    animation: none;
+  }
+
+  .blog-container .sort-btn,
+  .blog-container .view-all,
+  .blog-container .back-filter,
+  .blog-container .timeline-toggle,
+  .blog-container #all-posts,
+  .blog-container #all-posts .section-header {
+    transition: none;
+  }
+
+  .blog-container .sort-btn:hover,
+  .blog-container .sort-btn:active,
+  .blog-container .view-all:hover,
+  .blog-container .back-filter:hover,
+  .blog-container .sort-btn.is-active svg {
+    transform: none;
+  }
+}

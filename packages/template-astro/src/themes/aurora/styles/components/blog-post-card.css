@@ -2,3 +2,5 @@
    自 src/components/BlogPostCard.astro <style> 迁出。 */
   .type-badge { transform:translateY(3px); justify-content: center; opacity:.5; display: inline-flex; margin: 0 8px 0 0; flex-shrink: 0; }
   .type-badge svg { width: 18px; height: 18px; }
+  /* 归档卡片默认只显示“日”；blogs 的标题排序视图会显示完整日期。 */
+  .post-card-full-date { display: none; }
