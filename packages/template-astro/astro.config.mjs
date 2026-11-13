@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
-import { readFileSync, existsSync, readdirSync, copyFileSync, mkdirSync, statSync, writeFileSync, rmSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, copyFileSync, mkdirSync, statSync, writeFileSync, rmSync, createReadStream } from 'fs';
 import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
 import { dirname, join, extname, parse, relative } from 'path';
@@ -381,6 +381,38 @@ export default defineConfig({
       exclude: ['astro-icon'],
     },
     plugins: [
+
+      // ── Dev-only data assets ──
+      // Production copies data/assets → dist/assets in astro:build:done, but the
+      // dev server has no such copy. Serve /assets/* from data/assets so covers,
+      // avatars and post images resolve identically in `astro dev`.
+      (function chronicleDevDataAssets() {
+        return {
+          name: 'chronicle-dev-data-assets',
+          apply: 'serve',
+          configureServer(server) {
+            const assetRoot = join(DATA_DIR, 'assets');
+            server.middlewares.use('/assets', (req, res, next) => {
+              try {
+                const pathname = decodeURIComponent((req.url || '').split('?')[0]);
+                const filePath = join(assetRoot, pathname);
+                if (!filePath.startsWith(assetRoot + (process.platform === 'win32' ? '\\' : '/'))) return next();
+                if (!existsSync(filePath) || !statSync(filePath).isFile()) return next();
+                const types = {
+                  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+                  '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif',
+                  '.svg': 'image/svg+xml',
+                };
+                res.setHeader('Content-Type', types[extname(filePath).toLowerCase()] || 'application/octet-stream');
+                res.setHeader('Cache-Control', 'no-cache');
+                createReadStream(filePath).pipe(res);
+              } catch {
+                next();
+              }
+            });
+          },
+        };
+      })(),
 
       // ── Build cache 根治：每次构建强制全量新鲜输出 ──
       // Astro 增量输出会复用旧 dist 产物（改 critical/manifest 后 HTML 不重写 → 产物过期，
