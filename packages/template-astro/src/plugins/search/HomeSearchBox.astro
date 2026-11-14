@@ -34,6 +34,16 @@ const searchPath = buildLocalizedPath(locale, '/search');
     root.addEventListener('searchbox:submit', (event) => {
       const detail = (event && event.detail) || {};
       const keyword = String(detail.query || '').trim();
+      // When the global search overlay is enabled, reuse it instead of
+      // navigating to the standalone search page.
+      const overlay = document.querySelector('[data-global-search-overlay]');
+      if (overlay) {
+        document.dispatchEvent(new CustomEvent('chronicle:open-search', {
+          detail: { keyword },
+        }));
+        return;
+      }
+
       const target = keyword
         ? `${searchPath}?keyword=${encodeURIComponent(keyword)}`
         : `${searchPath}`;

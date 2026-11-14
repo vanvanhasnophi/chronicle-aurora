@@ -60,12 +60,26 @@ const {
     }
   }
 
-  function open() {
-    // Guard: never open the overlay on the dedicated search page.
-    if (window.location.pathname.includes('/search')) return;
+  function setInitialState(detail: Record<string, unknown> = {}) {
     const overlay = getOverlay();
     if (!overlay) return;
-    if (_overlayOpen) return; // already open / opening
+    const keyword = typeof detail.keyword === 'string' ? detail.keyword : '';
+    const tags = typeof detail.tags === 'string' ? detail.tags : '';
+    const view = typeof detail.view === 'string' ? detail.view : '';
+    if (keyword) overlay.dataset.searchKeyword = keyword; else delete overlay.dataset.searchKeyword;
+    if (tags) overlay.dataset.searchTags = tags; else delete overlay.dataset.searchTags;
+    if (view) overlay.dataset.searchView = view; else delete overlay.dataset.searchView;
+  }
+
+  function open(detail: Record<string, unknown> = {}) {
+    const overlay = getOverlay();
+    if (!overlay) return;
+    setInitialState(detail);
+    if (_overlayOpen) {
+      // Already open: apply the new query/tags in place.
+      document.dispatchEvent(new CustomEvent('chronicle:search-apply', { detail }));
+      return;
+    }
     _overlayOpen = true;
     if (_closeTimer) { clearTimeout(_closeTimer); _closeTimer = null; }
     overlay.hidden = false;
@@ -75,6 +89,9 @@ const {
     overlay.classList.add('is-open');
     focusSearchInput(overlay);
     document.dispatchEvent(new CustomEvent('chronicle:global-search-open'));
+    // The engine may initialize after this event; it also reads the dataset
+    // attributes when its prime() completes.
+    document.dispatchEvent(new CustomEvent('chronicle:search-apply', { detail }));
   }
 
   function close() {
@@ -117,6 +134,26 @@ const {
     }
   });
 
+  document.addEventListener('chronicle:open-search', (event) => {
+    open((event as CustomEvent).detail || {});
+  });
+
+  function searchRouteParams(anchor: HTMLAnchorElement): Record<string, string> | null {
+    try {
+      const url = new URL(anchor.href, location.origin);
+      if (url.origin !== location.origin) return null;
+      const path = url.pathname.replace(/\/+$/, '');
+      if (path !== '/search' && path !== '/zh/search' && path !== '/en/search') return null;
+      return {
+        keyword: url.searchParams.get('keyword') || '',
+        tags: url.searchParams.get('tags') || '',
+        view: url.searchParams.get('view') || '',
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // Capture phase — runs before Astro's ClientRouter click handler, so the
   // anchor default / soft navigation is suppressed and the overlay opens instead.
   document.addEventListener('click', (e) => {
@@ -125,8 +162,34 @@ const {
     if (trigger) {
       e.preventDefault();
       e.stopPropagation();
-      open();
+      open({
+        keyword: trigger.getAttribute('data-search-keyword') || '',
+        tags: trigger.getAttribute('data-search-tags') || '',
+        view: trigger.getAttribute('data-search-view') || '',
+      });
       return;
+    }
+    // Blog card tags are spans inside the card's post link; open tag search
+    // without navigating to the post.
+    const cardTag = target && target.closest ? target.closest('.post-tags .tag') as HTMLElement | null : null;
+    if (cardTag) {
+      e.preventDefault();
+      e.stopPropagation();
+      let tagName = cardTag.textContent || '';
+      tagName = tagName.replace(/^#\s*/, '').trim();
+      if (tagName === '精选' || tagName === 'Featured') tagName = 'featured';
+      if (tagName) open({ tags: tagName });
+      return;
+    }
+    const anchor = target && target.closest ? target.closest('a[href]') as HTMLAnchorElement | null : null;
+    if (anchor && !e.defaultPrevented && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+      const params = searchRouteParams(anchor);
+      if (params) {
+        e.preventDefault();
+        e.stopPropagation();
+        open(params);
+        return;
+      }
     }
     const backdrop = target && target.closest ? target.closest('[data-global-search-backdrop]') : null;
     if (backdrop) {
@@ -142,6 +205,20 @@ const {
       if (!interactive) close();
     }
   }, true);
+
+  // Consume query handed off by the /search route's head redirect.
+  try {
+    const raw = sessionStorage.getItem('chronicle:search-pending');
+    if (raw) {
+      sessionStorage.removeItem('chronicle:search-pending');
+      const detail = JSON.parse(raw) as Record<string, string>;
+      open({
+        keyword: detail.keyword || '',
+        tags: detail.tags || '',
+        view: detail.view || '',
+      });
+    }
+  } catch { /* ignore pending state */ }
 
   // Overlay is transient — close it on soft navigation (no persist).
   document.addEventListener('astro:after-swap', () => {

@@ -19,6 +19,8 @@ const settings = await loadSiteSettings();
 const featureFlags = resolveFeatureFlags(settings?.featureFlags);
 const searchSuggestionsEnabled = featureFlags.searchSuggestions !== false;
 const fullTextSearchEnabled = featureFlags.fullTextSearch === true;
+const globalSearchEnabled = featureFlags.globalSearch === true;
+const homePath = locale === "zh-CN" ? "/zh/" : "/en/";
 
 const metaDescription = locale === "zh-CN"
   ? "在 Chronicle 中按标题或标签搜索文章与内容。"
@@ -26,16 +28,40 @@ const metaDescription = locale === "zh-CN"
 ---
 
 <Layout title={t("nav.search")} settings={settings} scrollable={false} meta={{ description: metaDescription }}>
-  <Fragment slot="head"><style is:inline set:html={searchCritical} /></Fragment>
-  <SearchExperience
-    mode="page"
-    locale={locale}
-    routePrefix={routePrefix}
-    t={t}
-    searchSuggestionsEnabled={searchSuggestionsEnabled}
-    fullTextSearchEnabled={fullTextSearchEnabled}
-    indexUrl="/posts/index.json"
-    fullIndexUrl="/posts/full_index.json"
-    featuredLabel={t("tag.featured")}
-  />
+  <Fragment slot="head">
+    <style is:inline set:html={searchCritical} />
+    {globalSearchEnabled && <meta http-equiv="refresh" content={`0;url=${homePath}`} />}
+    {globalSearchEnabled && (
+      <script is:inline define:vars={{ homePath }}>
+        (function () {
+          const params = new URLSearchParams(location.search);
+          const detail = {
+            keyword: params.get('keyword') || '',
+            tags: params.get('tags') || '',
+            view: params.get('view') || '',
+          };
+          try {
+            // Even an empty query opens the overlay once on the home page.
+            sessionStorage.setItem('chronicle:search-pending', JSON.stringify(detail));
+          } catch {}
+          location.replace(homePath);
+        })();
+      </script>
+    )}
+  </Fragment>
+  {globalSearchEnabled ? (
+    <div class="search-page-overlay-host" aria-hidden="true"></div>
+  ) : (
+    <SearchExperience
+      mode="page"
+      locale={locale}
+      routePrefix={routePrefix}
+      t={t}
+      searchSuggestionsEnabled={searchSuggestionsEnabled}
+      fullTextSearchEnabled={fullTextSearchEnabled}
+      indexUrl="/posts/index.json"
+      fullIndexUrl="/posts/full_index.json"
+      featuredLabel={t("tag.featured")}
+    />
+  )}
 </Layout>
