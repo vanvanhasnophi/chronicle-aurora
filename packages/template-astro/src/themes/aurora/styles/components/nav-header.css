@@ -427,17 +427,17 @@
     background: #fff;
     transition: transform .2s;
   }
-  .nav-header [data-perf="full"] .popup-switch{
+  #perf-toggle[data-perf="full"] .popup-switch{
     background: var(--accent);
   }
-  .nav-header [data-perf="full"] .popup-switch-knob{
+  #perf-toggle[data-perf="full"] .popup-switch-knob{
     transform: translateX(16px);
   }
 
-  .nav-header [data-perf="reduced"] .popup-switch{
+  #perf-toggle[data-perf="reduced"] .popup-switch{
     background: var(--border-color);
   }
-  .nav-header [data-perf="reduced"] .popup-switch-knob{
+  #perf-toggle[data-perf="reduced"] .popup-switch-knob{
     transform: none;
   }
 
