@@ -73,7 +73,8 @@
     transition: opacity 0.28s ease;
   }
 
-  .nav-header.nav-collapsed:not(.at-top) .site-header{
+  .nav-header.nav-collapsed:not(.at-top) .site-header,
+  html.focus .nav-header.nav-collapsed .site-header{
     opacity: 0;
     pointer-events: none;
   }
@@ -138,7 +139,8 @@
     pointer-events: auto;
   }
 
-  html:not(.is-mobile) .nav-header.nav-collapsed:not(.at-top) .nav-links{
+  html:not(.is-mobile) .nav-header.nav-collapsed:not(.at-top) .nav-links,
+  html.focus:not(.is-mobile) .nav-header.nav-collapsed .nav-links{
     gap: 0.75rem;
   }
 
@@ -229,25 +231,29 @@
     flex: 0 0 auto;
   }
 
-  .nav-header.nav-collapsed:not(.at-top) .nav-link-full{
+  .nav-header.nav-collapsed:not(.at-top) .nav-link-full,
+  html.focus .nav-header.nav-collapsed .nav-link-full{
     max-width: 0;
     opacity: 0;
     transform: translateX(-4px);
   }
 
-  .nav-header.nav-collapsed:not(.at-top) .nav-link-collapsed{
+  .nav-header.nav-collapsed:not(.at-top) .nav-link-collapsed,
+  html.focus .nav-header.nav-collapsed .nav-link-collapsed{
     max-width: 18px;
     opacity: 1;
     transform: translateX(0);
   }
 
-  .nav-header.nav-collapsed:not(.at-top) .nav-link.router-link-active .nav-link-full{
+  .nav-header.nav-collapsed:not(.at-top) .nav-link.router-link-active .nav-link-full,
+  html.focus .nav-header.nav-collapsed .nav-link.router-link-active .nav-link-full{
     max-width: 12rem;
     opacity: 1;
     transform: translateX(0);
   }
 
-  .nav-header.nav-collapsed:not(.at-top) .nav-link.router-link-active .nav-link-collapsed{
+  .nav-header.nav-collapsed:not(.at-top) .nav-link.router-link-active .nav-link-collapsed,
+  html.focus .nav-header.nav-collapsed .nav-link.router-link-active .nav-link-collapsed{
     max-width: 0;
     opacity: 0;
     transform: translateX(4px);
@@ -590,7 +596,8 @@
   }
 
   @media (min-width: 769px) {
-    .nav-header.nav-collapsed:not(.at-top) .nav-link:not(.router-link-active){
+    .nav-header.nav-collapsed:not(.at-top) .nav-link:not(.router-link-active),
+    html.focus .nav-header.nav-collapsed .nav-link:not(.router-link-active){
       padding-left: 0.7rem;
       padding-right: 0.7rem;
     }

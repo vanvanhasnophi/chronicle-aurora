@@ -27,8 +27,7 @@ import { extractBodySummary } from '../../../shared/src/utils/summary.ts'
  * @property {string[]} [authors]
  * @property {boolean} [aiGenerated]
  * @property {'article'|'slides'} [type]
- * @property {string} [collection]
- * @property {string} [collectionPath]
+ * @property {Record<string, unknown>} [extensions]
  */
 
 /**
@@ -71,12 +70,26 @@ function parseFrontmatter(raw) {
 
 /**
  * Build collection→post reverse index from collections.yml.
- * Each post maps to the LAST collection that contains it.
+ * Each post maps to the FIRST collection that contains it (collections.yml order).
+ * Keep this in sync with template-astro localFs.resolveCollectionAssignments.
  * @param {string} dataDir
  * @returns {Map<string, { collection: string; collectionPath: string }>}
  */
+function collectionsEnabled(dataDir) {
+  const siteFile = path.join(dataDir, 'site.yml')
+  if (!fs.existsSync(siteFile)) return true
+  try {
+    const site = YAML.parse(fs.readFileSync(siteFile, 'utf-8')) || {}
+    const cfg = site.collections || {}
+    return cfg.enabled !== false && cfg.collectionPage !== false
+  } catch {
+    return true
+  }
+}
+
 function buildCollectionIndex(dataDir) {
   const map = new Map()
+  if (!collectionsEnabled(dataDir)) return map
   const file = path.join(dataDir, 'collections.yml')
   if (!fs.existsSync(file)) return map
 
@@ -96,7 +109,10 @@ function buildCollectionIndex(dataDir) {
           const collectionPath = parents.length > 0
             ? `${colName} / ${parents.join(' / ')}`
             : colName
-          map.set(String(node.id), { collection: colName, collectionPath })
+          const id = String(node.id)
+          if (!map.has(id)) {
+            map.set(id, { collection: colName, collectionPath })
+          }
         }
         if (node?.type === 'group' && Array.isArray(node.children)) {
           walk(node.children, colName, [...parents, node.title || 'Untitled'])
@@ -157,8 +173,13 @@ export function buildPostIndex(dataDir) {
       type: fm.marp ? 'slides' : (fm.type || 'article'),
     }
     if (collectionInfo) {
-      out.collection = collectionInfo.collection
-      out.collectionPath = collectionInfo.collectionPath
+      out.extensions = {
+        ...(out.extensions || {}),
+        collections: {
+          name: collectionInfo.collection,
+          path: collectionInfo.collectionPath,
+        },
+      }
     }
     index[slug] = out
   }

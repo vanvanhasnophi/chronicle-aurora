@@ -1,13 +1,28 @@
 ---
-// Redirect /friends → /{lang}/friends
+// Generic root redirect for plugin pages: /<module> → /<locale>/<module>.
+// Core does not know any concrete plugin route; the dynamic page enumerates them.
+import { getAllPluginPages } from '../plugins';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return getAllPluginPages().map((page: any) => ({ params: { module: page.route } }));
+}
+
+const { module } = Astro.params;
 ---
+
 <html lang="en">
-  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><title>Redirecting…</title>
-    <noscript><meta http-equiv="refresh" content="0; url=/zh/friends" /></noscript></head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Redirecting…</title>
+    <noscript><meta http-equiv="refresh" content={`0; url=/zh/${module}`} /></noscript>
+  </head>
   <body>
-    <script>
+    <script define:vars={{ module }}>
       (function () {
-        var path = window.location.pathname.replace(/\/+$/,'').replace(/^\//,'');
+        var path = String(module || window.location.pathname.replace(/\/+$/, '').replace(/^\//, ''));
         var zh = false;
         try {
           var pref = localStorage.getItem('locale') || '';

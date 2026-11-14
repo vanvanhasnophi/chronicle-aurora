@@ -46,7 +46,7 @@ import PostPickerField from './fields/PostPickerField.vue'
 import LinkListField from './fields/LinkListField.vue'
 import BackgroundEditorField from './fields/BackgroundEditorField.vue'
 import CardListField from './fields/CardListField.vue'
-import CollectionTreeField from './fields/CollectionTreeField.vue'
+import { getSchemaField } from '../../data/schemaFields'
 import AboutEditorButton from './fields/AboutEditorButton.vue'
 import WalineAdminLink from './fields/WalineAdminLink.vue'
 
@@ -66,7 +66,6 @@ const COMPONENT_MAP: Record<string, any> = {
   'link-list':           LinkListField,
   'background-editor':   BackgroundEditorField,
   'card-list':           CardListField,
-  'collection-tree':     CollectionTreeField,
   'about-editor':        AboutEditorButton,
   'waline-admin-link':   WalineAdminLink,
 }
@@ -102,9 +101,13 @@ const isHidden = computed(() => {
 
 const resolvedComponent = computed(() => {
   const cc = props.componentOverride || props.fieldSchema['x-chronicle-class']
+  const registered = getSchemaField(cc)
+  if (registered) return registered
   if (cc && COMPONENT_MAP[cc] !== undefined) return COMPONENT_MAP[cc]
   // Fallback by x-widget
   const widget = props.fieldSchema['x-widget']
+  const registeredWidget = getSchemaField(widget)
+  if (registeredWidget) return registeredWidget
   const fallbackMap: Record<string, any> = {
     input:              NativeInput,
     textarea:           NativeTextarea,
@@ -121,7 +124,6 @@ const resolvedComponent = computed(() => {
     'link-list':        LinkListField,
     'background-editor':BackgroundEditorField,
     'card-list':        CardListField,
-    'collection-editor':CollectionTreeField,
   }
   return fallbackMap[widget] || NativeInput
 })

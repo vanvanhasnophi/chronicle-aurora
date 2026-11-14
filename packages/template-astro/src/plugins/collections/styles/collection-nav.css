@@ -73,6 +73,10 @@
   .cn-tree[hidden] {
     display: none;
   }
+  /* Hide the desktop sidebar on mobile; owned by the collections plugin, not the theme. */
+  html.is-mobile .cn-panel[data-cn-variant="sidebar"] {
+    display: none !important;
+  }
   .cn-tree li {
     margin: 7px 0;
   }

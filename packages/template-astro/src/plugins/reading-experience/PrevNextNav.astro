@@ -1,8 +1,9 @@
 ---
 import './styles/prevnext-nav.css';
 import { dataSource } from '../../data';
+import { getPostExtension } from '../../data/extensions';
 import { getTranslation, type Locale } from '../../utils/i18n';
-import { isPostTypeQueueIgnored } from '../../plugins';
+import { hasCapability, isPostTypeQueueIgnored } from '../../plugins';
 
 interface Props {
   post: any;
@@ -25,14 +26,21 @@ const published = (dataSource.getPublishedPosts() as any[]).filter(
   (p: any) => !isPostTypeQueueIgnored(p.type || 'article'),
 );
 
+// collection scope is only valid while the collections capability / nav slot is
+// present. Without it, fall back to global order so a disabled plugin leaves no
+// collection-specific navigation behind.
+const collectionCapable = hasCapability('getCollections');
+const effectiveScope = scope === 'collection' && !collectionCapable ? 'global' : scope;
+const collectionName = String(getPostExtension<any>(post, 'collections')?.name || '');
+
 // ── 规则 2：collection 内导航开启时，不属于任何 collection 的文章不显示 prev/next ──
-if (scope === 'collection' && !post.collection) return;
+if (effectiveScope === 'collection' && !collectionName) return;
 
 // ── collection scope：按 collections.yml nodes 顺序导航（collection 自带顺序，不受 order 影响）──
 let prev: any = null;
 let next: any = null;
-if (scope === 'collection') {
-  const seq = (dataSource.getCollectionPostIds?.(String(post.collection || '')) || [])
+if (effectiveScope === 'collection') {
+  const seq = (dataSource.getCollectionPostIds?.(collectionName) || [])
     .map((id) => published.find((p: any) => String(p.id) === id))
     .filter(Boolean);
   if (seq.length === 0) return;

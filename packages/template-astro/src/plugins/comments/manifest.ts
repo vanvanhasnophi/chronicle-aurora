@@ -6,6 +6,7 @@
 // 样式归属主题层：styles/components/comment-section.css
 import type { PluginManifest } from '../types';
 import EndOfArticleBottom from './EndOfArticleBottom.astro';
+import { commentsDataHooks } from './data';
 
 export const comments: PluginManifest = {
   id: 'comments',
@@ -19,10 +20,19 @@ export const comments: PluginManifest = {
     // 置底必须唯一（registerPlugin 强制——同一 slot 的 bottom 重复注册构建期报错）
     { slot: 'post-end-of-article', position: 'bottom', component: EndOfArticleBottom, when: { capability: 'getComments' } },
   ],
-  // 提供的能力：评论数据（getComments 实现在 DataSource/localFs——能力声明随插件注册，
-  // 禁用/删除 → 能力消失 → 消费方（文末置底/态度按钮）自动收敛）
+  // 文章页左下角评论入口：无面板，点击滚动到评论区
+  postActions: [
+    {
+      id: 'comments',
+      labelKey: 'comment.title',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      action: 'scrollToComment',
+      isAvailable: ({ settings }) => settings?.comments !== false,
+    },
+  ],
+  // 提供的能力：评论数据（getComments 实现已迁到 plugins/comments/data.ts）
   provides: ['getComments'],
-  dataHooks: {},
+  dataHooks: commentsDataHooks,
   settingsSchema: ['comments'],
 };
 

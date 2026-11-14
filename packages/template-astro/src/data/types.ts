@@ -36,8 +36,8 @@ export interface PostMeta {
     tags: string[];
     status: string;
     font?: string;
-    collection?: string;
-    collectionPath?: string;
+    /** Generic plugin-owned post extensions (e.g. { collections: { name, path } }) */
+    extensions?: Record<string, unknown>;
     author?: string;
     authors?: string[];
     aiGenerated?: boolean;
@@ -105,7 +105,6 @@ export interface LocalSettings {
     /** 3.1.x — nested post-page config (data/site.yml post: block). */
     post?: PostPageConfig;
     // Feature toggles
-    collectionPage?: boolean;
     aboutPage?: boolean;
     friendsPage?: boolean;
     rss?: boolean;

@@ -7,6 +7,13 @@
  *
  * 全部路径相对仓库根。
  */
+import { collectionsMeta } from '../../../template-astro/src/plugins/collections/meta'
+import { friendsMeta } from '../../../template-astro/src/plugins/friends/meta'
+import { commentsMeta } from '../../../template-astro/src/plugins/comments/meta'
+import { slidesMeta } from '../../../template-astro/src/plugins/slides/meta'
+import { searchMeta } from '../../../template-astro/src/plugins/search/meta'
+import { readingExperienceMeta } from '../../../template-astro/src/plugins/reading-experience/meta'
+import '../plugins/collections'
 
 export interface SchemaMapping {
   /** JSON Schema $id，如 "chronicle:template-settings" */
@@ -115,18 +122,16 @@ const settings: Record<string, SchemaMapping> = {
     filePath: 'data/profile.yml',
     format: 'yaml',
   },
-  'chronicle:collections': {
-    schemaId: 'chronicle:collections',
-    filePath: 'data/collections.yml',
-    format: 'yaml',
-    // 单功能插件：页面开关 = 插件总开关（组内 enabled，PluginSettings 管理）——
-    // 不再设顶层 headerFlag（顶层 collectionPage 键是旧残留，会键名重复）
+  [collectionsMeta.schemaId]: {
+    schemaId: collectionsMeta.schemaId,
+    filePath: collectionsMeta.filePath,
+    format: collectionsMeta.format,
+    // 单功能插件：页面开关 = 插件总开关（组内 enabled，PluginSettings 管理）
   },
-  'chronicle:friends': {
-    schemaId: 'chronicle:friends',
-    filePath: 'data/friends.yml',
-    format: 'yaml',
-    // 单功能插件：同上，开关在组内 enabled（PluginSettings）
+  [friendsMeta.schemaId]: {
+    schemaId: friendsMeta.schemaId,
+    filePath: friendsMeta.filePath,
+    format: friendsMeta.format,
   },
   'chronicle:post-page': {
     schemaId: 'chronicle:post-page',
@@ -137,87 +142,86 @@ const settings: Record<string, SchemaMapping> = {
 
 const contentTypes: Record<string, ContentTypeMapping> = {
   posts: { dir: 'data/posts', idFrom: 'dirname', file: 'index.md', format: 'markdown' },
-  comments: { dir: 'data/comments', idFrom: 'filename', file: '*.json', format: 'json' },
+  comments: commentsMeta.contentType,
   commentsPending: { dir: 'data/comments-pending', idFrom: 'filename', file: '*.json', format: 'json' },
   profile: { dir: 'data', idFrom: 'filename', file: 'profile.yml', format: 'yaml' },
-  collections: { dir: 'data', idFrom: 'filename', file: 'collections.yml', format: 'yaml' },
-  friends: { dir: 'data', idFrom: 'filename', file: 'friends.yml', format: 'yaml' },
+  [collectionsMeta.key]: collectionsMeta.contentType,
+  [friendsMeta.key]: friendsMeta.contentType,
 }
 
 // 插件配置位置：插件 settingsSchema 声明的逻辑段 → schema + 落点。
 // 现状模式：search/comments 段在 template-settings.schema.json（site.yml）；friends 独立文件。
 const plugins: Record<string, PluginMapping> = {
   search: {
-    key: 'search',
-    schemaId: 'chronicle:search',
-    filePath: 'data/site.yml',
-    format: 'yaml',
-    name: 'Search 检索',
-    description: 'Search suggestions, global search, full-text index — 搜索建议 / 全局搜索 / 全文索引',
-    featureFlag: 'enabled',
-    builtin: true,
-    storage: 'site',
-    entries: [{ target: 'chronicle:homepage' }],
+    key: searchMeta.key,
+    schemaId: searchMeta.schemaId,
+    filePath: searchMeta.filePath,
+    format: searchMeta.format,
+    name: searchMeta.name,
+    description: searchMeta.description,
+    featureFlag: searchMeta.featureFlag,
+    builtin: searchMeta.builtin,
+    storage: searchMeta.storage,
+    entries: searchMeta.entries,
   },
   friends: {
-    key: 'friends',
-    schemaId: 'chronicle:friends',
-    filePath: 'data/friends.yml',
-    format: 'yaml',
-    name: 'Friends 友链',
-    description: 'Friend cards & global style — 好友卡片与全局样式',
-    featureFlag: 'enabled',
-    builtin: true,
-    storage: 'file',
-    contentEditor: true,
+    key: friendsMeta.key,
+    schemaId: friendsMeta.schemaId,
+    filePath: friendsMeta.filePath,
+    format: friendsMeta.format,
+    name: friendsMeta.name,
+    description: friendsMeta.description,
+    featureFlag: friendsMeta.featureFlag,
+    builtin: friendsMeta.builtin,
+    storage: friendsMeta.storage,
+    contentEditor: friendsMeta.contentEditor,
   },
   comments: {
-    key: 'comments',
-    schemaId: 'chronicle:comments',
-    filePath: 'data/site.yml',
-    format: 'yaml',
-    name: 'Comments 评论',
-    description: 'Master switch, backend, attitude, image upload — 主开关与评论配置（后端/态度/图床）',
-    featureFlag: 'enabled',
-    builtin: true,
-    storage: 'site',
-    // 评论显示在文章页——入口留在 post-page（文章页设置页），点击进入评论插件详情
-    entries: [{ target: 'chronicle:post-page' }],
+    key: commentsMeta.key,
+    schemaId: commentsMeta.schemaId,
+    filePath: commentsMeta.filePath,
+    format: commentsMeta.format,
+    name: commentsMeta.name,
+    description: commentsMeta.description,
+    featureFlag: commentsMeta.featureFlag,
+    builtin: commentsMeta.builtin,
+    storage: commentsMeta.storage,
+    entries: commentsMeta.entries,
   },
   slides: {
-    key: 'slides',
-    schemaId: 'chronicle:slideshow',
-    filePath: 'data/site.yml',
-    format: 'yaml',
-    name: 'Slides 幻灯片',
-    description: 'Marp slide rendering — Marp 幻灯片渲染（post 级配置走 frontmatter slideshow 段）',
-    featureFlag: 'enabled',
-    storage: 'post',
-    builtin: true,
+    key: slidesMeta.key,
+    schemaId: slidesMeta.schemaId,
+    filePath: slidesMeta.filePath,
+    format: slidesMeta.format,
+    name: slidesMeta.name,
+    description: slidesMeta.description,
+    featureFlag: slidesMeta.featureFlag,
+    storage: slidesMeta.storage,
+    builtin: slidesMeta.builtin,
   },
   collections: {
-    key: 'collections',
-    schemaId: 'chronicle:collections',
-    filePath: 'data/collections.yml',
-    format: 'yaml',
-    name: 'Collections 合集',
-    description: 'Collection tree & navigation settings — 合集树与合集导航设置',
-    featureFlag: 'enabled',
-    builtin: true,
-    storage: 'file',
-    contentEditor: true,
+    key: collectionsMeta.key,
+    schemaId: collectionsMeta.schemaId,
+    filePath: collectionsMeta.filePath,
+    format: collectionsMeta.format,
+    name: collectionsMeta.name,
+    description: collectionsMeta.description,
+    featureFlag: collectionsMeta.featureFlag,
+    builtin: collectionsMeta.builtin,
+    storage: collectionsMeta.storage,
+    contentEditor: collectionsMeta.contentEditor,
   },
   readingExperience: {
-    key: 'reading-experience',
-    schemaId: 'chronicle:reading-experience',
-    filePath: 'data/site.yml',
-    format: 'yaml',
-    name: 'Reading Experience 阅读体验',
-    description: 'TOC & end-of-article blocks (related, prev/next, share, attitude, author card) — 目录与文末区块（相关/上下篇/分享/态度/作者卡）',
-    featureFlag: 'enabled',
-    builtin: true,
-    storage: 'site',
-    entries: [{ target: 'chronicle:post-page' }],
+    key: readingExperienceMeta.key,
+    schemaId: readingExperienceMeta.schemaId,
+    filePath: readingExperienceMeta.filePath,
+    format: readingExperienceMeta.format,
+    name: readingExperienceMeta.name,
+    description: readingExperienceMeta.description,
+    featureFlag: readingExperienceMeta.featureFlag,
+    builtin: readingExperienceMeta.builtin,
+    storage: readingExperienceMeta.storage,
+    entries: readingExperienceMeta.entries,
   },
 }
 

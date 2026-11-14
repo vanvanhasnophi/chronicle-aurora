@@ -50,8 +50,9 @@ const SITE_URL = 'http://localhost:4321';
 
 function isFullTextEnabled() {
   const site = readSiteConfig();
+  if (site.search?.enabled === false) return false;
   // Full-text search is opt-out — on by default (aligned with the schema).
-  return (site.fullTextSearch ?? site.featureFlags?.fullTextSearch) !== false;
+  return (site.search?.fullTextSearch ?? site.fullTextSearch ?? site.featureFlags?.fullTextSearch) !== false;
 }
 
 // Strip a `---` … `---` YAML frontmatter block; return the remaining body.

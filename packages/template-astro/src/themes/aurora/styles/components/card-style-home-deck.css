@@ -593,11 +593,6 @@
     color: var(--comp-text-accent-ghost);
   }
 
-  .home-shell .activity-item.collection .activity-item__icon{
-    background: var(--accent-dark);
-    color: #fff;
-  }
-
   .home-shell .activity-item.app .activity-item__icon{
     background: var(--comp-bg);
     color: var(--app-text-pri);

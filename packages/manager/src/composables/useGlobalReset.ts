@@ -13,14 +13,16 @@ import { ref } from 'vue'
 import { schemaStore, syncSchemas } from './schemaApi'
 import { writeYaml, writeJson, writeText, deleteDir, deleteFile, mkdir, readDir } from '../data/dataAccess'
 import systemSettings from '../../schemas/system-settings.schema.json'
+import { collectionsMeta } from '../../../template-astro/src/plugins/collections/meta'
+import { friendsMeta } from '../../../template-astro/src/plugins/friends/meta'
 
 const SCHEMAS: Record<string, any> = {
   'chronicle:homepage': () => schemaStore['chronicle:homepage'],
   'chronicle:appearance': () => schemaStore['chronicle:appearance'],
   'chronicle:post-page': () => schemaStore['chronicle:post-page'],
   'chronicle:profile': () => schemaStore['chronicle:profile'],
-  'chronicle:friends': () => schemaStore['chronicle:friends'],
-  'chronicle:collections': () => schemaStore['chronicle:collections'],
+  [friendsMeta.schemaId]: () => schemaStore[friendsMeta.schemaId],
+  [collectionsMeta.schemaId]: () => schemaStore[collectionsMeta.schemaId],
 }
 
 /** 背景渲染 meta 默认值（与 BackgroundEditorModal.defaultMeta 对齐） */
@@ -95,12 +97,12 @@ export function useGlobalReset() {
     let ok = await writeYaml('data/site.yml', siteDefaults)
     if (!ok) return false
 
-    // profile / friends / collections
-    for (const id of ['chronicle:profile', 'chronicle:friends', 'chronicle:collections']) {
+    // profile / friends / collection plugin data
+    for (const id of ['chronicle:profile', friendsMeta.schemaId, collectionsMeta.schemaId]) {
       const sch = SCHEMAS[id]()
       if (!sch) continue
       const file = id === 'chronicle:profile' ? 'data/profile.yml'
-        : id === 'chronicle:friends' ? 'data/friends.yml' : 'data/collections.yml'
+        : id === friendsMeta.schemaId ? friendsMeta.filePath : collectionsMeta.filePath
       const defaults = stripVirtual(buildDefaults(sch), sch)
       // 数组 schema（collections）→ YAML 全量序列化（applyPayload 对数组顶层无效）；对象 → Document API 保注释
       if (sch.type === 'array') {

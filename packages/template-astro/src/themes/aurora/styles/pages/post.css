@@ -343,10 +343,6 @@
        so they are available on every page, not just post pages. */
 
 /* ── 自 pages/post.css 合并（[lang]/post/[id].astro is:global 块；外层 post.css 为事实源，统一收口至此）── */
-/* Hide desktop CollectionNav on mobile (768px breakpoint, matches html.is-mobile) */
-html.is-mobile .cn-panel[data-cn-variant="sidebar"] {
-  display: none !important;
-}
 
 @media (max-width: 768px) {
   .post-detail-container {

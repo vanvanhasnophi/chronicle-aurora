@@ -98,12 +98,12 @@ function init() {
       } else if (btn.dataset.action === 'scrollToComment') {
         const target = document.getElementById('__chronicle-comment') || document.getElementById('comments');
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          const mc = document.querySelector('.main-content,main');
+          const mc = document.querySelector('.main-content,main') as HTMLElement | null;
           if (mc) {
-            const tr = target.getBoundingClientRect();
-            const mr = mc.getBoundingClientRect();
-            mc.scrollBy({ top: tr.top - mr.top, behavior: 'smooth' });
+            const top = target.getBoundingClientRect().top - mc.getBoundingClientRect().top + mc.scrollTop;
+            mc.scrollTo({ top, behavior: 'smooth' });
+          } else {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         }
       }

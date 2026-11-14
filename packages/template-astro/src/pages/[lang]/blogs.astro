@@ -101,8 +101,25 @@ const blogI18n = {
       (function () {
         try {
           var params = new URLSearchParams(window.location.search);
+          // Legacy ?tags=... implied generic tag filtering. Canonicalize the
+          // featured alias and drop unknown tag params: this page only has a
+          // featured view, not a tag filter.
+          var canonicalize = function () {
+            var query = params.toString().replace(/(^|&)featured=($|&)/, '$1featured$2');
+            window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash);
+          };
+          if (params.has('tags')) {
+            var legacyTag = params.get('tags');
+            params.delete('tags');
+            if (legacyTag === 'featured') params.set('featured', '');
+            canonicalize();
+          }
+          if (params.has('featured')) {
+            params.set('featured', '');
+            canonicalize();
+          }
           var sort = params.get('sort');
-          if (params.get('tags') === 'featured' || (sort && sort !== 'newest')) {
+          if (params.has('featured') || (sort && sort !== 'newest')) {
             document.documentElement.classList.add('blogs-query-loading');
             window.setTimeout(function () {
               document.documentElement.classList.remove('blogs-query-loading');
@@ -127,7 +144,7 @@ const blogI18n = {
         <section class="section-block" id="featured-section">
           <div class="section-header featured">
             <h2 class="section-title">{t('blog.featured')}</h2>
-            <a class="view-all" href="?tags=featured#all-posts" data-view-all>
+            <a class="view-all" href="?featured" data-view-all>
               {t('blog.viewAll')}
             </a>
           </div>
@@ -260,10 +277,6 @@ const blogI18n = {
       const i18n = i18nEl ? JSON.parse(i18nEl.textContent || '{}') : {};
 
       const original = archive.innerHTML;
-      const normalize = (value: string | null) => {
-        const normalized = String(value || '').trim().replace(/^#+/, '').toLowerCase();
-        return normalized === '精选' ? 'featured' : normalized;
-      };
       const state = { tag: '', sort: 'newest' };
       const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const timelineBtn = document.getElementById('blog-timeline');
@@ -569,17 +582,20 @@ const blogI18n = {
         }
 
         const url = new URL(window.location.href);
-        if (state.tag) url.searchParams.set('tags', state.tag);
-        else url.searchParams.delete('tags');
+        url.searchParams.delete('tags');
+        if (state.tag === 'featured') url.searchParams.set('featured', '');
+        else url.searchParams.delete('featured');
         if (state.sort !== 'newest') url.searchParams.set('sort', state.sort);
         else url.searchParams.delete('sort');
-        if (pushHistory) window.history.pushState({}, '', url);
-        else window.history.replaceState({}, '', url);
+        const query = url.searchParams.toString().replace(/(^|&)featured=($|&)/, '$1featured$2');
+        const next = url.pathname + (query ? '?' + query : '') + url.hash;
+        if (pushHistory) window.history.pushState({}, '', next);
+        else window.history.replaceState({}, '', next);
       };
 
       const readUrl = () => {
         const params = new URL(window.location.href).searchParams;
-        state.tag = normalize(params.get('tags')) === 'featured' ? 'featured' : '';
+        state.tag = params.has('featured') ? 'featured' : '';
         const sort = params.get('sort');
         state.sort = sort === 'oldest' || sort === 'title' ? sort : 'newest';
       };
@@ -644,9 +660,6 @@ const blogI18n = {
           state.tag = 'featured';
           state.sort = 'newest';
           render(true);
-          window.setTimeout(() => {
-            document.getElementById('all-posts')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, reduceMotion() ? 0 : 300);
         });
       });
 

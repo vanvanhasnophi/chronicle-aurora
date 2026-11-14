@@ -4,7 +4,9 @@ import './styles/slideshow.css';
 // Reads post content directly from data source (no base64 encoding needed).
 
 import { dataSource } from "../../data";
+import { getPostExtension } from "../../data/extensions";
 import TagLinks from "../../components/TagLinks.astro";
+import { hasCapability } from "../../plugins";
 import {
   chronicleLightCSS,
   chronicleDarkCSS,
@@ -19,16 +21,18 @@ interface Props {
 }
 
 const { id, locale = "zh", config = {}, collectionEnabled = true } = Astro.props as Props;
+const collectionCapable = hasCapability('getCollections');
 const post = dataSource.getPostById(id);
 const md = post?.content || "";
 const ratio = config.ratio || "16:9";
+const collectionInfo = getPostExtension<any>(post, 'collections');
 const postMeta = {
   title: post?.title || "",
   author: post?.author || "",
   date: post?.date || "",
   updatedAt: post?.updatedAt || "",
-  collection: post?.collection || "",
-  collectionPath: post?.collectionPath || "",
+  collection: collectionInfo?.name || "",
+  collectionPath: collectionInfo?.path || "",
   tags: post?.tags || [],
 };
 const collectionUrl = locale === "en" ? "/en/collection" : "/collection";
@@ -190,7 +194,7 @@ if (md.trim()) {
             )
           }
           {
-            postMeta.collection && collectionEnabled && (
+            postMeta.collection && collectionEnabled && collectionCapable && (
               <a
                 href={
                   collectionUrl + "#" + encodeURIComponent(postMeta.collection)
@@ -543,7 +547,7 @@ if (md.trim()) {
     e.stopPropagation();
     // Close TOC if open
     tocPopup.style.display = "none";
-    togglePopup(infoPopup, e.target as HTMLElement);
+    togglePopup(infoPopup, e.currentTarget as HTMLElement);
   });
 
   scope.on("keydown", (e: { key: string; }) => {
@@ -659,29 +663,36 @@ if (md.trim()) {
   const zoomLabel = document.getElementById("slide-zoom-label")!;
   const zoomGroup = document.getElementById("slide-zoom-group")!;
   const zoomPopup = document.getElementById("slide-zoom-popup")!;
-  ;[tocPopup, infoPopup, zoomPopup].forEach((p) => scope.toBody(p));
+  // Portal container keeps body-level backdrop-filter while restoring the
+  // `.chronicle-slideshow` CSS scope for popup styling.
+  const popupRoot = document.createElement('div');
+  popupRoot.className = 'chronicle-slideshow chronicle-slideshow-popup-root';
+  scope.toBody(popupRoot);
+  ;[tocPopup, infoPopup, zoomPopup].forEach((p) => { scope.toBody(p); popupRoot.appendChild(p); });
 
-  // Popup positioning relative to trigger buttons
-  function positionPopup(popup: HTMLElement, trigger: HTMLElement) {
-    const r = trigger.getBoundingClientRect();
-    const anchorX = r.left + r.width / 2;
-    // Half popup width + 8px margin — cached so we only measure once
-    if (!popup.dataset._halfW) {
-      const prev = popup.style.display;
-      popup.style.display = 'block'; popup.style.visibility = 'hidden';
-      popup.dataset._halfW = String(popup.offsetWidth / 2 + 8 || 100);
-      popup.style.display = prev; popup.style.visibility = '';
-    }
-    const pad = popup.dataset._halfW;
+  // Body-mounted popups share a fixed inset contract.
+  function positionPopup(popup: HTMLElement) {
     popup.style.position = 'fixed';
     popup.style.top = 'auto';
-    popup.style.bottom = (window.innerHeight - r.top + 12) + 'px';
-    popup.style.left = `clamp(${pad}px, ${anchorX}px, calc(100vw - ${pad}px))`;
+    popup.style.bottom = '50px';
+    popup.style.transform = 'none';
+    if (popup === zoomPopup) {
+      popup.style.left = 'auto';
+      popup.style.right = 'min(160px, 20vw)';
+    } else if (popup === tocPopup) {
+      popup.style.left = 'min(48px, 5vw)';
+      popup.style.right = 'auto';
+    } else {
+      // info keeps its left inset from the previous layout
+      popup.style.left = '24px';
+      popup.style.right = 'auto';
+    }
   }
+
   function showPopup(popup: HTMLElement, trigger: HTMLElement) {
     [tocPopup, infoPopup, zoomPopup].forEach(p => { if (p !== popup) hidePopup(p) });
-    positionPopup(popup, trigger);
     popup.style.display = popup === zoomPopup ? 'flex' : 'block';
+    positionPopup(popup);
     popup.classList.remove('slide-popup');
     void popup.offsetHeight;
     popup.classList.add('slide-popup');
@@ -696,7 +707,16 @@ if (md.trim()) {
   const ZOOM_MIN = 0.2;
   const ZOOM_MAX = 4;
   const ZOOM_DEFAULT_MAX = 1;
-  const ZOOM_STEP = 0.1;
+  function zoomIn() {
+    // Snap to a 10% grid: 88% -> 90%, 80% -> 90%.
+    const base = Math.floor(Math.round(zoom * 100) / 10) * 10;
+    setZoom((base + 10) / 100);
+  }
+  function zoomOut() {
+    // Snap to a 10% grid: 88% -> 80%, 80% -> 70%.
+    const base = Math.ceil(Math.round(zoom * 100) / 10) * 10;
+    setZoom((base - 10) / 100);
+  }
   function setZoom(z: number) {
     zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
     const idx = current;
@@ -715,7 +735,7 @@ if (md.trim()) {
       // Browse mode + Ctrl: zoom
       if (viewMode === "browse" && e.ctrlKey) {
         e.preventDefault();
-        setZoom(zoom - Math.sign(e.deltaY) * ZOOM_STEP);
+        if (e.deltaY > 0) zoomOut(); else zoomIn();
         return;
       }
       // Present mode: scroll to navigate slides (skip if inside a popup)
@@ -730,14 +750,16 @@ if (md.trim()) {
   );
   document
     .getElementById("slide-zoom-out")
-    ?.addEventListener("click", () => setZoom(zoom - ZOOM_STEP));
+    ?.addEventListener("click", () => zoomOut());
   document
     .getElementById("slide-zoom-in")
-    ?.addEventListener("click", () => setZoom(zoom + ZOOM_STEP));
+    ?.addEventListener("click", () => zoomIn());
   function fitZoom() {
+    // Slide base width is 800px (`.marp-slides-browse .marpit`).
     const vw = browseBox.clientWidth;
-    const fitPct = 10 * Math.floor((vw - 10) / 80);
-    setZoom(Math.min(Math.max(ZOOM_MIN, fitPct / 100), ZOOM_DEFAULT_MAX));
+    const available = Math.max(0, vw - 16);
+    const fit = available / 800;
+    setZoom(Math.min(Math.max(ZOOM_MIN, fit), ZOOM_DEFAULT_MAX));
   }
   document
     .getElementById("slide-zoom-fit")
@@ -747,11 +769,11 @@ if (md.trim()) {
     .getElementById("slide-zoom-out-m")
     ?.addEventListener("click", (e) => {
       e.stopPropagation();
-      setZoom(zoom - ZOOM_STEP);
+      zoomOut();
     });
   document.getElementById("slide-zoom-in-m")?.addEventListener("click", (e) => {
     e.stopPropagation();
-    setZoom(zoom + ZOOM_STEP);
+    zoomIn();
   });
   document
     .getElementById("slide-zoom-fit-m")
@@ -760,11 +782,13 @@ if (md.trim()) {
       fitZoom();
       hidePopup(zoomPopup);
     });
-  // Label click → toggle popup
+  // Label click → toggle popup (desktop and mobile)
   zoomLabel.addEventListener("click", (e) => {
     e.stopPropagation();
-    if (window.matchMedia("(max-width: 768px)").matches)
-      togglePopup(zoomPopup, zoomLabel);
+    // When inline zoom controls are visible, the label is a passive readout.
+    const inline = document.querySelector('.zoom-btn-inline') as HTMLElement | null;
+    if (inline && getComputedStyle(inline).display !== 'none') return;
+    togglePopup(zoomPopup, zoomLabel);
   });
   // Click outside → close
   scope.on("click", (e: { target: Node; }) => {

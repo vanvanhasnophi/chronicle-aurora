@@ -1,9 +1,10 @@
 // ── 插件注册表（构建期静态收集）────────────────────────────
 // 主板路由壳经 getPluginPage / getPluginSlots 查表渲染。
 // 注册发生在 src/plugins/index.ts（静态 import 各插件 manifest）。
-import type { PluginManifest, PluginSlotContribution, PluginChangeInterpreter, ChangedFile, ActivityItem, ChangeInterpreterCtx, PluginPostTypeContribution } from './types';
+import type { PluginManifest, PluginSlotContribution, PluginChangeInterpreter, ChangedFile, ActivityItem, ChangeInterpreterCtx, PluginPostTypeContribution, PluginPostAction, PluginPostContext, PluginTocContext } from './types';
 export type { PluginManifest, ActivityItem, ChangedFile, ChangeInterpreterCtx, PluginPostTypeContribution } from './types';
 import type { DataSource } from '../data/types';
+import { registerDataHooks } from '../data/pluginHooks';
 
 /** 槽位门控评估上下文（主板页面传入；不传 = 不过滤，全量返回） */
 export interface SlotGateCtx {
@@ -45,6 +46,7 @@ export function registerPlugin(manifest: PluginManifest): void {
   }
   registry.set(manifest.id, manifest);
   for (const cap of manifest.provides ?? []) providedCapabilities.add(cap);
+  registerDataHooks(manifest.id, manifest.dataHooks);
   indexPostTypes(manifest);
 }
 
@@ -152,6 +154,49 @@ export function interpretChanges(changes: ChangedFile[], ctx: ChangeInterpreterC
  * 收集某页面类型的插件 critical CSS（如 post 页的合集导航布局偏移规则）。
  * 插件禁用/删除 → 不注册 → 对应 critical 不注入（core 零插件样式）。
  */
+export function hasCapability(capability: string): boolean {
+  return providedCapabilities.has(capability);
+}
+
+/** 文章页左下角动作：过滤 when / isAvailable 后交给 core 统一渲染 */
+export function getPluginPostActions(ctx?: PluginPostContext): PluginPostAction[] {
+  const gate = {
+    featureFlags: ctx?.settings?.featureFlags as Record<string, boolean> | undefined,
+    dataSource: ctx?.dataSource,
+  };
+  const out: PluginPostAction[] = [];
+  for (const plugin of registry.values()) {
+    for (const action of plugin.postActions ?? []) {
+      if (!passesWhen(action.when, gate)) continue;
+      if (action.isAvailable && !action.isAvailable(ctx ?? {})) continue;
+      out.push(action);
+    }
+  }
+  return out;
+}
+
+/** TOC provider from the first registered plugin that declares one. */
+export function getPluginTocProvider(): ((ctx: PluginTocContext) => any[]) | undefined {
+  for (const plugin of registry.values()) {
+    if (plugin.tocProvider) return plugin.tocProvider;
+  }
+  return undefined;
+}
+
+/** 文章页 body class：合并所有插件注册的钩子（去重） */
+export function getPluginPostBodyClass(ctx?: PluginPostContext): string {
+  const classes = new Set<string>();
+  for (const plugin of registry.values()) {
+    if (!plugin.postBodyClass) continue;
+    const value = plugin.postBodyClass(ctx ?? {});
+    if (!value) continue;
+    for (const cls of String(value).split(/\s+/)) {
+      if (cls) classes.add(cls);
+    }
+  }
+  return [...classes].join(' ');
+}
+
 export function getPluginCritical(pageType: string): string {
   let out = '';
   for (const plugin of registry.values()) {

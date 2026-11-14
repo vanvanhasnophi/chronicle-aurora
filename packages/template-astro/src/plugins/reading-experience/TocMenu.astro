@@ -1,0 +1,14 @@
+---
+interface Props { toc?: any[] }
+const { toc = [] } = Astro.props as Props;
+---
+
+<ul data-menu="toc" class="cb__list">
+  {toc.map((item: any) => (
+    <li class:list={['cb__list-item', `cb__list-item--l${item.level}`]} data-toc-id={item.id}>
+      <a href={`#${item.id}`} class="cb__list-link" data-toc-id={item.id}>
+        <span class="cb__list-text">{item.text}</span>
+      </a>
+    </li>
+  ))}
+</ul>

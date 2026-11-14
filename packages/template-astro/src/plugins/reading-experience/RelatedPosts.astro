@@ -1,12 +1,17 @@
 ---
 import './styles/related-posts.css';
 import { dataSource } from '../../data';
+import { getPostExtension } from '../../data/extensions';
 import { getTranslation, type Locale } from '../../utils/i18n';
+import { hasCapability } from '../../plugins';
 
 interface Props { post: any; locale: Locale; lang: string }
 const { post, locale, lang } = Astro.props as Props;
 const t = (key: string) => getTranslation(locale, key);
 
+// Collection-based related scoring only when the collections nav capability exists.
+const collectionCapable = hasCapability('getCollections');
+const myCollectionPath = String(getPostExtension<any>(post, 'collections')?.path || '');
 const all = dataSource.getPublishedPosts() as any[];
 const others = all.filter((p: any) => String(p.id) !== String(post.id));
 const myTags = new Set((post.tags || []).map((x: string) => String(x)));
@@ -14,7 +19,8 @@ const scored = others
   .map((p: any) => {
     let score = 0;
     for (const tag of p.tags || []) if (myTags.has(String(tag))) score += 2;
-    if (p.collectionPath && post.collectionPath && p.collectionPath === post.collectionPath) score += 3;
+    const pCollectionPath = String(getPostExtension<any>(p, 'collections')?.path || '');
+    if (collectionCapable && myCollectionPath && pCollectionPath === myCollectionPath) score += 3;
     return { p, score };
   })
   .sort((a: any, b: any) => b.score - a.score || (String(a.p.date) < String(b.p.date) ? 1 : -1));
