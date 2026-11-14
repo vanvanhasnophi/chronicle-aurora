@@ -16,6 +16,7 @@
     "build:astro": "node packages/gen/bin/cli.mjs build --dataDir data --codeDir packages/template-astro --targetDir dist",
     "verify:isolation": "node scripts/verify-plugin-isolation.mjs",
     "verify:isolation:all": "node scripts/verify-plugin-isolation-all.mjs",
+    "ai:summaries": "node scripts/ai-summaries.mjs",
     "preview:astro": "npm run preview --workspace=@chronicle/template-astro",
     "stop": "bash scripts/stop.sh"
   }

@@ -23,6 +23,14 @@
   --recommended-accent-text: #fff;
   --text-on-accent: #111;
   --featured: #ffd700;
+  /* ── AI enhancement palette (fixed; independent of site accent) ── */
+  --ai-grad-1: #2dd4bf;
+  --ai-grad-2: #38bdf8;
+  --ai-grad-3: #818cf8;
+  --ai-grad-4: #fbbf24;
+  --ai-gradient: linear-gradient(120deg, var(--ai-grad-1) 0%, var(--ai-grad-2) 34%, var(--ai-grad-3) 68%, var(--ai-grad-4) 100%);
+  --ai-gradient-soft: linear-gradient(120deg, color-mix(in srgb, var(--ai-grad-1) 18%, transparent), color-mix(in srgb, var(--ai-grad-2) 14%, transparent) 45%, color-mix(in srgb, var(--ai-grad-3) 16%, transparent) 72%, color-mix(in srgb, var(--ai-grad-4) 14%, transparent));
+  --ai-glow: 0 0 32px color-mix(in srgb, var(--ai-grad-2) 18%, transparent);
   --featured-bg: color-mix(in srgb, var(--featured) 15%, transparent);
   --warning: #ff4d50;
   --warning-bg: color-mix(in srgb, var(--warning) 15%, transparent);

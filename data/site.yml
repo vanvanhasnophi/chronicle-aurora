@@ -48,6 +48,9 @@ search:
   searchSuggestions: true
   globalSearch: true
   fullTextSearch: true
+ai-enhance:
+  enabled: false
+  summary: true
 comments:
   enabled: true
   comments: true

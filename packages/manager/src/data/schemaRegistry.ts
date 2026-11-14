@@ -13,6 +13,7 @@ import { commentsMeta } from '../../../template-astro/src/plugins/comments/meta'
 import { slidesMeta } from '../../../template-astro/src/plugins/slides/meta'
 import { searchMeta } from '../../../template-astro/src/plugins/search/meta'
 import { readingExperienceMeta } from '../../../template-astro/src/plugins/reading-experience/meta'
+import { aiEnhanceMeta } from '../../../template-astro/src/plugins/ai-enhance/meta'
 import '../plugins/collections'
 
 export interface SchemaMapping {
@@ -222,6 +223,18 @@ const plugins: Record<string, PluginMapping> = {
     builtin: readingExperienceMeta.builtin,
     storage: readingExperienceMeta.storage,
     entries: readingExperienceMeta.entries,
+  },
+  'ai-enhance': {
+    key: aiEnhanceMeta.key,
+    schemaId: aiEnhanceMeta.schemaId,
+    filePath: aiEnhanceMeta.filePath,
+    format: aiEnhanceMeta.format,
+    name: aiEnhanceMeta.name,
+    description: aiEnhanceMeta.description,
+    featureFlag: aiEnhanceMeta.featureFlag,
+    builtin: aiEnhanceMeta.builtin,
+    storage: aiEnhanceMeta.storage,
+    entries: aiEnhanceMeta.entries,
   },
 }
 

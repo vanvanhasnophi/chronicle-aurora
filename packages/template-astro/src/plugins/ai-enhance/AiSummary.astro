@@ -1,0 +1,28 @@
+---
+import './styles/ai-summary.css';
+import { getPostExtension } from '../../data/extensions';
+
+interface Props {
+  post?: any;
+  locale?: string;
+}
+const { post, locale = 'zh-CN' } = Astro.props as Props;
+const ai = getPostExtension<any>(post, 'ai');
+const aiLocale = locale === 'en' ? 'en' : 'zh';
+const summary = ai?.summaries?.[aiLocale]?.summary || ai?.summaries?.en?.summary;
+const label = locale === 'en' ? 'AI Summary' : 'AI 摘要';
+---
+{summary && (
+  <section class="ai-summary mtl-surface" aria-label={label}>
+    <div class="ai-summary-head">
+      <span class="ai-summary-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/>
+          <path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"/>
+        </svg>
+      </span>
+      <span class="ai-summary-label">{label}</span>
+    </div>
+    <p class="ai-summary-text">{summary}</p>
+  </section>
+)}

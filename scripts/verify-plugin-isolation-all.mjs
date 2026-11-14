@@ -22,7 +22,7 @@ function read(file) {
 
 try {
   let disabled = siteBackup;
-  for (const key of ['collections', 'friends', 'comments', 'search', 'slides', 'reading-experience']) {
+  for (const key of ['collections', 'friends', 'comments', 'search', 'slides', 'reading-experience', 'ai-enhance']) {
     disabled = disabled.replace(
       new RegExp(`(${key}:\\s*\\n\\s+enabled:\\s*)true`),
       '$1false',

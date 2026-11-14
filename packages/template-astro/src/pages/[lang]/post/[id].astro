@@ -101,6 +101,7 @@ const TocSlot = getPluginSlot('post-toc', slotGateCtx);
 // 置底组件唯一（registerPlugin 强制 bottom 唯一）
 const EndOfArticleTopSlots = getPluginSlots('post-end-of-article', slotGateCtx, 'top');
 const EndOfArticleBottomSlot = getPluginSlot('post-end-of-article', slotGateCtx, 'bottom');
+const AiSummarySlot = getPluginSlot('post-ai-summary', slotGateCtx);
 const SlidesSlot = getPluginSlot('post-slides-view', slotGateCtx);
 const PostSidebarSlot = getPluginSlot('post-sidebar', slotGateCtx);
 
@@ -334,6 +335,10 @@ const pluginPostCritical = getPluginCritical('post');
             )}
           </div>
         </header>
+
+        {AiSummarySlot && (
+          <AiSummarySlot post={post} locale={locale} />
+        )}
 
         {tocItems.length > 0 && inlineTocEnabled && (
           <div class="toc-inline mtl-surface" id="inline-toc">
