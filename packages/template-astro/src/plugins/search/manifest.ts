@@ -25,9 +25,9 @@ export const search: PluginManifest = {
   slots: [
     // 全局搜索弹层（遮罩式搜索）：globalSearch 配置关闭时不注入
     { slot: 'global-search-overlay', component: GlobalSearchOverlay, when: { featureFlag: 'globalSearch' } },
-    // 导航搜索按钮（遮罩式搜索入口）：同 globalSearch 门控——插件禁用/删除 →
-    // 构建期不注册 → 按钮消失；globalSearch 关闭 → 按钮与弹层一起消失
-    { slot: 'nav-search-action', component: NavSearchButton, when: { featureFlag: 'globalSearch' } },
+    // 导航搜索入口：只要 search 插件启用就保留。
+    // globalSearch 开启时点击打开遮罩；关闭时 data-global-search 无监听，自然回退为独立 /search 链接。
+    { slot: 'nav-search-action', component: NavSearchButton },
     // 首页 taxonomy 卡片内容块（快速搜索 + 标签云）——主板模板骨架渲染本槽位
     { slot: 'home-card-taxonomy', component: TaxonomySearchBlock },
   ],

@@ -459,6 +459,34 @@ export function initSearchExperience(config: SearchEngineConfig) {
     );
   }
 
+  function applyOverlayExternalState() {
+    if (mode !== 'overlay') return;
+    const overlay = document.querySelector('[data-global-search-overlay]') as HTMLElement | null;
+    if (!overlay) return;
+    const keyword = overlay.dataset.searchKeyword || '';
+    const tags = (overlay.dataset.searchTags || '')
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+    const view = overlay.dataset.searchView || '';
+
+    searchQuery = keyword;
+    suggestionQuery = keyword;
+    selectedTags = [...new Set(tags)];
+    isTagCloudOpen = view === 'tags';
+
+    syncSearchBoxValue(keyword);
+    root.querySelectorAll('.tag-cloud-item.selected').forEach((el) => el.classList.remove('selected'));
+    selectedTags.forEach((tag) => {
+      root.querySelector(`.tag-cloud-item[data-tag="${CSS.escape(tag)}"]`)?.classList.add('selected');
+    });
+    syncTagTriggerState();
+    renderTagChips();
+    filterPosts();
+    updateCenteredMode();
+    updateVisibility();
+  }
+
   async function localSearch(keyword, tags = []) {
     let entries = await loadSearchEntries();
     const kw = String(keyword || '').trim().toLowerCase();
@@ -932,6 +960,7 @@ export function initSearchExperience(config: SearchEngineConfig) {
     if (initialTitle || parsedInitialTags.length > 0) {
       window.history.replaceState({}, "", `${routePrefix}/search`);
     }
+    applyOverlayExternalState();
   }
 
   function resetExperience() {
@@ -956,6 +985,7 @@ export function initSearchExperience(config: SearchEngineConfig) {
     // next open starts clean. Delegated to document so it survives soft navs.
     document.addEventListener('chronicle:global-search-open', () => prime(), { signal });
     document.addEventListener('chronicle:global-search-close', () => resetExperience(), { signal });
+    document.addEventListener('chronicle:search-apply', () => applyOverlayExternalState(), { signal });
 
     // If the overlay is already open when we (lazily) init — e.g. the user
     // pressed Cmd+K before the engine module finished loading — prime now.
