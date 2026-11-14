@@ -32,10 +32,8 @@ export interface PostMeta {
   status: PostStatus
   /** Font preference: "sans" | "serif" */
   font: string
-  /** Which collection this post belongs to (name) */
-  collection?: string
-  /** Dot-path within the collection tree, e.g. "r/1/1" */
-  collectionPath?: string
+  /** Generic plugin-owned metadata (e.g. { collections: { name, path } }). */
+  extensions?: Record<string, unknown>
   author: string
   aiGenerated: boolean
   /** Directory name (= id, used on disk) */

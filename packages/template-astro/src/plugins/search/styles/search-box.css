@@ -17,7 +17,7 @@
   }
   .search-box-wrapper .search-box:focus-within{
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--comp-bg-accent-blur);
+    box-shadow: 0 0 12px 4px var(--comp-bg-accent-blur);
   }
 
   .search-box-wrapper .divider{

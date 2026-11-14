@@ -1,0 +1,6 @@
+/* Collections plugin — activity tone styling.
+   Loaded only while the collections plugin is enabled (home taxonomy slot). */
+.home-shell .activity-item.collection .activity-item__icon {
+  background: var(--accent-dark);
+  color: #fff;
+}

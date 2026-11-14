@@ -5,11 +5,10 @@ import { dataSource } from '../../../data';
 import { SITE_AUTHOR_PLACEHOLDER } from '@chronicle/shared/src/utils';
 import { getTranslation, getLocale } from '../../../utils/i18n';
 import { buildLocalizedPath, toContentLocale } from '../../../utils/routeLocale';
-import { buildTocItems, injectHeadingIds } from '../../../utils/toc';
-import { extractHeadings } from '../../../utils/chronicleMarkdown';
+import { injectHeadingIds } from '../../../utils/toc';
 import { renderCodeBlockStatsHtml, renderCodeBlockLangLabelsHtml } from '../../../utils/markdownParser';
 import { escapeHtmlText, decodeHtmlEntities, getFileExt, getMediaIcon, toMediaCard, rewriteMediaLinks, hydrateLegacyKatexPlaceholders, wrapRenderedKatex } from '../../../utils/contentUtils';
-import { getPluginSlot, getPluginSlots, getPluginCritical, isPostTypeRegistered, getPostTypeFallback } from '../../../plugins';
+import { getPluginSlot, getPluginSlots, getPluginCritical, getPluginPostBodyClass, getPluginTocProvider, isPostTypeRegistered, getPostTypeFallback } from '../../../plugins';
 import { resolveFeatureFlags } from '../../../utils/featureFlags';
 import CornerActions from '../../../components/CornerActions.astro';
 import TagLinks from '../../../components/TagLinks.astro';
@@ -59,8 +58,7 @@ if (localPost) {
     content: localPost.content,
     html: localPost.compiledHtml,
     toc: localPost.toc || [],
-    collection: localPost.collection,
-    collectionPath: localPost.collectionPath,
+    extensions: localPost.extensions,
     font: localPost.font,
     status: localPost.status,
     aiGenerated: localPost.aiGenerated,
@@ -76,11 +74,6 @@ settings = dataSource.getPublicSettings() as Record<string, any>;
 const postCfg = ((settings as Record<string, any>).post || {}) as any;
 const metaCfg = postCfg.postMeta || {};
 const tocCfg = postCfg.postToc || {};
-const collectionNavCfg = postCfg.postCollectionNav || {};
-// 正文让位 body 类（插件契约：reading-experience 合集导航 CSS 用 body.has-collection-nav
-// 做确定性首帧让位——:has 在慢网首帧 DOM 未完整时不匹配，让位迟到造成 CLS）
-const collectionNavBodyClass =
-  !!localPost?.collection && collectionNavCfg.alwaysCollapsed !== true ? 'has-collection-nav' : '';
 const endOfArticleCfg = postCfg.postEndOfArticle || {};
 const commentsCfg = postCfg.postComments || (settings as Record<string, any>).comment || {};
 
@@ -108,14 +101,16 @@ const TocSlot = getPluginSlot('post-toc', slotGateCtx);
 // 置底组件唯一（registerPlugin 强制 bottom 唯一）
 const EndOfArticleTopSlots = getPluginSlots('post-end-of-article', slotGateCtx, 'top');
 const EndOfArticleBottomSlot = getPluginSlot('post-end-of-article', slotGateCtx, 'bottom');
-const CollectionNavSlot = getPluginSlot('post-collection-nav', slotGateCtx);
 const SlidesSlot = getPluginSlot('post-slides-view', slotGateCtx);
+const PostSidebarSlot = getPluginSlot('post-sidebar', slotGateCtx);
 
-// ── Collection feature flag (distinct from data result — see getCollections) ──
-// 单功能插件：页面开关 = 组内 enabled（镜像回退），无独立 collectionPage 键
-const collectionEnabled = (settings as Record<string, any>).collectionPage !== false;
-// 合集导航开关在 collections.yml 的 post.collectionNav.enabled——CollectionNav 组件自读门控，
-// 主板不预知该配置键（交集式）
+// 文章页 body class 由插件注册钩子合并；core 不预知 collection/TOC 等语义。
+const pluginPostBodyClass = getPluginPostBodyClass({
+  post: localPost,
+  postId: String(localPost?.id || id || ''),
+  dataSource,
+  settings,
+});
 
 // ── TOC toggles (3.1.x) ────────────────────────────────
 // TOC（内联 + 浮动 + 移动端控制）属 reading-experience 插件功能——插件禁用/删除 →
@@ -125,20 +120,6 @@ const inlineTocEnabled = tocEnabled && tocCfg.inlineToc !== false;
 const tocFloatEnabled = tocEnabled && tocCfg.tocFloat !== false;
 // 悬浮目录折叠态：始终展开开关关闭时即折叠（rail 现况）；开启时始终展开（正文让位）
 const mobileTocControlEnabled = tocEnabled && tocCfg.mobileTocControl !== false;
-
-// ── Collections + post titles for CollectionNav ──────────
-let embeddedCollections: any[] = [];
-let embeddedPostTitles: Record<string, string> = {};
-let embeddedPostTypes: Record<string, string> = {};
-try {
-  const collectionsData = dataSource.getCollections();
-  embeddedCollections = (collectionsData as any)?.collections || [];
-  const allPosts = dataSource.getPublishedPosts();
-  for (const p of allPosts) {
-    embeddedPostTitles[String(p.id)] = String(p.title || '').trim();
-    embeddedPostTypes[String(p.id)] = String(p.type || 'article').trim();
-  }
-} catch (_) {}
 
 if (!post && !error) {
   error = 'Post not found';
@@ -248,15 +229,9 @@ if (renderedPostContent) {
       // ignore and keep placeholders
     }
 
-    // Use server-provided TOC if available; fall back to the single markdown-it
-    // pipeline (extractHeadings — replaces the old regex-over-HTML extraction).
-    if (post && Array.isArray(post.toc) && post.toc.length > 0) {
-      tocItems = buildTocItems('', true, post.toc);
-    } else if (post?.content) {
-      tocItems = extractHeadings(post.content);
-    } else {
-      tocItems = [];
-    }
+    // TOC extraction belongs to the reading-experience plugin provider.
+    const tocProvider = getPluginTocProvider();
+    tocItems = tocProvider && post ? tocProvider({ post, content: post.content }) : [];
 
     // Inject heading ids into rendered HTML so TOC links work
     if (tocItems.length > 0) {
@@ -286,12 +261,12 @@ const pluginPostCritical = getPluginCritical('post');
 ---
 
 {isSlidesView && post ? (
-<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article' }} bodyClass={collectionNavBodyClass}>
+<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article' }} bodyClass={pluginPostBodyClass}>
   {pluginPostCritical && <Fragment slot="head"><style is:inline set:html={pluginPostCritical} /></Fragment>}
-  {SlidesSlot ? <SlidesSlot id={post.id} locale={locale} config={post.slideshow || {}} collectionEnabled={collectionEnabled} /> : null}
+  {SlidesSlot ? <SlidesSlot id={post.id} locale={locale} config={post.slideshow || {}} /> : null}
 </Layout>
 ) : (
-<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article' }} bodyClass={collectionNavBodyClass}>
+<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article' }} bodyClass={pluginPostBodyClass}>
   {pluginPostCritical && <Fragment slot="head"><style is:inline set:html={pluginPostCritical} /></Fragment>}
   <div class="post-detail-container" id="post-top">
     {error ? (
@@ -448,10 +423,10 @@ const pluginPostCritical = getPluginCritical('post');
     </>
   )}
 
-  <CornerActions toc={tocItems} postId={post?.id || id} commentsEnabled={commentsEnabled} collectionEnabled={collectionEnabled} hasCollection={!!post?.collection} mobileToc={mobileTocControlEnabled} dataSource={dataSource} />
+  <CornerActions toc={tocItems} postId={post?.id || id} post={post} settings={settings} dataSource={dataSource} />
 
-  {CollectionNavSlot && (
-    <CollectionNavSlot postId={post?.id || id} />
+  {PostSidebarSlot && (
+    <PostSidebarSlot postId={post?.id || id} />
   )}
 
 

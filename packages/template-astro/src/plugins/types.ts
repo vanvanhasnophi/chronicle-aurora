@@ -2,6 +2,7 @@
 // 聚合维度：内容消费上下文（见 docs/architecture-positioning.md）。
 // 主板只保留：路由壳 + 数据契约 + 预设；功能按插件注册，一单元一 manifest。
 import type { DataSource } from '../data/types';
+import type { PluginDataHooks } from '../data/pluginHooks';
 
 /** 页面级贡献：主板动态壳（pages/[lang]/[module].astro）按 route 渲染的页面体组件 */
 export interface PluginPageContribution {
@@ -114,6 +115,40 @@ export interface PluginPostTypeContribution {
   queueIgnored?: boolean;
 }
 
+export interface PluginTocContext {
+  post: any;
+  content?: string;
+  html?: string;
+}
+
+/** 文章页插件动作（左下角 CornerActions）——core 只渲染注册表，不预知插件语义 */
+export interface PluginPostAction {
+  /** 动作 id，同时作为 data-menu / aria 标识 */
+  id: string;
+  /** 文案 i18n key；缺省用 id */
+  labelKey?: string;
+  /** 原始 SVG 图标 HTML */
+  icon?: string;
+  /** 动作面板组件；core 以 postId + variant="inline" 渲染 */
+  component?: any;
+  /** 无面板的简单动作（如 scrollToComment），映射到 data-action */
+  action?: string;
+  /** 面板组件额外 props（可依据文章上下文动态生成） */
+  props?: Record<string, unknown> | ((ctx: PluginPostContext) => Record<string, unknown>);
+  /** 与槽位相同的 featureFlag/capability 门控 */
+  when?: { featureFlag?: string; capability?: keyof DataSource };
+  /** 文章级可用性判断（如该文章是否在某个合集内） */
+  isAvailable?: (ctx: PluginPostContext) => boolean;
+}
+
+export interface PluginPostContext {
+  post?: any;
+  postId?: string;
+  dataSource?: DataSource;
+  settings?: Record<string, any>;
+  toc?: any[];
+}
+
 /** 插件 manifest：一单元注册（页面 + 槽位 + 数据钩子 + 变化解释器 + critical + 设置 schema） */
 export interface PluginManifest {
   id: string;
@@ -125,8 +160,14 @@ export interface PluginManifest {
   name: string;
   pages?: Record<string, PluginPageContribution>;
   slots?: PluginSlotContribution[];
+  /** 文章页左下角动作：core 只遍历注册表，不硬编码 collection/TOC 外的插件入口 */
+  postActions?: PluginPostAction[];
+  /** 文章页 body class 钩子：core 合并所有注册插件返回值，不预知插件语义 */
+  postBodyClass?: (ctx: PluginPostContext) => string | undefined;
+  /** TOC provider: reading-experience owns heading extraction. */
+  tocProvider?: (ctx: PluginTocContext) => any[];
   /** 数据钩子扩展：插件专属能力（叠加在 DataSource 上，可缺省） */
-  dataHooks?: Partial<DataSource>;
+  dataHooks?: PluginDataHooks;
   /** 文件变化解释器：把 data/ 变化理解为主页 activity 条目（core 分发变化，插件自解释） */
   changeInterpreters?: PluginChangeInterpreter[];
   /** 页面级 critical CSS（页面类型 → CSS 文本，插件 ?raw 提供）：

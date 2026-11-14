@@ -8,9 +8,10 @@
 // 当前实现为内核 utils/toc.ts（正则），确认 markdown-it 一致后可在插件内替换。
 import type { PluginManifest } from '../types';
 import FloatingToc from './FloatingToc.astro';
-import CollectionNav from './CollectionNav.astro';
 import EndOfArticle from './EndOfArticle.astro';
-import collectionNavCritical from './styles/critical/collection-nav.css?raw';
+import TocMenu from './TocMenu.astro';
+import { provideToc } from './toc';
+import { readingExperienceDataHooks } from './data';
 
 export const readingExperience: PluginManifest = {
   id: 'reading-experience',
@@ -21,15 +22,24 @@ export const readingExperience: PluginManifest = {
     { slot: 'post-toc', component: FloatingToc, when: { featureFlag: 'readingExperience' } },
     // 文末·置顶（阅读体验内容：相关/上下篇/分享/作者卡）——置顶允许多组件（append 排列）
     { slot: 'post-end-of-article', position: 'top', component: EndOfArticle, when: { featureFlag: 'readingExperience' } },
-    // 交集式：合集导航 UI（阅读场景）——数据经 DataSource.getCollections（collections 插件提供），
-    // capability 探测——内容源无合集能力时不注入
-    { slot: 'post-collection-nav', component: CollectionNav, when: { capability: 'getCollections' } },
   ],
-  // 页面 critical：post 页在合集导航槽位注册时内联（布局偏移防 CLS——插件禁用 → 不注入）
-  critical: {
-    post: collectionNavCritical,
-  },
-  dataHooks: {},
+  // 文章页左下角 TOC 入口（面板由插件组件渲染）
+  postActions: [
+    {
+      id: 'toc',
+      labelKey: 'inblog.toc-title',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+      component: TocMenu,
+      isAvailable: ({ toc, settings }) =>
+        Array.isArray(toc) &&
+        toc.length > 0 &&
+        settings?.post?.postTocEnabled !== false &&
+        settings?.post?.postToc?.mobileTocControl !== false,
+      props: ({ toc }) => ({ toc: toc || [] }),
+    },
+  ],
+  dataHooks: readingExperienceDataHooks,
+  tocProvider: provideToc,
   settingsSchema: ['reading-experience'],
 };
 

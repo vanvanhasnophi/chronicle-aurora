@@ -73,3 +73,21 @@
   .friends-list--left-lg,
   .friends-list--top-lg { grid-template-columns:repeat(1, minmax(0,500px)); }
 }
+
+/* Mobile overrides must come after the 980px rule, otherwise 2 columns win. */
+@media (max-width: 768px) {
+  .friends-list--left-sm {
+    grid-template-columns: repeat(1, minmax(0, 300px));
+  }
+  .friends-list--left-lg,
+  .friends-list--top-lg {
+    grid-template-columns: repeat(1, minmax(0, 500px));
+  }
+  .friend-card--left-sm .friend-card__copy,
+  .friend-card--left-lg .friend-card__copy,
+  .friend-card--top-lg .friend-card__copy {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+}

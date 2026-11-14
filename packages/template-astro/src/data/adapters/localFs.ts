@@ -27,6 +27,7 @@ import YAML from 'yaml';
 import crypto from 'node:crypto';
 import { renderChronicleMarkdown, setRenderPostId } from '../../utils/chronicleMarkdown';
 import { normalizeAuthors } from '@chronicle/shared/src/utils';
+import { setDataContext, applyPostExtensions, applySettingsExtensions, getDataHook } from '../pluginHooks';
 import type { DataSource, PostMeta, LocalPost, LocalSettings, ChronicleComment, CommentTreeNode, PostPageConfig } from '../types';
 
 /** Resolve asset:// protocol to /assets/ (public URL) */
@@ -269,56 +270,11 @@ function resolveDataDir(): string {
 }
 
 const DATA_DIR = resolveDataDir();
+setDataContext({ dataDir: DATA_DIR });
 const POSTS_DIR = path.join(DATA_DIR, 'posts');
 const INDEX_FILE = path.join(POSTS_DIR, 'index.json');
-const COLLECTION_FILE = path.join(DATA_DIR, 'collections.yml');
 
-/**
- * 合集归属实时查询（collections.yml 反查，与 CollectionNav 的 matched 同源）。
- * post.collection/collectionPath 不再依赖 frontmatter 或 index.json 快照字段——
- * collections.yml 改动（如文章移出合集）即时生效，避免陈旧快照导致"无合集文章
- * 仍挂合集导航/正文让位"。每篇文章映射到第一个包含它的合集（多合集按
- * collections.yml 顺序取第一个，合集内上下篇也以该合集为准）。
- */
-let _colAssignmentCache: Map<string, { collection: string; collectionPath: string }> | null = null;
-let _colAssignmentMtime = 0;
-function resolveCollectionAssignments(): Map<string, { collection: string; collectionPath: string }> {
-  try {
-    const mtime = fs.statSync(COLLECTION_FILE).mtimeMs;
-    if (_colAssignmentCache && _colAssignmentMtime === mtime) return _colAssignmentCache;
-  } catch { return _colAssignmentCache ?? new Map(); }
-  const map = new Map<string, { collection: string; collectionPath: string }>();
-  try {
-    const data = readDataFile(COLLECTION_FILE);
-    const cols = Array.isArray(data) ? data : ((data as any)?.collections || []);
-    const walk = (nodes: any[] | undefined, colName: string, parents: string[]) => {
-      if (!Array.isArray(nodes)) return;
-      for (const node of nodes) {
-        if (node?.type === 'post' && node.id) {
-          const collectionPath = parents.length > 0
-            ? `${colName} / ${parents.join(' / ')}`
-            : colName;
-          const id = String(node.id);
-          if (!map.has(id)) {
-            map.set(id, { collection: colName, collectionPath });
-          }
-        }
-        if (node?.type === 'group' && Array.isArray(node.children)) {
-          walk(node.children, colName, [...parents, node.title || 'Untitled']);
-        }
-      }
-    };
-    for (const col of cols) {
-      if (col?.name && Array.isArray(col.nodes)) walk(col.nodes, String(col.name), []);
-    }
-  } catch { /* collections.yml 缺失/损坏 → 空映射 */ }
-  _colAssignmentCache = map;
-  try { _colAssignmentMtime = fs.statSync(COLLECTION_FILE).mtimeMs; } catch {}
-  return map;
-}
-const FRIENDS_FILE = path.join(DATA_DIR, 'friends.yml');
 const PROFILE_FILE = path.join(DATA_DIR, 'profile.yml');
-const COMMENTS_DIR = path.join(DATA_DIR, 'comments');
 
 // Markdown rendering centralized in src/utils/chronicleMarkdown.ts
 // Uses markdown-it with custom rules for katex, code chunks, file cards, images.
@@ -326,14 +282,8 @@ const COMMENTS_DIR = path.join(DATA_DIR, 'comments');
 // ── Post page config (3.1.x) — flat top-level groups from site.yml ──
 // （类型定义见 src/data/types.ts；此处仅保留合并逻辑）
 
-const POST_PAGE_DEFAULTS: Required<PostPageConfig> = {
+const POST_PAGE_DEFAULTS: Record<string, any> = {
   postMeta: { metaUpdated: true, metaStats: true, metaAiBadge: true, showTags: true },
-  postTocEnabled: true,
-  postToc: { inlineToc: true, tocFloat: true, tocFloatAlwaysExpanded: false, mobileTocControl: true },
-  postCollectionNavEnabled: true,
-  postCollectionNav: { alwaysCollapsed: false },
-  postEndOfArticle: { relatedPosts: true, prevNext: true, prevNextMode: 'both', prevNextScope: 'global', prevNextOrder: 'desc', authorCard: true, share: true, shareChannels: ['twitter', 'weibo', 'linkedin'] },
-  postComments: { backend: '', walineServerUrl: '', attitude: true, showGeoAddress: true, imageUploadEnabled: false, imageUploadEndpoint: '', imageUploadToken: '' },
 }
 
 /**
@@ -344,17 +294,7 @@ function normalizePostConfig(raw: unknown): PostPageConfig {
   const src = raw && typeof raw === 'object' ? (raw as Record<string, any>) : {};
   const legacy = src.post && typeof src.post === 'object' ? (src.post as Record<string, any>) : {};
   // site.yml 按插件分组：readingExperience 组提供 toc/endOfArticle、comments 组提供评论配置
-  const re = src['reading-experience'] && typeof src['reading-experience'] === 'object' ? (src['reading-experience'] as Record<string, any>) : {};
-  const cm = src.comments && typeof src.comments === 'object' ? (src.comments as Record<string, any>) : {};
-  // postCollectionNav 内置在 collections.yml（post.collectionNav——单 schema 同文件，
-  // manager 保存时一并写入）；site.yml 旧值回退
-  try {
-    const collData = readDataFile(COLLECTION_FILE) || {};
-    if (collData.post?.collectionNav && typeof collData.post.collectionNav === 'object') {
-      const merged = { ...legacy.collectionNav, ...collData.post.collectionNav };
-      legacy.collectionNav = merged;
-    }
-  } catch { /* 读取失败则回退 site.yml */ }
+  // postCollectionNav 的插件配置由 data hook enrichSettings 注入。
   const out: Record<string, any> = {};
   for (const key of Object.keys(POST_PAGE_DEFAULTS)) {
     const def = (POST_PAGE_DEFAULTS as Record<string, any>)[key];
@@ -371,10 +311,7 @@ function normalizePostConfig(raw: unknown): PostPageConfig {
       }
     }
     // 组优先（插件分组）：toc/endOfArticle ← readingExperience、comments ← comments 组
-    const groupVal = key === 'postToc' ? re.toc
-      : key === 'postEndOfArticle' ? re.endOfArticle
-      : key === 'postComments' ? cm
-      : undefined;
+    const groupVal = undefined;
     const val = groupVal ?? src[key] ?? legacyVal;
     if (val && typeof val === 'object' && !Array.isArray(val) && def && typeof def === 'object') {
       out[key] = { ...def, ...val };
@@ -459,8 +396,6 @@ function scanPostsFromDisk(): PostMeta[] {
             tags: Array.isArray(attrs.tags) ? attrs.tags.map(String) : [],
             status: String(attrs.status || 'published'),
             font: attrs.font ? String(attrs.font) : undefined,
-            collection: attrs.collection ? String(attrs.collection) : undefined,
-            collectionPath: attrs.collectionPath ? String(attrs.collectionPath) : undefined,
             author: authorList[0] || undefined,
             authors: authorList.length ? authorList : undefined,
             aiGenerated: !!attrs.aiGenerated,
@@ -471,14 +406,8 @@ function scanPostsFromDisk(): PostMeta[] {
         });
     }
 
-    // 合集归属实时查询覆盖（frontmatter 的 collection 字段不再作为来源——
-    // 统一查询 collections.yml，与 getAllPosts/index.json 路径一致）
-    const colAssignments = resolveCollectionAssignments();
-    for (const p of posts) {
-      const ca = colAssignments.get(String(p.id));
-      p.collection = ca?.collection;
-      p.collectionPath = ca?.collectionPath;
-    }
+    // 插件扩展字段（合集归属等）由注册的 data hook 注入。
+    for (const p of posts) applyPostExtensions(p);
     return posts;
 }
 
@@ -505,14 +434,8 @@ function getAllPosts(): PostMeta[] {
               });
             }
             if (posts.length > 0) {
-                // 合集归属实时查询覆盖（index.json 的 collection 是生成快照——
-                // collections.yml 改动后未重跑 indexer 会陈旧：无合集文章残留旧合集）
-                const colAssignments = resolveCollectionAssignments();
-                for (const p of posts) {
-                  const ca = colAssignments.get(String(p.id));
-                  p.collection = ca?.collection;
-                  p.collectionPath = ca?.collectionPath;
-                }
+                // 插件扩展字段（合集归属等）由注册的 data hook 注入。
+                for (const p of posts) applyPostExtensions(p);
                 _postCache = posts;
                 _postCacheMtime = fs.statSync(INDEX_FILE).mtimeMs;
                 return _postCache;
@@ -560,41 +483,11 @@ export function getPostById(id: string, locale?: string): LocalPost | null {
         }
     }
 
-    // 合集归属实时查询（覆盖 index.json 快照——collections.yml 改动即时生效，
-    // 无合集文章不再残留旧合集；与 CollectionNav 的 matched 同源，侧栏/正文让位一致）
-    const ca = resolveCollectionAssignments().get(id);
-    return { ...meta, collection: ca?.collection, collectionPath: ca?.collectionPath, content, compiledHtml };
+    // 插件扩展字段（合集归属等）由注册的 data hook 注入。
+    return applyPostExtensions({ ...meta, content, compiledHtml });
 }
 
 // ── Settings ─────────────────────────────────────────────
-
-/** Read friends data from friends.yml */
-function readFriendsFromFile(): { cards: unknown[]; globalStyle: string | null } {
-    const data = readDataFile(FRIENDS_FILE)
-    if (!data) return { cards: [], globalStyle: null }
-    const result = { cards: data.cards || [], globalStyle: data.globalStyle || null }
-    // Resolve asset:// URLs in card data
-    result.cards = (result.cards || []).map((c: any) => ({
-      ...c,
-      avatar: resolveAssetUrl(c.avatar || ''),
-      cover: resolveAssetUrl(c.cover || ''),
-    }))
-    return result
-}
-
-function readFriendsCards(): unknown[] {
-    return readFriendsFromFile().cards;
-}
-
-function readFriendsGlobalStyle(): string | null {
-    // 方案 A：设置回 site.yml（顶层 friendsGlobalStyle 键）；旧 friends.yml globalStyle 回退
-    try {
-        const siteYml = path.join(DATA_DIR, 'site.yml');
-        const site = readDataFile(siteYml) || {};
-        if (typeof site.friendsGlobalStyle === 'string' && site.friendsGlobalStyle) return site.friendsGlobalStyle;
-    } catch { /* ignore */ }
-    return readFriendsFromFile().globalStyle ?? null;
-}
 
 /** Get public-safe settings */
 export function getPublicSettings(): LocalSettings {
@@ -610,7 +503,7 @@ export function getPublicSettings(): LocalSettings {
       if (block && typeof block === 'object') Object.assign(flat, block)
     }
     if (Object.keys(flat).length > 0) raw = { ...flat, ...raw }
-    return {
+    const result: Record<string, any> = {
         siteName: raw.siteName || raw.sitename || raw.site_name,
         siteDescription: raw.siteDescription || '',
         // 3.1.x 去 frontend 前缀（site 设置无 backend 对应物）；兼容旧键 frontendTheme 等
@@ -631,8 +524,7 @@ export function getPublicSettings(): LocalSettings {
         locale: raw.locale ?? raw.frontendLocale,
         // ── 开关按插件分组读取（site.yml 每插件一段，组内开关键 = featureFlag 名）──
         // 单功能插件（friends/collections/slides）site.yml 只存 enabled——页面开关 = 总开关，
-        // 顶层镜像键（collectionPage/friendsPage/slides）作为派生值回退到组内 enabled（兼容旧消费方）
-        collectionPage: raw.collections?.collectionPage ?? raw.collections?.enabled ?? raw.collectionPage ?? true,
+        // 顶层镜像键作为派生值回退到组内 enabled（兼容旧消费方）
         aboutPage: raw.aboutPage ?? true,
         friendsPage: raw.friends?.friendsPage ?? raw.friends?.enabled ?? raw.friendsPage ?? true,
         rss: raw.rss ?? true,
@@ -655,15 +547,12 @@ export function getPublicSettings(): LocalSettings {
             comments: raw.comments?.enabled === false ? false : (raw.comments?.comments ?? raw.comments?.enabled ?? raw.featureFlags?.comments ?? true),
             readingExperience: raw['reading-experience']?.enabled ?? raw.featureFlags?.readingExperience ?? true,
             friendsPage: raw.friends?.friendsPage ?? raw.friends?.enabled ?? raw.featureFlags?.friendsPage ?? true,
-            collectionPage: raw.collections?.collectionPage ?? raw.collections?.enabled ?? raw.featureFlags?.collectionPage ?? true,
             slides: raw.slides?.slides ?? raw.slides?.enabled ?? raw.featureFlags?.slides ?? true,
             aboutPage: raw.aboutPage ?? raw.featureFlags?.aboutPage ?? true,
             rss: raw.rss ?? raw.featureFlags?.rss ?? true,
             traffic: raw.traffic ?? raw.featureFlags?.traffic ?? raw.analytics?.enabled ?? false,
             ...Object.fromEntries(Object.entries(raw).filter(([, v]) => typeof v === 'boolean')),
         },
-        friendsCards: readFriendsCards(),
-        friendsGlobalStyle: readFriendsGlobalStyle(),
         homepageMode: raw.homepageMode,
         singleColumnHomepage: raw.singleColumnHomepage,
         cardVisibility: raw.cardVisibility || {},
@@ -675,6 +564,8 @@ export function getPublicSettings(): LocalSettings {
         comment: raw.comment || {},
         post: normalizePostConfig(raw),
     };
+    applySettingsExtensions(result);
+    return result as LocalSettings;
 }
 
 /** Get author profile — avatar auto-discovered from data/avatar/ */
@@ -693,53 +584,23 @@ export function getProfile(): Record<string, unknown> {
     return data
 }
 
-/** Get collections data (single-file YAML) */
+/** Data-source capabilities contributed by plugins (e.g. collections). */
 export function getCollections(): Record<string, unknown> {
-    const data = readDataFile(COLLECTION_FILE)
-    if (data) {
-      const arr = Array.isArray(data) ? data : (data.collections || data.items || [])
-      // Resolve asset:// URLs in collection covers
-      const resolved = arr.map((c: any) => ({ ...c, cover: resolveAssetUrl(c.cover || '') }))
-      return { collections: resolved }
-    }
-    return { collections: [] }
+    const hook = getDataHook('getCollections');
+    return hook ? hook() : { collections: [] };
 }
 
-/**
- * Collection 内导航顺序：按 collections.yml nodes 树深度优先展平某 collection 的帖子 id
- * （保留人工定义的阅读顺序——collection 自带顺序，不按日期、不受 prevNextOrder 影响）。
- */
 export function getCollectionPostIds(collectionName: string): string[] {
-    const data = getCollections();
-    const cols = Array.isArray(data?.collections) ? (data.collections as Record<string, any>[]) : [];
-    const col = cols.find((c: any) => String(c.name || c.slug || '') === collectionName)
-    if (!col) return []
-    const ids: string[] = []
-    const walk = (nodes: unknown[]) => {
-      for (const node of nodes || []) {
-        if (!node || typeof node !== 'object') continue
-        const n = node as Record<string, any>
-        if (n.type === 'post' && n.id) ids.push(String(n.id))
-        if (n.type === 'group' && Array.isArray(n.children)) walk(n.children)
-      }
-    }
-    walk(Array.isArray(col.nodes) ? col.nodes : [])
-    return ids
+    const hook = getDataHook('getCollectionPostIds');
+    return hook ? hook(collectionName) : [];
 }
 
 // ── Comments ──────────────────────────────────────────────
 
-/** Read comments for a post from data/comments/{postId}.json */
+/** Comments are provided by the comments plugin data hook. */
 export function getComments(postId: string): ChronicleComment[] {
-  const file = path.join(COMMENTS_DIR, `${postId}.json`);
-  if (!fs.existsSync(file)) return [];
-  try {
-    const raw = fs.readFileSync(file, 'utf-8');
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const hook = getDataHook('getComments');
+  return hook ? hook(postId) : [];
 }
 
 /**

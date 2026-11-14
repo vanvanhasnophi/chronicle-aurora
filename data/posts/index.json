@@ -15,8 +15,12 @@
     ],
     "aiGenerated": true,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide / Configuration"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
   },
   "comments-config": {
     "title": "Comments Configuration",
@@ -34,8 +38,12 @@
     ],
     "aiGenerated": true,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide / Configuration"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
   },
   "friend-config": {
     "title": "Friends Management",
@@ -53,8 +61,12 @@
     ],
     "aiGenerated": true,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide / Configuration"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
   },
   "getting-started": {
     "title": "Getting Started",
@@ -69,8 +81,12 @@
     "author": null,
     "aiGenerated": false,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
   },
   "markdown-showcase": {
     "title": "Markdown Showcase",
@@ -86,8 +102,12 @@
     "author": null,
     "aiGenerated": false,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
   },
   "profile-config": {
     "title": "Profile Configuration",
@@ -105,8 +125,12 @@
     ],
     "aiGenerated": true,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide / Configuration"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
   },
   "site-config": {
     "title": "Site Configuration",
@@ -124,8 +148,12 @@
     ],
     "aiGenerated": true,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide / Configuration"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
   },
   "slides-demo": {
     "title": "Chronicle Presentation",
@@ -140,8 +168,12 @@
     "author": null,
     "aiGenerated": false,
     "type": "slides",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
   },
   "welcome-to-chronicle": {
     "title": "Welcome to Chronicle",
@@ -157,7 +189,11 @@
     "author": null,
     "aiGenerated": false,
     "type": "article",
-    "collection": "Chronicle Guide",
-    "collectionPath": "Chronicle Guide"
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
   }
 }

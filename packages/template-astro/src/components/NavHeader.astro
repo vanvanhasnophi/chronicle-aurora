@@ -44,6 +44,8 @@ const isActive = (path: string) => {
   if (path !== "/" && activePath.startsWith(path)) return true;
   return false;
 };
+// A post route belongs to the "文章" (blogs) nav section.
+const isBlogsActive = isActive("/blogs") || activePath === "/post" || activePath.startsWith("/post/");
 ---
 
 <!-- Hidden SVG symbols — referenced by <use> throughout the nav -->
@@ -136,7 +138,7 @@ const isActive = (path: string) => {
           href={blogsHref}
           class:list={[
             "nav-link",
-            { "router-link-active": isActive("/blogs") },
+            { "router-link-active": isBlogsActive },
           ]}
         >
           <span class="nav-link-swap">

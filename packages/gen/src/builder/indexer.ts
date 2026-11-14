@@ -16,8 +16,8 @@ export interface IndexEntry {
   author?: string
   aiGenerated?: boolean
   type?: 'article' | 'slides'
-  collection?: string
-  collectionPath?: string
+  /** Generic plugin-owned metadata. */
+  extensions?: Record<string, unknown>
 }
 
 export interface IndexOutput {

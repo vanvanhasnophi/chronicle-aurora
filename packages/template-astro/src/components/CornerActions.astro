@@ -2,44 +2,66 @@
 import '../themes/aurora/styles/components/corner-actions.css';
 import BackToTop from './BackToTop.astro';
 import CornerButton from './CornerButton.astro';
-import { getPluginSlot } from '../plugins';
+import { getPluginPostActions } from '../plugins';
 import type { TocItem } from '../utils/toc';
 import { getTranslation, getLocale } from '../utils/i18n';
 
-interface Props { toc?: TocItem[]; postId?: string; commentsEnabled?: boolean; collectionEnabled?: boolean; hasCollection?: boolean; mobileToc?: boolean; dataSource?: any }
+interface Props {
+  toc?: TocItem[];
+  postId?: string;
+  post?: any;
+  settings?: Record<string, any>;
+  dataSource?: any;
+}
 const props = Astro.props as Props;
-const { toc=[], postId='', commentsEnabled=true, collectionEnabled=true, hasCollection=false, mobileToc=true } = props;
-// capability 门控需要 dataSource（getCollections 探测）——无 ctx 时 passesWhen
-// 对 undefined dataSource 拒绝 capability，合集面板（post-collection-nav 槽位）
-// 会整体消失（按钮在、内容空）。post 页传入 dataSource 后门控正确放行。
-const CollectionNavSlot = getPluginSlot('post-collection-nav', { dataSource: props.dataSource });
+const { toc = [], postId = '', post, settings } = props;
+
+// Plugin-owned corner actions; core only knows the registration contract.
+const actionCtx = {
+  post,
+  postId,
+  dataSource: props.dataSource,
+  settings,
+  toc,
+};
+const actions = getPluginPostActions(actionCtx);
 
 const locale = getLocale(Astro.locals);
 const t = (key: string) => getTranslation(locale, key);
 
-function inCol(n:any[]|undefined,pid:string):boolean{if(!Array.isArray(n))return false;for(const x of n){if(x?.type==='post'&&String(x.id)===pid)return true;if(x?.children&&inCol(x.children,pid))return true}return false}
-const hasCol=collectionEnabled&&hasCollection;
-const hasToc=mobileToc&&toc.length>0, hasComment=commentsEnabled, btnCount=(hasToc?1:0)+(hasCol?1:0)+(hasComment?1:0), capW=btnCount*50+(btnCount-1);
+const btnCount = actions.length;
+const actionLabel = (action: (typeof actions)[number]) =>
+  action.labelKey ? t(action.labelKey) : action.id;
+const actionProps = (action: (typeof actions)[number]) =>
+  typeof action.props === 'function' ? action.props(actionCtx) : (action.props || {});
 ---
 
 <BackToTop />
 
-{/* 无任何已注册候选功能（TOC/合集/评论全不可用）→ 左下角 primary 按钮整体消失，
-    不显示无功能无图标的空按钮 */}
 {btnCount > 0 && (
 <div class="ca-left">
-  <CornerButton id="cb-left" template="menu" side="left" variant="primary" capsule={btnCount>1} capsuleWidth={capW}>
+  <CornerButton id="cb-left" template="menu" side="left" variant="primary" capsule={btnCount>1} capsuleWidth={btnCount * 50 + Math.max(0, btnCount - 1)}>
     <Fragment slot="buttons">
-      {hasToc&&(<button class="cb__slot" data-menu="toc" title={t('inblog.toc-title')} aria-label={t('inblog.toc-title')}><svg class="cb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>)}
-      {hasToc&&hasCol&&(<span class="cb__divider"></span>)}
-      {hasCol&&(<button class="cb__slot" data-menu="collection" title={t('nav.collection')} aria-label={t('nav.collection')}><svg class="cb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M 12 2 L 21 8 L 12 14 L 3 8 Z"/><path d="M 18 14 L 21 16 L 12 22 L 3 16 L 6 14"/></svg></button>)}
-      {(hasToc||hasCol)&&hasComment&&(<span class="cb__divider"></span>)}
-      {hasComment&&(<button class="cb__slot" data-action="scrollToComment" title={t('comment.title')} aria-label={t('comment.title')}><svg class="cb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>)}
+      {actions.map((action) => (
+        <button
+          class="cb__slot"
+          data-menu={action.component ? action.id : undefined}
+          data-action={action.action}
+          title={actionLabel(action)}
+          aria-label={actionLabel(action)}
+        >
+          {action.icon ? <span class="cb__icon" set:html={action.icon} /> : <span class="cb__icon">{actionLabel(action).slice(0, 1)}</span>}
+        </button>
+      ))}
     </Fragment>
-    {hasToc&&(<ul data-menu="toc" class="cb__list" hidden>{toc.map((item:TocItem)=>(<li class:list={['cb__list-item',`cb__list-item--l${item.level}`]} data-toc-id={item.id}><a href={`#${item.id}`} class="cb__list-link" data-toc-id={item.id}><span class="cb__list-text">{item.text}</span></a></li>))}</ul>)}
-    {hasCol&&CollectionNavSlot&&(<div data-menu="collection" hidden><CollectionNavSlot postId={postId} variant="inline" /></div>)}
+    {actions.filter((action) => action.component).map((action) => {
+      const ActionComponent = action.component;
+      return (
+        <div data-menu={action.id} hidden>
+          <ActionComponent postId={postId} variant="inline" {...actionProps(action)} />
+        </div>
+      );
+    })}
   </CornerButton>
 </div>
 )}
-
-

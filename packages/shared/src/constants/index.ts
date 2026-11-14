@@ -46,9 +46,6 @@ export const PROFILE_FILE = 'profile.yml'
 /** Friends config */
 export const FRIENDS_FILE = 'friends.yml'
 
-/** Collections config */
-export const COLLECTIONS_FILE = 'collections.yml'
-
 /** Post metadata index (auto-generated, JSON) */
 export const POST_INDEX_FILE = 'index.json'
 
@@ -67,9 +64,6 @@ export const SETTINGS_FILE_NAME = 'settings.json'
 
 /** @deprecated No auth in Aurora */
 export const SECURITY_FILE_NAME = 'security.json'
-
-/** @deprecated Use COLLECTIONS_FILE instead */
-export const COLLECTION_FILE_NAME = 'collection.json'
 
 /** @deprecated Use POST_INDEX_FILE instead */
 export const INDEX_FILE_NAME = 'index.json'

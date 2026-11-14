@@ -7,6 +7,7 @@
 import type { PluginManifest } from '../types';
 import FriendsPage from './FriendsPage.astro';
 import NavFriendsLink from './NavFriendsLink.astro';
+import { friendsDataHooks } from './data';
 
 export const friends: PluginManifest = {
   id: 'friends',
@@ -19,7 +20,7 @@ export const friends: PluginManifest = {
     // 导航链接（NavHeader nav-link 槽位）——插件禁用/删除 → 链接消失
     { slot: 'nav-link', component: NavFriendsLink },
   ],
-  dataHooks: {},
+  dataHooks: friendsDataHooks,
   settingsSchema: ['friends'],
 };
 
