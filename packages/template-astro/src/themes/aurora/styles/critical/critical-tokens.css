@@ -20,7 +20,9 @@
 
   /* Brand */
   --accent-default: #2ea35f;
-  --accent: var(--accentColor, var(--accent-default));
+  --accent-base: var(--accentColor, var(--accent-default));
+  --accent: var(--accent-base);
+  --accent-readable: color-mix(in srgb, var(--accent) 70%, #fff);
   --accent-dark: color-mix(in srgb, var(--accent) 80%, #000);
   --accent-bg: color-mix(in srgb, var(--accent) 15%, transparent);
   --recommended-accent-text: #fff;
@@ -87,6 +89,8 @@
   color-scheme: light;
   --app-text-wght: 430;
   --recommended-accent-text: #fff;
+  --accent: color-mix(in oklch, var(--accent-base) 75%, #2c2c2e);
+  --accent-readable: color-mix(in oklch, var(--accent-base) 52%, #2c2c2e);
 
   /* ═══ Grayscale foundation (light) ═══ */
   --bg-base: #f9f9f9;

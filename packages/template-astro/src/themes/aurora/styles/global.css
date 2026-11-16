@@ -16,8 +16,10 @@
   --app-heading-wght: 570;
   --transition-duration: 1;
   --accent-default: #2ea35f;
-  --accent: var(--accentColor, var(--accent-default));
+  --accent-base: var(--accentColor, var(--accent-default));
+  --accent: var(--accent-base);
   --accent-dark: color-mix(in srgb, var(--accent) 80%, #000);
+  --accent-readable: color-mix(in srgb, var(--accent) 70%, #fff);
   --accent-bg: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-hvr: color-mix(in srgb, var(--accent) 80%, transparent);
   --recommended-accent-text: #fff;
@@ -113,7 +115,7 @@
   --glass-shadow-elev-1: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(0, 0, 0, 0.07);
   --glass-shadow-elev-2: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.8), 0 3px 10px -2px rgba(0, 0, 0, 0.09), 0 1px 3px -1px rgba(0, 0, 0, 0.05);
   --glass-shadow-elev-3: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.9), 0 5px 18px -3px rgba(0, 0, 0, 0.10), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
-  --card-glow:0 0 16px color-mix(in srgb, var(--comp-text-pri-hl) 30%, transparent);
+  --card-glow:0 0 16px color-mix(in srgb, var(--accent) 30%, transparent);
   --toc-divider-color: rgba(255, 255, 255, 0.02);
   --select-option-border-color: var(--border-color);
   --frontend-bg-overlay: var(--frontend-bg-overlay-dark, transparent);
@@ -151,6 +153,8 @@
   --code-text: #c7254e;
   --recommended-accent-text: #fff;
   --text-on-accent: #fff;
+  --accent: color-mix(in oklch, var(--accent-base) 75%, #2c2c2e);
+  --accent-readable: color-mix(in oklch, var(--accent-base) 52%, #2c2c2e);
   --bg-base: #f9f9f9;
   --bg-offset: #aaa;
   --fg-base: #111111;
@@ -167,7 +171,7 @@
   --comp-bg-accent-blur: color-mix(in srgb, var(--accent) 35%, #fffb);
   --comp-bg-accent-ghost: color-mix(in srgb, var(--accent) 45%, #fff7);
   --comp-text-pri-hl: var(--accent);
-  --comp-text-sec-hl: color-mix(in srgb, var(--accent) 75%, var(--comp-text-sec));
+  --comp-text-sec-hl: color-mix(in oklch, var(--accent) 75%, var(--comp-text-sec));
   --comp-text-accent-ghost: color-mix(in srgb, var(--comp-text-pri) 75%, var(--accent));
   --border-color-blur: color-mix(in srgb, var(--fg-base) 12%, transparent);
   --select-arrow-color: #999;
@@ -229,7 +233,7 @@
   a{
     font-weight: 500;
     font-variation-settings: 'wght' 500;
-    color: var(--accent-dark);
+    color: var(--accent-readable);
     text-decoration: inherit;
   }
   a:hover{
@@ -293,7 +297,7 @@ h6{
   }
   html:not(.is-mobile) .interactive.glowable:hover, html.is-mobile .interactive.glowable:active{
     box-shadow: var(--card-glow);
-    border-color: var(--comp-text-sec-hl);
+    border-color: var(--accent);
   }
   .mtl-surface{
     background: var(--comp-bg-glass);
@@ -578,4 +582,12 @@ body.backend::after{
 html[data-featured-alt="true"] {
   --featured: var(--featured-alt);
   --featured-bg: color-mix(in srgb, var(--featured) 16%, transparent);
+}
+
+:root[data-theme="light"][data-featured-alt="true"] {
+  --featured: #c0268f;
+  --featured-bg: color-mix(in srgb, var(--featured) 12%, transparent);
+}
+:root[data-theme="light"] .nav-link.router-link-active {
+  color: #111111 !important;
 }

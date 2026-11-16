@@ -518,7 +518,7 @@
   }
 
   .home-shell .view-more-link:hover{
-    color: var(--accent-dark);
+    color: var(--accent-readable, var(--accent-dark));
     text-decoration: underline;
   }
 

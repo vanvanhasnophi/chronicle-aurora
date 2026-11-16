@@ -344,7 +344,7 @@ const analyticsBackend = analyticsEnabled ? String(analyticsCfg.backend || '') :
 const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaMeasurementId || '').trim();
 ---
 <!DOCTYPE html>
-<html lang={htmlLang} class={"immersive"} data-perf-default={defaultPerformanceMode} data-featured-alt={featuredAlt ? "true" : undefined}>
+<html lang={htmlLang} class={"immersive"} data-perf-default={defaultPerformanceMode} data-featured-alt={featuredAlt ? "true" : undefined} style={`--accent-base:${accent}`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />

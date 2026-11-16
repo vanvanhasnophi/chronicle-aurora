@@ -181,7 +181,7 @@ html.immersive .nav-header {
 /* ── Links ── */
 /* 与 global.css 同值（accent-dark）：base 与 global 同层同值，迟到无变化；
    裸 a 链接首帧即最终色（不再出现 accent→accent-dark 闪现）。 */
-a { color:var(--accent-dark); }
+a { color:var(--accent-readable, var(--accent-dark)); }
 
 /* ── Mobile (≤768px) ── */
 @media (max-width:768px) {

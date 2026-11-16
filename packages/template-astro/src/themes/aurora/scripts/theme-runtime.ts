@@ -52,7 +52,7 @@ function applySettings() {
 
     // 应用 accent 颜色
     if (settings.accent) {
-      document.documentElement.style.setProperty('--accent', settings.accent);
+      document.documentElement.style.setProperty('--accent-base', settings.accent);
     }
 
     // 应用字体

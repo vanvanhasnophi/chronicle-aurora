@@ -168,7 +168,7 @@ html.blogs-query-loading .blog-container #featured-section {
 
 .blog-container .timeline-toggle:hover {
   background: var(--accent-bg);
-  color: var(--accent-dark);
+  color: var(--accent-readable, var(--accent-dark));
 }
 
 .blog-container .timeline-toggle[aria-pressed="true"],
@@ -428,7 +428,7 @@ html.blogs-query-loading .blog-container #featured-section {
 }
 
 .blog-container .month-label:hover .month-name {
-  color: var(--accent-dark);
+  color: var(--accent-readable, var(--accent-dark));
 }
 
 .blog-container .month-label:focus-visible {
