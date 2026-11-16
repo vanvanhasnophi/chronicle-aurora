@@ -23,6 +23,7 @@
   --recommended-accent-text: #fff;
   --text-on-accent: #111;
   --featured: #ffd700;
+  --featured-alt: #ff4fd8;
   /* ── AI enhancement palette (fixed; independent of site accent) ── */
   --ai-grad-1: #2dd4bf;
   --ai-grad-2: #38bdf8;
@@ -571,4 +572,10 @@ body.backend::after{
       --top-fade-length: 50px;
     }
   }
+}
+
+/* Featured alternative when the accent is too close to the default gold. */
+html[data-featured-alt="true"] {
+  --featured: var(--featured-alt);
+  --featured-bg: color-mix(in srgb, var(--featured) 16%, transparent);
 }

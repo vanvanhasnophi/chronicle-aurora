@@ -161,6 +161,31 @@ const metaRobots = String(pageMeta.robots || (pageMeta.noIndex ? 'noindex,nofoll
 // 从settings获取样式配置
 const theme = settings?.theme || 'follow';
 const accent = settings?.accent || '#2ea35f';
+
+function accentIsGoldLike(value: string): boolean {
+  const m = String(value || '').trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return false;
+  let hex = m[1];
+  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  let hue = 0;
+  if (d !== 0) {
+    if (max === r) hue = ((g - b) / d) % 6;
+    else if (max === g) hue = (b - r) / d + 2;
+    else hue = (r - g) / d + 4;
+    hue *= 60;
+    if (hue < 0) hue += 360;
+  }
+  return hue >= 20 && hue <= 70 && sat > 0.35 && l > 0.3 && l < 0.85;
+}
+
+const featuredAlt = accentIsGoldLike(accent);
 const background = normalizeLayoutBackground(settings?.background || '');
 const backgroundMetaRaw = settings?.backgroundMeta || null;
 const backgroundColorLight = settings?.baseColorLight || settings?.backgroundColorLight || '';
@@ -319,7 +344,7 @@ const analyticsBackend = analyticsEnabled ? String(analyticsCfg.backend || '') :
 const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaMeasurementId || '').trim();
 ---
 <!DOCTYPE html>
-<html lang={htmlLang} class={"immersive"} data-perf-default={defaultPerformanceMode}>
+<html lang={htmlLang} class={"immersive"} data-perf-default={defaultPerformanceMode} data-featured-alt={featuredAlt ? "true" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
