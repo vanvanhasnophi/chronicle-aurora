@@ -18,7 +18,7 @@ homepage:
     staleDays: 30
 appearance:
   theme: follow
-  accent: '#ffd700'
+  accent: '#36a32e'
   font: sans
   locale: follow
   defaultPerformanceMode: auto
