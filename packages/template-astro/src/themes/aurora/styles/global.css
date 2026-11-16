@@ -115,7 +115,7 @@
   --glass-shadow-elev-1: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(0, 0, 0, 0.07);
   --glass-shadow-elev-2: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.8), 0 3px 10px -2px rgba(0, 0, 0, 0.09), 0 1px 3px -1px rgba(0, 0, 0, 0.05);
   --glass-shadow-elev-3: inset 0 1.1px 0 -1px rgba(255, 255, 255, 0.9), 0 5px 18px -3px rgba(0, 0, 0, 0.10), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
-  --card-glow:0 0 16px color-mix(in srgb, var(--accent) 30%, transparent);
+  --card-glow:0 0 16px color-mix(in srgb, var(--comp-text-pri-hl) 30%, transparent);
   --toc-divider-color: rgba(255, 255, 255, 0.02);
   --select-option-border-color: var(--border-color);
   --frontend-bg-overlay: var(--frontend-bg-overlay-dark, transparent);
@@ -297,7 +297,7 @@ h6{
   }
   html:not(.is-mobile) .interactive.glowable:hover, html.is-mobile .interactive.glowable:active{
     box-shadow: var(--card-glow);
-    border-color: var(--accent);
+    border-color: var(--comp-text-sec-hl);
   }
   .mtl-surface{
     background: var(--comp-bg-glass);
@@ -590,4 +590,10 @@ html[data-featured-alt="true"] {
 }
 :root[data-theme="light"] .nav-link.router-link-active {
   color: #111111 !important;
+}
+/* Dark-mode highlight family stays neutral; only the light theme tints it. */
+:root:not([data-theme="light"]) {
+  --comp-text-pri-hl: var(--app-text-pri);
+  --comp-text-sec-hl: var(--app-text-sec);
+  --highlight: color-mix(in srgb, var(--hl-offset) 20%, transparent);
 }

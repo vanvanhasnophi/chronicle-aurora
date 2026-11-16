@@ -34,6 +34,9 @@ function initThemeListener() {
 }
 
 // ── 应用主题/accent/字体（读框架数据桥 __CHRONICLE_SETTINGS__）──
+let activeAccent = '';
+let activeFeaturedAlt = '';
+
 function applySettings() {
   const settings = { ...(window as any).__CHRONICLE_SETTINGS__ };
   if (!settings) return;
@@ -50,9 +53,16 @@ function applySettings() {
     // 主题：设置 <html data-theme>，背景/遮罩/底色均由 CSS 变量按主题解析
     applyTheme(settings.theme);
 
-    // 应用 accent 颜色
-    if (settings.accent) {
-      document.documentElement.style.setProperty('--accent-base', settings.accent);
+    // 应用 accent 颜色：软路由时沿用当前页面的 accent，避免预取旧页面把它重置。
+    const accent = initialized && activeAccent ? activeAccent : (settings.accent || activeAccent);
+    if (accent) {
+      activeAccent = accent;
+      document.documentElement.style.setProperty('--accent-base', accent);
+    }
+    if (activeFeaturedAlt) {
+      document.documentElement.dataset.featuredAlt = 'true';
+    } else {
+      delete document.documentElement.dataset.featuredAlt;
     }
 
     // 应用字体
@@ -71,6 +81,7 @@ let initialized = false;
 function init() {
   if (!initialized) {
     // 首次硬加载：完整初始化（主题、监听器）
+    activeFeaturedAlt = document.documentElement.dataset.featuredAlt || '';
     applySettings();
     initThemeListener();
     initialized = true;
@@ -82,6 +93,13 @@ function init() {
 
 // Astro 每次路由切换完毕会抛出 page-load 事件 (包含首次加载)
 document.addEventListener('astro:page-load', init);
+
+document.addEventListener('astro:before-swap', () => {
+  const root = document.documentElement;
+  const currentAccent = getComputedStyle(root).getPropertyValue('--accent-base').trim();
+  if (currentAccent) activeAccent = currentAccent;
+  activeFeaturedAlt = root.dataset.featuredAlt || '';
+});
 
 document.addEventListener('astro:after-swap', () => {
   document.documentElement.classList.remove('home-transition-disabled');
