@@ -160,7 +160,12 @@ const metaRobots = String(pageMeta.robots || (pageMeta.noIndex ? 'noindex,nofoll
 
 // 从settings获取样式配置
 const theme = settings?.theme || 'follow';
-const accent = settings?.accent || '#2ea35f';
+const rawAccent = settings?.accent || '#2ea35f';
+// A site may point accent at the featured token. Resolve that known token to
+// its base color so SSR hue detection and the light-mode derivation still work.
+const accent = /^var\(--featured(?:\s*,.*)?\)$/.test(String(rawAccent).trim())
+  ? '#ffd700'
+  : rawAccent;
 
 function accentIsGoldLike(value: string): boolean {
   const m = String(value || '').trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
