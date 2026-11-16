@@ -428,7 +428,7 @@
     transition: transform .2s;
   }
   #perf-toggle[data-perf="full"] .popup-switch{
-    background: var(--accent);
+    background: var(--accent-dark);
   }
   #perf-toggle[data-perf="full"] .popup-switch-knob{
     transform: translateX(16px);
