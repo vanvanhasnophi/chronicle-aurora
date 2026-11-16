@@ -513,6 +513,8 @@ const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaM
       <div class="bg-overlay"></div>
     </div>
 
+    <div id="route-progress" aria-hidden="true"><span></span></div>
+
     <div id="app">
       <NavHeader currentPath={Astro.url.pathname} locale={locale} articleTitle={navTitle} articleBackHref={navBackHref} articleBackLabel={navBackLabel} featureFlags={featureFlags} defaultPerformanceMode={defaultPerformanceMode} siteName={siteTitle} />
 
@@ -633,6 +635,64 @@ const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaM
             setTimeout(activate, 2000);
           }
         });
+      })();
+    </script>
+
+    <style is:inline>
+      #route-progress {
+        position: fixed;
+        inset: 0 0 auto;
+        height: 2px;
+        z-index: 100000;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 120ms ease;
+      }
+      #route-progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #fff));
+        box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+        transition: width 220ms cubic-bezier(.2, .8, .2, 1);
+      }
+      #route-progress.is-active { opacity: 1; }
+    </style>
+    <script is:inline>
+      (() => {
+        if (window.__chronicleRouteProgress) return;
+        window.__chronicleRouteProgress = true;
+        const bar = () => document.getElementById('route-progress');
+        const fill = () => bar()?.querySelector('span');
+        let safety = 0;
+        const show = () => {
+          const el = bar();
+          if (!el) return;
+          el.classList.add('is-active');
+          const s = fill();
+          if (s) s.style.width = '14%';
+          clearTimeout(safety);
+          safety = setTimeout(done, 10000);
+        };
+        const advance = () => {
+          const s = fill();
+          if (s) s.style.width = '72%';
+        };
+        const done = () => {
+          clearTimeout(safety);
+          const s = fill();
+          if (s) s.style.width = '100%';
+          const el = bar();
+          if (!el) return;
+          setTimeout(() => {
+            el.classList.remove('is-active');
+            if (fill()) fill().style.width = '0';
+          }, 180);
+        };
+        document.addEventListener('astro:before-preparation', show);
+        document.addEventListener('astro:before-swap', advance);
+        document.addEventListener('astro:after-swap', done);
+        document.addEventListener('astro:page-load', done);
       })();
     </script>
 
