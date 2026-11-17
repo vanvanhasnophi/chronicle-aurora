@@ -108,7 +108,7 @@
   }
   .search-box-wrapper .search-btn.active{
     background-color: var(--accent);
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
   }
 
   .search-box-wrapper .input-area{

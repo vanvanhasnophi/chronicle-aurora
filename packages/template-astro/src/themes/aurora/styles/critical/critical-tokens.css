@@ -26,6 +26,9 @@
   --accent-dark: color-mix(in srgb, var(--accent) 80%, #000);
   --accent-bg: color-mix(in srgb, var(--accent) 15%, transparent);
   --recommended-accent-text: #fff;
+  /* 以 --accent 作为背景时的前景色。深色主题的 accent 保持高亮 → 用近黑；
+     浅色主题的 accent 被 #2c2c2e 压暗 → 用白。 */
+  --text-on-accent: #111;
   --featured: #ffd700;
   --featured-bg: color-mix(in srgb, var(--featured) 15%, transparent);
 
@@ -89,6 +92,7 @@
   color-scheme: light;
   --app-text-wght: 430;
   --recommended-accent-text: #fff;
+  --text-on-accent: #fff;
   --accent: color-mix(in oklch, var(--accent-base) 75%, #2c2c2e);
   --accent-readable: color-mix(in oklch, var(--accent-base) 52%, #2c2c2e);
 
@@ -123,6 +127,12 @@
     color-scheme: light;
     --app-text-wght: 430;
     --recommended-accent-text: #fff;
+    /* accent 必须与 :root[data-theme="light"] 同步压暗，否则 --text-on-accent
+       的白色会落在深色主题的高亮 accent 上（对比度只有 ~3.2:1）。
+       选择器特异性高于 global.css 的 :root，异步 CSS 到达后也不会被覆盖。 */
+    --accent: color-mix(in oklch, var(--accent-base) 75%, #2c2c2e);
+    --accent-readable: color-mix(in oklch, var(--accent-base) 52%, #2c2c2e);
+    --text-on-accent: #fff;
 
     /* ═══ Grayscale foundation (light) ═══ */
     --bg-base: #f9f9f9;

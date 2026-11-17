@@ -518,7 +518,7 @@ const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaM
       <div class="bg-overlay"></div>
     </div>
 
-    <div id="route-progress" aria-hidden="true"><span></span></div>
+    <div id="route-progress" aria-hidden="true" transition:persist="route-progress"><span></span></div>
 
     <div id="app">
       <NavHeader currentPath={Astro.url.pathname} locale={locale} articleTitle={navTitle} articleBackHref={navBackHref} articleBackLabel={navBackLabel} featureFlags={featureFlags} defaultPerformanceMode={defaultPerformanceMode} siteName={siteTitle} />
@@ -644,6 +644,8 @@ const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaM
     </script>
 
     <style is:inline>
+      /* 状态：.is-active 显示；.is-done = 已到 100%。
+         宽度由 JS 驱动：14% → 慢导航 60% → 100%。 */
       #route-progress {
         position: fixed;
         inset: 0 0 auto;
@@ -651,53 +653,88 @@ const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaM
         z-index: 100000;
         pointer-events: none;
         opacity: 0;
-        transition: opacity 120ms ease;
+        transition: opacity 180ms ease; /* 消失时短渐隐 */
       }
       #route-progress span {
         display: block;
         height: 100%;
         width: 0;
-        background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #fff));
-        box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+        /* 以 accent-readable 为基色（深色偏亮、浅色偏深），右端向白混一点 */
+        background: linear-gradient(90deg, var(--accent-readable), color-mix(in srgb, var(--accent-readable) 55%, #fff));
+        box-shadow: 0 0 10px color-mix(in srgb, var(--accent-readable) 55%, transparent);
         transition: width 220ms cubic-bezier(.2, .8, .2, 1);
       }
       #route-progress.is-active { opacity: 1; }
+      /* 只在加载中压暗内容；到 100%（is-done）立即恢复，压暗不进入换页过渡 */
+      #route-progress.is-active:not(.is-done) ~ #app {
+        opacity: .75;
+        transition: opacity 100ms ease;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #route-progress.is-active:not(.is-done) ~ #app { transition: none; }
+      }
     </style>
     <script is:inline>
       (() => {
         if (window.__chronicleRouteProgress) return;
         window.__chronicleRouteProgress = true;
-        const bar = () => document.getElementById('route-progress');
-        const fill = () => bar()?.querySelector('span');
-        let safety = 0;
-        const show = () => {
-          const el = bar();
-          if (!el) return;
-          el.classList.add('is-active');
-          const s = fill();
-          if (s) s.style.width = '14%';
-          clearTimeout(safety);
-          safety = setTimeout(done, 10000);
+
+        // 进度条带 transition:persist，跨软路由保留同一个节点，引用可缓存。
+        const bar = document.getElementById('route-progress');
+        const span = bar && bar.querySelector('span');
+        let creepT = 0;
+        let hideT = 0;
+        let safetyT = 0;
+
+        // instant：绕过 220ms 宽度过渡（提交 100% / 归零时用）
+        const setWidth = (w, instant = false) => {
+          if (!span) return;
+          if (!instant) {
+            span.style.width = w;
+            return;
+          }
+          const prev = span.style.transition;
+          span.style.transition = 'none';
+          span.style.width = w;
+          void span.offsetWidth; // Astro 紧接着拍快照，必须先把新宽度提交掉
+          span.style.transition = prev;
         };
-        const advance = () => {
-          const s = fill();
-          if (s) s.style.width = '72%';
+
+        const hide = (delay = 0) => {
+          clearTimeout(hideT);
+          hideT = setTimeout(() => {
+            bar?.classList.remove('is-active', 'is-done');
+            setTimeout(() => setWidth('0', true), 200); // 等 180ms 渐隐走完
+          }, delay);
         };
-        const done = () => {
-          clearTimeout(safety);
-          const s = fill();
-          if (s) s.style.width = '100%';
-          const el = bar();
-          if (!el) return;
-          setTimeout(() => {
-            el.classList.remove('is-active');
-            if (fill()) fill().style.width = '0';
-          }, 180);
+
+        const complete = () => {
+          clearTimeout(creepT);
+          clearTimeout(safetyT);
+          bar?.classList.add('is-done'); // 100% 立即取消内容压暗
+          setWidth('100%', true);
         };
-        document.addEventListener('astro:before-preparation', show);
-        document.addEventListener('astro:before-swap', advance);
-        document.addEventListener('astro:after-swap', done);
-        document.addEventListener('astro:page-load', done);
+
+        const start = () => {
+          if (!bar) return;
+          clearTimeout(hideT);
+          bar.classList.remove('is-done');
+          bar.classList.add('is-active');
+          setWidth('14%');
+          clearTimeout(creepT);
+          creepT = setTimeout(() => setWidth('60%'), 280); // 慢导航先爬到 60%
+          clearTimeout(safetyT);
+          safetyT = setTimeout(() => { complete(); hide(); }, 10000);
+        };
+
+        document.addEventListener('astro:before-preparation', start);
+        // Astro 顺序：fetch → after-preparation → startViewTransition(拍旧页快照) → before-swap
+        document.addEventListener('astro:after-preparation', complete);
+        document.addEventListener('astro:before-swap', (event) => {
+          const vt = event.viewTransition;
+          if (vt?.finished) vt.finished.catch(() => {}).then(() => hide(60));
+          else hide(60);
+        });
       })();
     </script>
 

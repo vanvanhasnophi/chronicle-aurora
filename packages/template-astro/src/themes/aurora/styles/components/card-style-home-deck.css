@@ -473,7 +473,7 @@
   }
   .home-shell .tag-cloud-item.selected{
     background: var(--accent);
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
     border-color: var(--comp-bg-accent);
   }
   .home-shell .tag-cloud-item.featured{

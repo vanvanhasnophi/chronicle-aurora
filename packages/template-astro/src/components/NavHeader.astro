@@ -68,7 +68,7 @@ const isBlogsActive = isActive("/blogs") || activePath === "/post" || activePath
   <div class="nav-content">
     <div class="header-swap">
       <div class:list={["site-header", { "entering-up": articleTitle && articleBackHref }]}>
-        <a href="/" class="nav-home-link">
+        <a href={homeHref} class="nav-home-link">
           <h1 class="app-title">{appTitle}</h1>
         </a>
       </div>
@@ -398,7 +398,8 @@ const isBlogsActive = isActive("/blogs") || activePath === "/post" || activePath
     function buildLocalizedClientPath(nextLocale: string | null) {
       const routeLocale = nextLocale === "zh-CN" ? "zh" : "en";
       const basePath = getBasePath();
-      if (basePath === "/") return "/" + routeLocale;
+      // 首页带尾斜杠，避免静态托管把 /zh 308 到 /zh/（软路由会多一个 RTT）
+      if (basePath === "/") return "/" + routeLocale + "/";
       return "/" + routeLocale + (basePath.startsWith("/") ? basePath : "/" + basePath);
     }
     function saveLocalePreference(nextLocale: string | null) {

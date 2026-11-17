@@ -49,7 +49,7 @@
   }
 
   .selected .tag-count {
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
   }
   .selected.featured .tag-count {
     color: var(--app-bg-pri);
@@ -57,7 +57,7 @@
 
   .tag-trigger.selected .tag-count {
     background: var(--accent);
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
   }
   .tag-trigger.selected.featured .tag-count {
     background: var(--featured);
@@ -86,7 +86,7 @@
   }
   .search-btn.active {
     background-color: var(--accent);
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
   }
 
   .input-area {
@@ -215,7 +215,7 @@
   }
   .tag-cloud-item.selected {
     background: var(--accent);
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
     border-color: var(--comp-bg-accent);
   }
   .tag-cloud-item.featured {
@@ -254,7 +254,7 @@
   }
   .close-cloud-btn {
     background: var(--accent);
-    color: var(--recommended-accent-text);
+    color: var(--text-on-accent);
     border: none;
     padding: 8px 24px;
     border-radius: 4px;

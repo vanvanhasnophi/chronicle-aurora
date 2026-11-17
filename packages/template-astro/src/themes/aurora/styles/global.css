@@ -23,6 +23,7 @@
   --accent-bg: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-hvr: color-mix(in srgb, var(--accent) 80%, transparent);
   --recommended-accent-text: #fff;
+  /* 以 --accent 作为背景时的前景色：深色主题 accent 亮 → 近黑；浅色主题 accent 压暗 → 白。 */
   --text-on-accent: #111;
   --featured: #ffd700;
   --featured-alt: #ff4fd8;
@@ -215,6 +216,14 @@
   --top-fade-length: 70px;
   --top-fade-opacity: 1;
 }
+/* 移动端顶栏 50px：这里的未分层覆盖必须存在，否则会被上面的 70px 盖住
+   （@layer 内的 50px 同值声明优先级更低），锚点/scroll-padding 会多留 20px。 */
+@media(max-width: 768px){
+  .main-content{
+    --toc-scroll-offset: 50px;
+    --top-fade-length: 50px;
+  }
+}
 
 @layer chr-global {
   :root{
@@ -401,6 +410,20 @@ h6{
   ::-webkit-scrollbar-track{
     background: transparent;
   }
+  /* 轨道避开 fixed 顶栏：内容仍可滚到顶栏下方（沉浸式渐隐不变），
+     但滚动条轨道整体下移一个顶栏高度，滑块从顶栏下沿开始。
+     Chromium 支持 ::-webkit-scrollbar-track 的 margin（滑块 0/50/100% 位置等比）。 */
+  .main-content::-webkit-scrollbar-track{
+    margin-top: 70px;
+  }
+  .main-content.no-nav::-webkit-scrollbar-track{
+    margin-top: 0;
+  }
+  @media(max-width: 768px){
+    .main-content::-webkit-scrollbar-track{
+      margin-top: 50px;
+    }
+  }
   .section-title{
     font-size: 1.8em;
     margin: 0 0 24px;
@@ -428,6 +451,8 @@ button:focus-visible{
   }
   html:not(.is-mobile) button.primary:hover{
     background: var(--accent);
+    /* 悬停底色从 accent-dark 变成 accent：深色主题下 accent 很亮，白字会掉到 3.x:1。 */
+    color: var(--text-on-accent);
   }
   button.secondary{
     background: transparent;

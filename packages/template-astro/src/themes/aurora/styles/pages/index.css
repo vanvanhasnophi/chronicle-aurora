@@ -14,7 +14,7 @@
     overflow: visible;
   }
 
-  .home-container .home-container--cover{
+  .home-container--cover{
     top: -70px;
     height: 100vh;
     justify-content: center;
@@ -25,11 +25,14 @@
   .home-container--split,
   .home-container .home-container--cards{
     --split-hero-min: clamp(118px, 18vh, 170px);
-    --split-peek: clamp(24px, 4vh, 40px);
+    /* 箭头已替代“卡片露出”的提示，peek 归零；卡片从首屏折线下方开始。 */
+    --split-peek: 0px;
     --split-cards-offset: 0px; /* cards visual offset controlled by JS */
   }
 
-  .home-container .home-container--split{
+  .home-container--split{
+    /* 与 cover 模式同源：容器上移顶栏高度，首屏占满 100vh。 */
+    margin-top: -70px;
     align-items: stretch;
     justify-content: flex-start;
     overflow: visible;
@@ -44,13 +47,16 @@
 
   .home-container .split-hero-stage{
     position: sticky;
-    top: 0;
+    /* 与 critical-home.css 同值：抵消滚动容器的 70px padding-top，首屏对齐视口顶端。 */
+    top: -70px;
     z-index: 10;
-    height: calc(90vh - 80px);
+    /* 与 critical-home.css / cover 模式同值：占满整个视口，内容在 100vh 内居中。 */
+    height: calc(var(--vh, 1vh) * 100);
     min-height: var(--split-hero-min);
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding: 0 0 0.8rem;
+    padding: 0;
     overflow: clip;
     will-change: filter, opacity;
   }
@@ -60,6 +66,8 @@
     z-index: 20;
     /* overlap hero by peek amount; further visual offset is applied by JS via transform */
     margin-top: calc(-1 * var(--split-peek));
+    /* 与 critical-home.css 同值：scroll-padding 对齐顶栏 + 80px 抵消入场位移。 */
+    scroll-margin-top: 80px;
     will-change: transform, opacity;
   }
 
@@ -71,5 +79,17 @@
 
   .home-container .hero--compact{
     max-width: 1280px;
+  }
+
+  @media (max-width: 768px) {
+    .home-container--cover{
+      top: -50px;
+    }
+    .home-container--split{
+      margin-top: -50px;
+    }
+    .home-container .split-hero-stage{
+      top: -50px;
+    }
   }
 

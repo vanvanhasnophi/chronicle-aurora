@@ -47,7 +47,9 @@ export function buildLocalizedPath(locale: string | undefined, path: string): st
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
   if (normalizedPath === '/') {
-    return `/${routeLocale}`;
+    // 首页保留尾斜杠：/zh/ 直接命中 index.html；
+    // /zh 在静态托管上会 301/308 到 /zh/，软路由会多一个 RTT。
+    return `/${routeLocale}/`;
   }
 
   return `/${routeLocale}${normalizedPath}`;

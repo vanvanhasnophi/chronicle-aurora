@@ -12,13 +12,32 @@
   margin:0; top:0; min-height:100vh; padding:0;
   display:flex; flex-direction:column; position:relative; z-index:2; overflow:visible;
 }
-.home-container--split { align-items:stretch; justify-content:flex-start; overflow:visible; }
-.split-hero-stage {
-  position:sticky; top:0; z-index:10;
-  height:calc(90vh - 80px); min-height:clamp(118px,18vh,170px);
-  display:flex; align-items:center; padding:0 0 0.8rem; overflow:clip;
+.home-container--split {
+  /* 箭头已承担“下面还有内容”的提示，卡片不再向上露出（peek=0）。
+     容器上移一个顶栏高度：首屏与 cover 模式同源（stage 占满 100vh、
+     内容在视口内居中），卡片仍从视口底部开始。 */
+  --split-peek:0px;
+  margin-top:-70px;
+  align-items:stretch; justify-content:flex-start; overflow:visible;
 }
-.split-cards-stage { position:relative; z-index:20; margin-top:calc(-1 * clamp(24px,4vh,40px)); }
+.split-hero-stage {
+  /* top=-顶栏高度：滚动容器有 70px padding-top，sticky 会钳在 70px；
+     负偏移让首屏停在视口顶端，与 cover 模式完全对齐。 */
+  position:sticky; top:-70px; z-index:10;
+  /* 与 cover 模式同一套首屏几何：占满整个视口，内容在 100vh 内居中。 */
+  height:calc(var(--vh, 1vh) * 100);
+  min-height:clamp(118px,18vh,170px);
+  box-sizing:border-box;
+  display:flex; align-items:center; padding:0; overflow:clip;
+}
+.split-cards-stage {
+  position:relative; z-index:20;
+  margin-top:calc(-1 * var(--split-peek));
+  /* 点击滚动提示时：滚动容器的 scroll-padding-top（=顶栏高 70/50）已把卡片顶到
+     顶栏下沿；这里再加 80px 抵消卡片入场位移（与 JS CARD_LIFT_MAX 同值），
+     scrollIntoView 后视觉上正好贴住顶栏下沿。 */
+  scroll-margin-top:80px;
+}
 
 /* ── Homepage: cover mode ── */
 .home-container--cover { top:-70px; height:100vh; justify-content:center; overflow:hidden; }
@@ -38,6 +57,44 @@
   font-size:1rem; font-weight:500; text-decoration:none;
   background:var(--accent-dark); color:#fff;
 }
+
+/* ── Split hero: 向下滚动提示 ──
+   拆分式首屏唯一的“还有内容”提示：无底色/边框/模糊的下箭头，轻浮动。
+   peek=0 后卡片从折线下方开始，箭头独立贴在首屏底部上方
+   （clamp(24px,4vh,36px)），既靠底、又不会压住下一屏卡片。
+   可点击：点击后把卡片流顶部滚到顶栏下沿（见 [lang]/index.astro）。
+   滚动进度把 opacity 淡到 0；data-perf=reduced（高级效果关闭）或
+   prefers-reduced-motion 时只留静态箭头。 */
+.scroll-hint {
+  position:absolute; left:50%;
+  bottom:clamp(24px, 4vh, 36px);
+  transform:translateX(-50%);
+  display:grid; place-items:center;
+  width:40px; height:40px;
+  padding:0;
+  background:none; border:0; border-radius:9999px;
+  -webkit-appearance:none; appearance:none;
+  -webkit-tap-highlight-color:transparent;
+  color:var(--comp-text-pri);
+  cursor:pointer; user-select:none;
+  touch-action:manipulation;
+}
+.scroll-hint:focus-visible {
+  outline:2px solid var(--accent); outline-offset:2px;
+}
+.scroll-hint__arrow {
+  width:40px; height:40px;
+  animation:scroll-hint-bob 1.9s ease-in-out infinite;
+}
+@keyframes scroll-hint-bob {
+  0%, 100% { transform:translateY(-2px); opacity:.7; }
+  50% { transform:translateY(4px); opacity:1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint__arrow { animation:none; opacity:1; }
+}
+/* 高级效果关闭（data-perf=reduced）时也不呼吸，保持静态箭头。 */
+html[data-perf="reduced"] .scroll-hint__arrow { animation:none; opacity:1; }
 
 /* ── Card grid shell (split + cards mode, above fold) ── */
 .home-shell {
@@ -84,6 +141,8 @@ h3, .story-card--empty h2 { margin: 0; font-size: 1.2rem; }
 /* ── Homepage mobile (≤768px) ── */
 @media (max-width:768px) {
   .home-container--cover { top:-50px; }
+  .home-container--split { margin-top:-50px; }
+  .split-hero-stage { top:-50px; }
   .hero { left:60px; }
   .cover-title { font-size:2.2rem; }
   .cover-subtitle { font-size:1rem; margin-bottom:2rem; }

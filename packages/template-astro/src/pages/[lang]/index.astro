@@ -45,6 +45,12 @@ const featureFlags = resolveFeatureFlags(settings?.featureFlags || {});
       <div class="home-container home-container--split">
         <div class="split-hero-stage" id="split-hero-stage">
           <HomeCoverDeck siteName={settings?.siteName} siteDescription={settings?.siteDescription || ''} locale={locale} themePostPath={themePostPath} mode="split" />
+          {/* 首屏向下滚动提示：按钮，点击后把卡片流顶部滚到顶栏下沿；滚动后由脚本淡出。 */}
+          <button class="scroll-hint" type="button" aria-label={t("home.scrollDown")}>
+            <svg class="scroll-hint__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 10l8 4 8-4"/>
+            </svg>
+          </button>
         </div>
         <div class="split-cards-stage">
           <CardStyleHomeDeck locale={locale} featureFlags={featureFlags} />
@@ -73,6 +79,12 @@ const featureFlags = resolveFeatureFlags(settings?.featureFlags || {});
   function freezeHomeEffects() {
     const hero = document.getElementById('split-hero');
     const cards = document.querySelector('.split-cards-stage');
+    const hint = document.querySelector('.scroll-hint');
+
+    if (hint) {
+      hint.style.opacity = '';
+      hint.style.visibility = '';
+    }
 
     if (hero) {
       hero.style.filter = 'none';
@@ -123,11 +135,25 @@ const featureFlags = resolveFeatureFlags(settings?.featureFlags || {});
     const stage = document.getElementById("split-hero-stage");
     const hero = document.getElementById("split-hero");
     const cards = document.querySelector(".split-cards-stage");
+    const hint = document.querySelector(".scroll-hint");
     if (!scroller || !shell || !stage || !hero || !cards) return;
 
     stopHomeEffects();
     homeEffectsController = new AbortController();
     const { signal } = homeEffectsController;
+
+    // 卡片流的滚动位移上限。
+    const CARD_LIFT_MAX = 80;
+
+    // 点击箭头：交给浏览器原生 scrollIntoView + CSS scroll-margin 对齐，
+    // 不在这里算 offsetTop / 顶栏高度，也不额外挂滚动逻辑。
+    // 对齐结果：滚动容器的 scroll-padding-top(=顶栏高) 把卡片顶到顶栏下沿，
+    // .split-cards-stage 的 scroll-margin-top 再抵消下面的入场位移 CARD_LIFT_MAX。
+    if (hint) {
+      hint.addEventListener("click", () => {
+        cards.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, { signal });
+    }
 
     let ticking = false;
 
@@ -144,27 +170,35 @@ const featureFlags = resolveFeatureFlags(settings?.featureFlags || {});
           ? 2 * progress * progress
           : -1 + (4 - 2 * progress) * progress;
 
+      // 滚动提示：一开始轻轻淡出，约 1/3 屏后完全隐藏（避免粘性 hero 上残留）。
+      if (hint) {
+        const hintOpacity = Math.max(0, 1 - progress * 3.2);
+        hint.style.opacity = `${hintOpacity}`;
+        // 淡到 0 后彻底移出命中/读屏/焦点树，避免留一个不可见的可点击按钮。
+        hint.style.visibility = hintOpacity > 0.05 ? "" : "hidden";
+      }
+
       if (isReduced) {
         // Light mode: only opacity + translate, no blur/scale
         hero.style.filter = 'none';
         hero.style.transform = 'none';
         hero.style.opacity = `${1 - .9 * progress}`;
-        const lift = Math.round(progress * 80);
+        const lift = Math.round(progress * CARD_LIFT_MAX);
         cards.style.transform = `translateY(-${lift}px)`;
-        cards.style.opacity = `${0.5 + 0.5 * progress}`;
+        cards.style.opacity = '1';
         cards.style.filter = 'none';
       } else {
         const maxBlur = 8;
-        const cardLiftMax = 80;
         const blur = Math.round(progress * maxBlur);
-        const decBlur = maxBlur - blur;
-        const lift = Math.round(progress * cardLiftMax);
+        const lift = Math.round(progress * CARD_LIFT_MAX);
         hero.style.filter = `blur(${blur}px)`;
         hero.style.opacity = `${1 - 0.06 * progress}`;
         hero.style.transform = `scale(${1 - 0.04 * progress})`;
         cards.style.transform = `translateY(-${lift}px)`;
-        cards.style.opacity = `${0.7 + 0.3 * progress}`;
-        cards.style.filter = `blur(${decBlur}px)`;
+        // 卡片流回到折线下方后，不再需要“初始模糊 + 70% 透明”的退后感：
+        // 模糊只会在入场时糊一下，透明会让 hero 透过卡片显形。改为始终清晰、不透明。
+        cards.style.opacity = '1';
+        cards.style.filter = 'none';
       }
     };
 

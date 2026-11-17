@@ -214,7 +214,10 @@ const sortedPosts = [...posts].sort(
 const featuredPosts = sortedPosts
   .filter((post) => Array.isArray(post?.tags) && post.tags.some(isFeaturedTag))
   .slice(0, 5);
-const recentPosts = sortedPosts.slice(0, 10);
+// 首页卡片流只放最近 5 篇：整块卡片流在首屏折线下方，减少条数可直接
+// 缩小首屏 HTML/节点数（其余文章走“查看全部”）。
+const RECENT_POSTS_LIMIT = 5;
+const recentPosts = sortedPosts.slice(0, RECENT_POSTS_LIMIT);
 const leadPost = recentPosts[0] || featuredPosts[0] || null;
 const secondaryPosts = uniqueById([...featuredPosts, ...recentPosts])
   .filter((post) => post?.id && post?.id !== leadPost?.id)

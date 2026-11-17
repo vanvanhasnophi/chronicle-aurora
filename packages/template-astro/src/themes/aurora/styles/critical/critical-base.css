@@ -106,6 +106,14 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb { background-color:color-mix(in srgb, var(--comp-text-sec) 50%, transparent); border-radius:9999px; }
 ::-webkit-scrollbar-thumb:hover { background-color:color-mix(in srgb, var(--comp-text-pri) 50%, transparent); }
 ::-webkit-scrollbar-track { background:transparent; }
+/* 轨道避开 fixed 顶栏：内容仍可滚到顶栏下方（沉浸式渐隐不变），
+   但滚动条轨道整体下移一个顶栏高度，滑块从顶栏下沿开始。
+   Chromium 支持 ::-webkit-scrollbar-track 的 margin（滑块 0/50/100% 位置等比）。 */
+.main-content::-webkit-scrollbar-track { margin-top:70px; }
+.main-content.no-nav::-webkit-scrollbar-track { margin-top:0; }
+@media (max-width:768px) {
+  .main-content::-webkit-scrollbar-track { margin-top:50px; }
+}
 
 /* ── CornerButton shell ──
    position:fixed must exist at first paint: without it the button is in-flow
