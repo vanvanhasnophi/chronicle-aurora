@@ -7,40 +7,43 @@
    Update in sync with: [lang]/index.astro, HomeCoverDeck.astro,
    CardStyleHomeDeck.astro. */
 
+/* split / cover 的首屏都从视口顶端开始：
+   去掉滚动容器的顶栏内边距，同时清掉 sticky 的 scroll-padding 钳制，
+   这样 hero 不再需要 -顶栏高度 的负偏移，卡片也仍从折线下方开始。 */
+.main-content:has(> .home-container--split),
+.main-content:has(> .home-container--cover) {
+  padding-top:0;
+  scroll-padding-top:0;
+}
+
 /* ── Homepage: split mode ── */
 .home-container {
   margin:0; top:0; min-height:100vh; padding:0;
   display:flex; flex-direction:column; position:relative; z-index:2; overflow:visible;
 }
 .home-container--split {
-  /* 箭头已承担“下面还有内容”的提示，卡片不再向上露出（peek=0）。
-     容器上移一个顶栏高度：首屏与 cover 模式同源（stage 占满 100vh、
-     内容在视口内居中），卡片仍从视口底部开始。 */
+  /* 箭头已承担“下面还有内容”的提示，卡片不再向上露出（peek=0）。 */
   --split-peek:0px;
-  margin-top:-70px;
   align-items:stretch; justify-content:flex-start; overflow:visible;
 }
 .split-hero-stage {
-  /* top=-顶栏高度：滚动容器有 70px padding-top，sticky 会钳在 70px；
-     负偏移让首屏停在视口顶端，与 cover 模式完全对齐。 */
-  position:sticky; top:-70px; z-index:10;
-  /* 与 cover 模式同一套首屏几何：占满整个视口，内容在 100vh 内居中。 */
+  /* 首屏占满整个视口，内容在 100vh 内居中（与 cover 模式同源）。 */
+  position:sticky; top:0; z-index:10;
   height:calc(var(--vh, 1vh) * 100);
   min-height:clamp(118px,18vh,170px);
   box-sizing:border-box;
-  display:flex; align-items:center; padding:0; overflow:clip;
+  display:flex; align-items:center; padding-top:var(--nav-h); overflow:clip;
 }
 .split-cards-stage {
   position:relative; z-index:20;
   margin-top:calc(-1 * var(--split-peek));
-  /* 点击滚动提示时：滚动容器的 scroll-padding-top（=顶栏高 70/50）已把卡片顶到
-     顶栏下沿；这里再加 80px 抵消卡片入场位移（与 JS CARD_LIFT_MAX 同值），
-     scrollIntoView 后视觉上正好贴住顶栏下沿。 */
-  scroll-margin-top:80px;
+  /* 点击滚动提示时：home 的 scroll-padding 已归零，卡片要停在顶栏下沿，
+     所以 scroll-margin = 顶栏高度 + 卡片入场位移（与 JS CARD_LIFT_MAX 同值）。 */
+  scroll-margin-top:calc(var(--nav-h) + 80px);
 }
 
 /* ── Homepage: cover mode ── */
-.home-container--cover { top:-70px; height:100vh; justify-content:center; overflow:hidden; }
+.home-container--cover { height:100vh; justify-content:center; overflow:hidden; }
 
 /* ── Homepage: cards mode ── */
 .home-container--cards { align-items:stretch; justify-content:flex-start; padding-top:clamp(2.5rem,10vh,6rem); }
@@ -48,9 +51,9 @@
 /* ── Hero deck ── */
 .home-cover-deck { position:relative; z-index:3; }
 .home-cover-deck--split { width:100%; display:block; }
-.hero { position:relative; left:15vw; }
-.cover-title { font-size:3.5rem; font-weight:600; font-variation-settings:"wght" 600; margin:0 0 1rem 0; line-height:1.1; }
-.cover-subtitle { font-size:1.15rem; margin:0 0 2.5rem 0; line-height:1.5; max-width:480px; }
+.hero { position:relative; left:15vw; top:-2vh; width:calc(100% - 15vw - 2rem); box-sizing:border-box; }
+.cover-title { font-size:3.5rem; font-weight:600; font-variation-settings:"wght" 600; margin:0 0 1rem 0; line-height:1.1; white-space:normal; overflow-wrap:anywhere; }
+.cover-subtitle { font-size:1.15rem; margin:0 0 2.5rem 0; line-height:1.5; max-width:480px; white-space:normal; overflow-wrap:anywhere; }
 .cover-cta {
   display:inline-flex; align-items:center; gap:8px;
   padding:12px 28px; border:none; border-radius:8px;
@@ -60,14 +63,12 @@
 
 /* ── Split hero: 向下滚动提示 ──
    拆分式首屏唯一的“还有内容”提示：无底色/边框/模糊的下箭头，轻浮动。
-   peek=0 后卡片从折线下方开始，箭头独立贴在首屏底部上方
-   （clamp(24px,4vh,36px)），既靠底、又不会压住下一屏卡片。
-   可点击：点击后把卡片流顶部滚到顶栏下沿（见 [lang]/index.astro）。
-   滚动进度把 opacity 淡到 0；data-perf=reduced（高级效果关闭）或
-   prefers-reduced-motion 时只留静态箭头。 */
+   固定贴视口底部上方（clamp(24px,4vh,36px)），z-index 高于卡片流，
+   卡片滚上来时仍可点击。点击后把卡片流顶部滚到顶栏下沿
+   （见 [lang]/index.astro）；滚动进度把 opacity 淡到 0。 */
 .scroll-hint {
-  position:absolute; left:50%;
-  bottom:clamp(24px, 4vh, 36px);
+  position:fixed; left:50%; bottom:clamp(24px, 4vh, 36px);
+  z-index:30;
   transform:translateX(-50%);
   display:grid; place-items:center;
   width:40px; height:40px;
@@ -140,10 +141,7 @@ h3, .story-card--empty h2 { margin: 0; font-size: 1.2rem; }
 
 /* ── Homepage mobile (≤768px) ── */
 @media (max-width:768px) {
-  .home-container--cover { top:-50px; }
-  .home-container--split { margin-top:-50px; }
-  .split-hero-stage { top:-50px; }
-  .hero { left:60px; }
+  .hero { left:60px; width:calc(100% - 60px - 1.25rem); }
   .cover-title { font-size:2.2rem; }
   .cover-subtitle { font-size:1rem; margin-bottom:2rem; }
   .home-shell { padding:.9rem .85rem 2rem; }

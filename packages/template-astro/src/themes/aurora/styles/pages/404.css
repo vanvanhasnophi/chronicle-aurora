@@ -1,7 +1,7 @@
 /* ── 页面样式：404.astro ──
    自 src/pages/404.astro <style> 迁出（与 critical 同值+附加细化，bundled 后加载赢平局，安全）。 */
     .error-shell{
-      min-height: calc(100vh - 70px);
+      min-height: calc(100vh - var(--nav-h));
       display: grid;
       place-items: center;
       padding: clamp(1.5rem, 4vw, 4rem);

@@ -45,16 +45,17 @@ const featureFlags = resolveFeatureFlags(settings?.featureFlags || {});
       <div class="home-container home-container--split">
         <div class="split-hero-stage" id="split-hero-stage">
           <HomeCoverDeck siteName={settings?.siteName} siteDescription={settings?.siteDescription || ''} locale={locale} themePostPath={themePostPath} mode="split" />
-          {/* 首屏向下滚动提示：按钮，点击后把卡片流顶部滚到顶栏下沿；滚动后由脚本淡出。 */}
-          <button class="scroll-hint" type="button" aria-label={t("home.scrollDown")}>
-            <svg class="scroll-hint__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M4 10l8 4 8-4"/>
-            </svg>
-          </button>
         </div>
         <div class="split-cards-stage">
           <CardStyleHomeDeck locale={locale} featureFlags={featureFlags} />
         </div>
+        {/* 首屏向下滚动提示：fixed + z-index 高于卡片流，点击后把卡片流顶部
+            滚到顶栏下沿；滚动后由脚本淡出。 */}
+        <button class="scroll-hint" type="button" aria-label={t("home.scrollDown")}>
+          <svg class="scroll-hint__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 10l8 4 8-4"/>
+          </svg>
+        </button>
       </div>
     )
   }

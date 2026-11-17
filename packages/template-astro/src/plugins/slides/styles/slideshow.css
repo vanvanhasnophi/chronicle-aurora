@@ -198,11 +198,8 @@
   /* ── Browse: absolute size, both scroll directions ── */
   .marp-slides-browse {
     overflow: auto;
-    padding: 70px 0 0 0;
+    padding: var(--nav-h) 0 0;
     margin-bottom: 50px;
-  }
-  html.is-mobile .marp-slides-browse {
-    padding: 50px 0 0 0;
   }
   .marp-slides-browse .marp-slides {
     --slide-zoom: 1;
@@ -216,11 +213,7 @@
 
   /* ── Present: contain, single slide fills viewport ── */
   .marp-slides-present {
-    margin-top: 70px;
-  }
-
-  html.is-mobile .marp-slides-present {
-    margin-top: 50px;
+    margin-top: var(--nav-h);
   }
 
   /* ── Shared popup animation (body-mounted) ────── */

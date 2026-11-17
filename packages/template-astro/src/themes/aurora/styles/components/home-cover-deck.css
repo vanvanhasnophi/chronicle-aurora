@@ -7,12 +7,12 @@
 @layer chr-component {
   /* Shell — layout & positioning */
   .home-cover-deck .home-cover-deck--split{ transform-origin: left bottom; will-change: transform, opacity; }
-  .home-cover-deck .hero{ position: relative; left: 15vw; }
-  @media (max-width:760px) { .home-cover-deck .hero{ left: 60px; } }
+  .home-cover-deck .hero{ position: relative; left: 15vw; top: -2vh; width: calc(100% - 15vw - 2rem); box-sizing: border-box; }
+  @media (max-width:760px) { .home-cover-deck .hero{ left: 60px; width: calc(100% - 60px - 1.25rem); } }
 
   /* Cover content */
-  .home-cover-deck .cover-title{ font-size:3.5rem; font-weight:600; font-variation-settings:"wght" 600; color:var(--app-text-pri); margin:0 0 1rem 0; line-height:1.1; }
-  .home-cover-deck .cover-subtitle{ font-size:1.15rem; color:var(--app-text-sec); margin:0 0 2.5rem 0; line-height:1.5; max-width:480px; }
+  .home-cover-deck .cover-title{ font-size:3.5rem; font-weight:600; font-variation-settings:"wght" 600; color:var(--app-text-pri); margin:0 0 1rem 0; line-height:1.1; white-space:normal; overflow-wrap:anywhere; }
+  .home-cover-deck .cover-subtitle{ font-size:1.15rem; color:var(--app-text-sec); margin:0 0 2.5rem 0; line-height:1.5; max-width:480px; white-space:normal; overflow-wrap:anywhere; }
   .home-cover-deck .cover-cta{ display:inline-flex; align-items:center; gap:8px; padding:12px 28px; background:var(--accent-dark); color:#fff; border:none; border-radius:8px; font-size:1rem; font-weight:500; cursor:pointer; text-decoration:none; transition:filter 0.2s, transform 0.2s; }
   .home-cover-deck .cover-cta:hover{ filter: brightness(1.8); transform: scale(1.05); color: #000;}
   .home-cover-deck .cover-cta svg{ width:20px; height:20px; }

@@ -14,6 +14,8 @@
   --app-font-stack-mono: 'Consolas', 'SF Mono', 'Menlo', 'Monaco', 'Ubuntu Mono', 'Courier New', monospace, var(--app-font-stack-inter);
   --app-text-wght: 400;
   --app-heading-wght: 570;
+  /* 顶栏高度（与 critical-tokens.css 同值，移动端 50px） */
+  --nav-h: 70px;
   --transition-duration: 1;
   --accent-default: #2ea35f;
   --accent-base: var(--accentColor, var(--accent-default));
@@ -121,6 +123,12 @@
   --select-option-border-color: var(--border-color);
   --frontend-bg-overlay: var(--frontend-bg-overlay-dark, transparent);
 }
+/* 移动端顶栏 50px：与 critical-tokens.css 同值 */
+@media (max-width: 768px) {
+  :root {
+    --nav-h: 50px;
+  }
+}
 :root{
   --code-keyword: #569cd6;
   --code-string: #ce9178;
@@ -212,17 +220,9 @@
   --code-link: #0000ff;
 }
 .main-content{
-  --toc-scroll-offset: 70px;
-  --top-fade-length: 70px;
+  --toc-scroll-offset: var(--nav-h);
+  --top-fade-length: var(--nav-h);
   --top-fade-opacity: 1;
-}
-/* 移动端顶栏 50px：这里的未分层覆盖必须存在，否则会被上面的 70px 盖住
-   （@layer 内的 50px 同值声明优先级更低），锚点/scroll-padding 会多留 20px。 */
-@media(max-width: 768px){
-  .main-content{
-    --toc-scroll-offset: 50px;
-    --top-fade-length: 50px;
-  }
 }
 
 @layer chr-global {
@@ -414,15 +414,10 @@ h6{
      但滚动条轨道整体下移一个顶栏高度，滑块从顶栏下沿开始。
      Chromium 支持 ::-webkit-scrollbar-track 的 margin（滑块 0/50/100% 位置等比）。 */
   .main-content::-webkit-scrollbar-track{
-    margin-top: 70px;
+    margin-top: var(--nav-h);
   }
   .main-content.no-nav::-webkit-scrollbar-track{
     margin-top: 0;
-  }
-  @media(max-width: 768px){
-    .main-content::-webkit-scrollbar-track{
-      margin-top: 50px;
-    }
   }
   .section-title{
     font-size: 1.8em;
@@ -571,7 +566,7 @@ body.backend::after{
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-top: 70px;
+    padding-top: var(--nav-h);
     height: 100vh;
     box-sizing: border-box;
     position: relative;
@@ -593,13 +588,6 @@ body.backend::after{
     padding-top: 0;
     overflow: hidden;
     z-index: 0;
-  }
-  @media(max-width: 768px){
-    .main-content{
-      padding-top: 50px;
-      --toc-scroll-offset: 50px;
-      --top-fade-length: 50px;
-    }
   }
 }
 

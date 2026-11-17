@@ -109,11 +109,8 @@ h1, h2, h3, h4, h5, h6 {
 /* 轨道避开 fixed 顶栏：内容仍可滚到顶栏下方（沉浸式渐隐不变），
    但滚动条轨道整体下移一个顶栏高度，滑块从顶栏下沿开始。
    Chromium 支持 ::-webkit-scrollbar-track 的 margin（滑块 0/50/100% 位置等比）。 */
-.main-content::-webkit-scrollbar-track { margin-top:70px; }
+.main-content::-webkit-scrollbar-track { margin-top:var(--nav-h); }
 .main-content.no-nav::-webkit-scrollbar-track { margin-top:0; }
-@media (max-width:768px) {
-  .main-content::-webkit-scrollbar-track { margin-top:50px; }
-}
 
 /* ── CornerButton shell ──
    position:fixed must exist at first paint: without it the button is in-flow
@@ -140,7 +137,7 @@ h1, h2, h3, h4, h5, h6 {
 /* ── Nav header (fixed) ── */
 .nav-header {
   position:fixed; top:0; left:0; right:0; z-index:9999;
-  height:70px; box-sizing:border-box;
+  height:var(--nav-h); box-sizing:border-box;
 }
 html.immersive .nav-header {
   background:transparent; border-bottom:none;
@@ -151,7 +148,7 @@ html.immersive .nav-header {
 }
 .main-content {
   flex:1; overflow-y:auto; overflow-x:hidden;
-  padding-top:70px; height:100vh; box-sizing:border-box;
+  padding-top:var(--nav-h); height:100vh; box-sizing:border-box;
   position:relative; /* 与 global.css 同值：滚动容器的定位上下文，首帧锁定 */
 }
 /* 状态布局与 global.css 同值：no-nav（无导航页）去顶部留白、unscrollable 锁滚动——首帧即最终态 */
@@ -193,10 +190,8 @@ a { color:var(--accent-readable, var(--accent-dark)); }
 
 /* ── Mobile (≤768px) ── */
 @media (max-width:768px) {
-  .nav-header { height:50px; }
   .nav-actions { gap:0.5rem; }
   .app-title { font-size:1.2rem; }
-  .main-content { padding-top:50px; }
   /* Mobile: show hamburger, use text labels not icons */
   .menu-toggle { display:flex; position:relative; }
   .nav-link-collapsed { display:none; position:static }

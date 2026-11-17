@@ -2,7 +2,7 @@
    自 src/plugins/search/SearchExperience.astro <style> 迁出（与 critical 同值+附加细化，bundled 后加载赢平局，安全）。 */
   .page-container {
     max-width: 800px;
-    max-height: calc(100vh - 70px);
+    max-height: calc(100vh - var(--nav-h));
     margin: 0 auto;
     padding: 15vh 20px 0;
     color: var(--app-text-pri);
