@@ -762,7 +762,10 @@ export function renderChronicleMarkdown(content: string, locale?: string): strin
   // Happens AFTER sanitize so the wrapper attributes added here are trusted.
   html = postProcessHtml(html);
 
-  return injectDetailsChevrons(html);
+  // <details> without <summary> gets a localized real summary — otherwise the
+  // browser's anonymous "Details" widget bypasses Chronicle's header styles.
+  const detailsLabel = /^zh/i.test(String(locale || _currentLocale)) ? '详情' : 'Details';
+  return injectDetailsChevrons(html, detailsLabel);
 }
 
 /**

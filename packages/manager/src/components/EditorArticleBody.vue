@@ -338,9 +338,9 @@ function jumpToSearchMatch(_pane: 'preview', delta: number) {
 }
 
 // ── Expose imperative API ────────────────────────────
-function insertAtCursor(text: string) {
+function insertAtCursor(text: string, cursorOffset?: number) {
   const editor = editorRef.value as any
-  editor?.insertAtCursor?.(text)
+  editor?.insertAtCursor?.(text, cursorOffset)
 }
 
 function getSelection() {
@@ -416,6 +416,7 @@ function getToolbarConfig() {
               { type: 'button', id: 'todo', label: 'Todo', icon: Icons.todo, action: 'insertTodo' },
               { type: 'button', id: 'footnote', label: 'Footnote', icon: Icons.hash, action: 'insertFootnote' },
               { type: 'button', id: 'quote', label: 'Quote', icon: Icons.quote, action: 'insertQuote' },
+              { type: 'button', id: 'details', label: 'Collapsible', icon: Icons.chevron, action: 'insertDetails' },
             ]
           }
         ]

@@ -507,12 +507,12 @@ defineExpose({
     const pos = editorView.state.selection.main.head
     return editorView.state.doc.lineAt(pos).number
   },
-  insertAtCursor(text: string) {
+  insertAtCursor(text: string, cursorOffset: number = text.length) {
     if (!editorView) return
     const { from, to } = editorView.state.selection.main
     editorView.dispatch({
       changes: { from, to, insert: text },
-      selection: { anchor: from + text.length },
+      selection: { anchor: from + Math.max(0, Math.min(cursorOffset, text.length)) },
     })
   },
   getSelection(): { from: number; to: number; text: string } | null {

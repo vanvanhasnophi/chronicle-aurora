@@ -200,6 +200,8 @@ const props = defineProps<{
   restrictedTypes?: string[]
   source?: 'assets' | 'post'
   postId?: string
+  /** 当前已选资源（如头像 /data/avatar/xxx.png）：列表里注入并预选中 */
+  initialSelectedUrl?: string
 }>()
 
 const emit = defineEmits<{
@@ -377,7 +379,7 @@ async function loadCloudFiles() {
         const urlBase = isPost ? `/data/posts/${props.postId}` : '/data/assets'
         const names = await readDir(dir)
         const filtered = isPost ? names.filter(n => n !== 'index.md' && n !== 'index.json') : names
-        cloudFiles.value = filtered.map((name) => ({
+        const list = filtered.map((name) => ({
             key: `${urlBase}/${name}`,
             name,
             size: 0,
@@ -386,6 +388,29 @@ async function loadCloudFiles() {
             url: `${urlBase}/${encodeURIComponent(name)}`,
             preview: `${urlBase}/${encodeURIComponent(name)}`,
         }))
+        // 头像等目标目录里的当前资源不在 data/assets 列表里：
+        // 注入一条并预选中，否则打开选择器看不到“已选中的图片”。
+        const selectedUrl = props.initialSelectedUrl
+            ? (props.initialSelectedUrl.startsWith('asset://')
+                ? '/data/assets/' + props.initialSelectedUrl.slice(8)
+                : props.initialSelectedUrl)
+            : ''
+        if (selectedUrl && !/^https?:\/\//i.test(selectedUrl)) {
+            const selectedName = decodeURIComponent(selectedUrl.split('/').pop() || '')
+            const exists = list.some((f) => f.url === selectedUrl || f.name === selectedName)
+            if (!exists && selectedName) {
+                list.unshift({
+                    key: selectedUrl,
+                    name: selectedName,
+                    size: 0,
+                    type: getFileTypeFromName(selectedName),
+                    mimeType: null,
+                    url: selectedUrl,
+                    preview: selectedUrl,
+                })
+            }
+        }
+        cloudFiles.value = list
         refreshVisibleFiles()
     } catch (e) {
         console.error('loadCloudFiles failed', e)
@@ -773,8 +798,23 @@ function refreshCloudFiles() {
     loadCloudFiles()
 }
 
-onMounted(() => {
-    loadCloudFiles()
+function preselectInitial() {
+    const target = props.initialSelectedUrl
+    if (!target || selectedEntries.value.length) return
+    if (/^https?:\/\//i.test(target)) return
+    const url = target.startsWith('asset://') ? '/data/assets/' + target.slice(8) : target
+    const f = cloudFiles.value.find((x) => x.url === url || x.key === url)
+    if (f) selectedEntries.value = [f]
+}
+
+onMounted(async () => {
+    await loadCloudFiles()
+    preselectInitial()
+})
+
+// 当前值异步到达（如头像目录自动发现）时补一次预选中
+watch(() => props.initialSelectedUrl, () => {
+    preselectInitial()
 })
 
 

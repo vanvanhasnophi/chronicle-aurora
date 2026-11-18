@@ -552,6 +552,7 @@
     "add": "添加",
     "draft": "存草稿",
     "publish": "发布",
+    "detailsSummary": "详情",
     "fileUpload": "文件上传",
     "loading": "正在挂载编辑器...",
     "file": {
@@ -681,6 +682,7 @@
     },
     "tool": {
       "code": "代码",
+      "details": "折叠块",
       "math": "公式",
       "todo": "待办",
       "footnote": "脚注",

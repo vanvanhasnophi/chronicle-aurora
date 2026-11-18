@@ -151,6 +151,8 @@ export function useEditorToolbar(options: EditorToolbarOptions) {
       } else {
         editorBodyRef.value?.insertAtCursor('\n> \n')
       }
+    } else if (action === 'insertDetails') {
+      insertDetails()
     } else if (action === 'stats') {
       activeModal.value = 'stats'
     } else if (action === 'export') {
@@ -160,10 +162,25 @@ export function useEditorToolbar(options: EditorToolbarOptions) {
       ;(editorBodyRef.value as any)?.handleToolAction?.(action)
     }
     // 插入/修改操作后导航到光标
-    const navActions = ['insertCode', 'insertTodo', 'insertQuote', 'openMathModal', 'insertFootnote', 'openLinkModal', 'openTableModal']
+    const navActions = ['insertCode', 'insertTodo', 'insertQuote', 'insertDetails', 'openMathModal', 'insertFootnote', 'openLinkModal', 'openTableModal']
     if (navActions.includes(action)) {
       (editorBodyRef.value as any)?.scrollToCursor?.()
     }
+  }
+
+  /**
+   * 插入折叠块：完整的 <details> + <summary> 结构，光标停在内层内容区。
+   * 有选区时把选区包进折叠内容，否则插入空块。
+   */
+  function insertDetails() {
+    const label = t('editor.detailsSummary') || 'Details'
+    const selected = ((editorBodyRef.value?.getSelection() as any)?.text || '').trim()
+    const open = `\n<details>\n<summary>${label}</summary>\n\n`
+    const close = selected ? `\n</details>\n` : `</details>\n`
+    const text = open + selected + close
+    // 光标落在 summary 与结束标签之间：空块时停在那条空行上。
+    const cursorOffset = open.length + selected.length - (selected ? 0 : 1)
+    editorBodyRef.value?.insertAtCursor?.(text, cursorOffset)
   }
 
   // ══════════════════════════════════════════════════════

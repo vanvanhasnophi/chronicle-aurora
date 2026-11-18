@@ -342,13 +342,23 @@ const pluginPostCritical = getPluginCritical('post');
 
         {tocItems.length > 0 && inlineTocEnabled && (
           <div class="toc-inline mtl-surface" id="inline-toc">
-            <button class="toc-summary" aria-label={t('inblog.toc-title')} aria-expanded="false">
-              <span class="toc-title">{t('inblog.toc-title')}</span>
+            <button class="toc-summary" aria-label={t('inblog.toc-title')} aria-expanded="false" aria-controls="inline-toc-body">
+              <span class="toc-title">
+                <svg class="toc-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"></circle>
+                  <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"></circle>
+                  <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"></circle>
+                </svg>
+                {t('inblog.toc-title')}
+              </span>
               <svg class="toc-toggle-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
-            <div class="toc-body-wrap">
+            <div class="toc-body-wrap" id="inline-toc-body">
               <div class="toc-body">
                 <ul class="toc-list">
                   {tocItems.map((item) => (

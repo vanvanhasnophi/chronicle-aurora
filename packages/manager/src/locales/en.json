@@ -546,6 +546,7 @@
     "add": "Add",
     "draft": "Draft",
     "publish": "Publish",
+    "detailsSummary": "Details",
     "fileUpload": "File Upload",
     "loading": "Editor Loading...",
     "file": {
@@ -669,6 +670,7 @@
     },
     "tool": {
       "code": "Code",
+      "details": "Collapsible",
       "math": "Formula",
       "todo": "Todo",
       "footnote": "Footnote",

@@ -220,9 +220,12 @@
   font: inherit;
   font-size: 1rem;
   font-weight: 600;
+  font-variation-settings: 'wght' 600;
   line-height: 1.5;
   color: var(--app-text-pri);
   user-select: none;
+  /* 展开/收起时 summary 与正文的 8px 间距跟随 ::details-content 一起过渡 */
+  transition: margin-bottom .25s ease;
 }
 
 .chr-md summary::-webkit-details-marker {
@@ -259,10 +262,14 @@
 }
 
 /* TOC body starts 8px below its summary; details has no wrapper, so put the
-   gap on the first content block instead of ::details-content padding
-   (padding would leak into the closed height). */
+   gap on the summary itself (works for parsed blocks and raw text) and zero
+   the first block's margin to avoid doubling it. Only when open, so the
+   closed height stays unchanged. */
+.chr-md details[open] > summary {
+  margin-bottom: 8px;
+}
 .chr-md details > summary + * {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .chr-md details > :last-child {
@@ -287,6 +294,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .chr-md details::details-content {
+    transition: none;
+  }
+  .chr-md summary {
     transition: none;
   }
 }

@@ -432,6 +432,9 @@ select,
 textarea{
     font-family: inherit;
   }
+  /* 与 critical-base.css 同值：交互元素统一 border-box，避免 a/button
+     在 width:100% + padding 的卡片（.mini-card、.popup-item 等）里错位。 */
+  a, button, input, select, textarea, summary{ box-sizing: border-box; }
   html:not(.is-mobile) button:hover{
     border-color: var(--accent);
   }

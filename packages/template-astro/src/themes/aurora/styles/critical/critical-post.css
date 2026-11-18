@@ -26,8 +26,10 @@
 
 /* ── Inline TOC ── */
 .toc-inline { padding:10px 14px; margin-bottom:24px; border-radius:10px; }
-.toc-inline .toc-summary { width:100%; padding:0; border:none; color:inherit; background:transparent; display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:0; }
-.toc-inline .toc-title { font-weight:600; }
+.toc-inline .toc-summary { width:100%; padding:0; border:none; color:inherit; background:transparent; display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:0; transition:margin-bottom .25s ease; }
+.toc-inline.open .toc-summary { margin-bottom:8px; }
+.toc-inline .toc-title { display:inline-flex; align-items:center; gap:8px; font-weight:600; font-variation-settings:'wght' 600; }
+.toc-inline .toc-icon { width:18px; height:18px; flex:0 0 auto; }
 .toc-inline .toc-toggle-icon { width:16px; height:16px; flex:0 0 auto; transform:rotate(-90deg); display:inline-flex; align-items:center; justify-content:center; }
 .toc-inline.open .toc-toggle-icon { transform:rotate(0deg); }
 .toc-inline[open] .toc-body-wrap { grid-template-rows:1fr; }

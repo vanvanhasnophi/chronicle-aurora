@@ -473,9 +473,9 @@ function toggleFullscreen() {
 }
 
 // ── Expose ───────────────────────────────────────────
-function insertAtCursor(text: string) {
+function insertAtCursor(text: string, cursorOffset?: number) {
   const editor = editorRef.value as any
-  editor?.insertAtCursor?.(text)
+  editor?.insertAtCursor?.(text, cursorOffset)
 }
 function getSelection() { return (editorRef.value as any)?.getSelection?.() || '' }
 function clearHistory() { (editorRef.value as any)?.clearHistory?.() }

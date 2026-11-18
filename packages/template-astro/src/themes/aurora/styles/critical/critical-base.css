@@ -43,6 +43,10 @@ button, input, select, textarea {
   font-size: inherit;
   line-height: inherit;
 }
+/* 交互元素统一 border-box：<button> 的 UA 默认是 border-box，<a> 是
+   content-box；同一套 width:100% + padding 的卡片/菜单项（.mini-card、
+   .popup-item 等）会因此出现 a 比 button 宽出左右 padding 的错位。 */
+a, button, input, select, textarea, summary { box-sizing: border-box; }
 /* 控件排版与 global.css 同值（font-size:1em ≡ inherit，显式同值便于构建期校验）；
    padding 首帧锁定——否则异步 CSS 到达时按钮尺寸跳变（CLS）。 */
 button {

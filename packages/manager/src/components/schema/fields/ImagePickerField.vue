@@ -39,6 +39,7 @@
         selectionMode="single"
         :restrictedTypes="['image']"
         :allowUpload="true"
+        :initialSelectedUrl="modelValue"
         @select="handleFilePickerSelect"
         @cancel="handleFilePickerCancel"
       />
@@ -128,7 +129,9 @@ async function handleFilePickerSelect(entry: any) {
   const dir = targetDir.value
   if (dir && !url.startsWith(`/${dir}/`)) {
     const ext = (url.match(/\.\w+$/)?.[0]) || '.jpg'
-    const dest = `${dir}/avatar${ext}`
+    // 用带时间戳的文件名，避免沿用 avatar.png 时 URL 不变：
+    // 预览不刷新、站点侧也会继续命中旧缓存，看起来就像“选了没反应”。
+    const dest = `${dir}/avatar-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}${ext}`
     try {
       const isElec = typeof window !== 'undefined' && !!(window as any).chronicleElectron?.isElectron
       if (isElec) {

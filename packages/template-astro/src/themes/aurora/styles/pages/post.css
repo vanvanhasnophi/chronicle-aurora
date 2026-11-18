@@ -143,11 +143,25 @@
       cursor: pointer;
       user-select: none;
       margin-bottom: 0;
+      transition: margin-bottom 0.25s ease;
+    }
+    .toc-inline.open .toc-summary {
+      margin-bottom: 8px;
     }
 
     .toc-inline .toc-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       font-weight: 600;
+      font-variation-settings: 'wght' 600;
       color: var(--app-text-pri);
+    }
+    .toc-inline .toc-icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      color: var(--app-text-sec);
     }
 
     .toc-inline .toc-toggle-icon {
@@ -170,12 +184,10 @@
     .toc-inline .toc-body-wrap {
       display: grid;
       grid-template-rows: 0fr;
-      padding-top: 0;
-      transition: grid-template-rows 0.25s ease, padding-top 0.25s ease;
+      transition: grid-template-rows 0.25s ease;
     }
     .toc-inline.open .toc-body-wrap {
       grid-template-rows: 1fr;
-      padding-top: 8px;
     }
     .toc-inline .toc-body {
       overflow: hidden;
@@ -185,6 +197,15 @@
     }
     .toc-inline.open .toc-body {
       opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .toc-inline .toc-summary,
+      .toc-inline .toc-body-wrap,
+      .toc-inline .toc-body,
+      .toc-inline .toc-toggle-icon {
+        transition: none;
+      }
     }
 
     .toc-inline .toc-list {
