@@ -8,6 +8,13 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ## [Unreleased]
 
+### Fixed
+
+- `npm run update` now fetches `upstream` before detecting its default branch; a freshly added remote no
+  longer falls back to a non-existent `master`.
+- `npm run update` no longer aborts while restoring `.chronicle/`: since 3.1.0 that directory is ignored, so
+  it is restored on disk without being staged (and the merge commit stays clean).
+
 ## [3.1.0] — 2026-11-18
 
 **Highlights of 3.1.0**

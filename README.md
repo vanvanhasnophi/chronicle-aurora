@@ -181,6 +181,16 @@ git remote add upstream https://github.com/vanvanhasnophi/chronicle-aurora.git
 npm run update
 ```
 
+If you are upgrading from **3.0.x**, run the updater from `upstream` once. The 3.0.x checkout can carry
+CRLF line endings on Windows, and its copy of the script predates the branches/branch detection this
+release needs:
+
+```bash
+git fetch upstream
+git -c core.autocrlf=false show upstream/main:scripts/update-app.sh > /tmp/update-app.sh
+bash /tmp/update-app.sh
+```
+
 The `upstream` remote is required — only a remote literally named `upstream` is used. Your `origin` points at your own copy (template-generated repos and forks both keep the `chronicle-aurora` name), so falling back to it would only ever compare the repo against itself. If `upstream` is missing, `npm run update` stops and prints the command to add it.
 
 `npm run update` (needs bash: macOS / Linux, WSL, or Git Bash on Windows):

@@ -181,6 +181,15 @@ git remote add upstream https://github.com/vanvanhasnophi/chronicle-aurora.git
 npm run update
 ```
 
+如果你是从 **3.0.x** 升级，先用 `upstream` 里的脚本跑一次：3.0.x 的检出在 Windows 上可能是 CRLF 行尾，
+而且旧脚本还没有这次更新所需的「先 fetch 再判断分支」逻辑：
+
+```bash
+git fetch upstream
+git -c core.autocrlf=false show upstream/main:scripts/update-app.sh > /tmp/update-app.sh
+bash /tmp/update-app.sh
+```
+
 `upstream` remote 是必须的——脚本只认名字叫 `upstream` 的 remote。你的 `origin` 指向你自己的拷贝（template 生成的仓库和 fork 都还叫 `chronicle-aurora`），回退到它只会拿仓库跟自己比。缺 `upstream` 时 `npm run update` 会停下并打印添加命令。
 
 `npm run update`（需要 bash：macOS / Linux、WSL，Windows 上的 Git Bash 均可）：

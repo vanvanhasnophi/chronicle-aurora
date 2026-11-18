@@ -85,14 +85,32 @@ fi
 UPSTREAM_URL=$(git remote get-url "$UPSTREAM_REMOTE")
 say "→ Using upstream: $UPSTREAM_REMOTE ($UPSTREAM_URL)"
 
+say ""
+say "┌──────────────────────────────────────────┐" "$BOLD"
+say "│  Chronicle Aurora — Upstream Update      │" "$BOLD"
+say "└──────────────────────────────────────────┘" "$BOLD"
+say ""
+
+# Fetch first: the upstream/* refs below do not exist until this runs.
+say "📡 Fetching $UPSTREAM_REMOTE…"
+FETCH_ERR=$(git fetch "$UPSTREAM_REMOTE" 2>&1) || {
+  echo -e "${RED}$(echo "$FETCH_ERR" | tail -10)${NC}"
+  err "Fetch failed. Check your network and the remote URL: $UPSTREAM_URL"
+  exit 1
+}
+
 # ── Ensure on main branch ────────────────────────────────────
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# Detect upstream default branch
+# Detect upstream default branch (only meaningful after the fetch above).
 UPSTREAM_BRANCH="$UPSTREAM_REMOTE/main"
 if ! git rev-parse --verify "$UPSTREAM_BRANCH" &>/dev/null; then
   UPSTREAM_BRANCH="$UPSTREAM_REMOTE/master"
+fi
+if ! git rev-parse --verify "$UPSTREAM_BRANCH" &>/dev/null; then
+  err "Upstream has neither a 'main' nor a 'master' branch: $UPSTREAM_URL"
+  exit 1
 fi
 UPSTREAM_BRANCH_NAME=$(echo "$UPSTREAM_BRANCH" | cut -d/ -f2-)
 
@@ -104,21 +122,6 @@ if [ "$CURRENT_BRANCH" != "$UPSTREAM_BRANCH_NAME" ]; then
     exit 1
   }
 fi
-
-# ── Fetch ────────────────────────────────────────────────────
-
-say ""
-say "┌──────────────────────────────────────────┐" "$BOLD"
-say "│  Chronicle Aurora — Upstream Update      │" "$BOLD"
-say "└──────────────────────────────────────────┘" "$BOLD"
-say ""
-
-say "📡 Fetching $UPSTREAM_REMOTE…"
-FETCH_ERR=$(git fetch "$UPSTREAM_REMOTE" 2>&1) || {
-  echo -e "${RED}$(echo "$FETCH_ERR" | tail -10)${NC}"
-  err "Fetch failed. Check your network and the remote URL: $UPSTREAM_URL"
-  exit 1
-}
 
 UPSTREAM_COMMITS=$(git rev-list --count "HEAD..$UPSTREAM_BRANCH" 2>/dev/null || echo 0)
 
@@ -194,8 +197,14 @@ for d in "${PROTECTED_DIRS[@]}"; do
   # Restore from backup
   if [ -d "$BACKUP_DIR/$d" ]; then
     cp -r "$BACKUP_DIR/$d" "$d"
-    git add "$d"/
-    success "$d/ restored"
+    # Directories ignored by upstream (e.g. `.chronicle/` since 3.1.0) must not be
+    # staged — `git add` would fail with "paths are ignored" and abort the update.
+    if git check-ignore -q "$d" 2>/dev/null; then
+      success "$d/ restored (untracked, as upstream intends)"
+    else
+      git add "$d"/
+      success "$d/ restored"
+    fi
   fi
 done
 
