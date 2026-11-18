@@ -1,5 +1,7 @@
 # Chronicle Aurora
 
+[![Version](https://img.shields.io/badge/version-3.1.0--snapshot.10-2f855a)](CHANGELOG.md)
+
 中文 [English](README.md)
 
 **在线演示：** [chr.eightyfor.top](https://chr.eightyfor.top) —— 由本仓库的 `demo` 分支构建。你的拷贝开箱是空的：`data/` 只有 schema 默认值，没有文章。

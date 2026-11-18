@@ -72,6 +72,43 @@ if (fs.existsSync(path.join(ROOT, lockRel))) {
   changes.push(`${lockRel}: workspace version fields → ${version}`)
 }
 
+// Keep per-package lockfiles in sync too: the deploy workflow runs
+// `npm install` inside packages/*, and `npm ci` inside a package must agree
+// with its package.json.
+for (const dir of WORKSPACES) {
+  const rel = `${dir}/package-lock.json`
+  if (!fs.existsSync(path.join(ROOT, rel))) continue
+  const lock = readJson(rel)
+  let changed = false
+  if (lock.version !== undefined && lock.version !== version) {
+    lock.version = version
+    changed = true
+  }
+  if (lock.packages?.[''] && lock.packages[''].version !== undefined && lock.packages[''].version !== version) {
+    lock.packages[''].version = version
+    changed = true
+  }
+  if (changed) {
+    writeJson(rel, lock)
+    changes.push(`${rel}: version → ${version}`)
+  }
+}
+
+// Keep the README version badge in sync (static shields.io badge).
+for (const rel of ['README.md', 'README.zh.md']) {
+  const abs = path.join(ROOT, rel)
+  if (!fs.existsSync(abs)) continue
+  const text = fs.readFileSync(abs, 'utf-8')
+  const encoded = version.replace(/-/g, '--')
+  const next = text.replace(
+    /https:\/\/img\.shields\.io\/badge\/version-[^)\s]+/,
+    `https://img.shields.io/badge/version-${encoded}-2f855a`,
+  )
+  if (next === text) continue
+  if (!dryRun) fs.writeFileSync(abs, next, 'utf-8')
+  changes.push(`${rel}: version badge → ${version}`)
+}
+
 // Start a new CHANGELOG section so the current [Unreleased] entries become the release.
 const changelogRel = 'CHANGELOG.md'
 if (fs.existsSync(path.join(ROOT, changelogRel))) {

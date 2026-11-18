@@ -113,7 +113,7 @@ function resolveBrandIcons() {
     pngLink,
     appleTouch: apple || '/apple-touch-icon.png',
     manifestIcons,
-    themeColor: /^#[0-9a-fA-F]{6}$/.test(String(siteConfig.appearance?.accent || '')) ? siteConfig.appearance.accent : '#36a32e',
+    themeColor: /^#[0-9a-fA-F]{6}$/.test(String(siteConfig.appearance?.accent || '')) ? siteConfig.appearance.accent : '#10b981',
   };
 }
 

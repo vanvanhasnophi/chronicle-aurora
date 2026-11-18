@@ -17,7 +17,7 @@
   /* 顶栏高度（与 critical-tokens.css 同值，移动端 50px） */
   --nav-h: 70px;
   --transition-duration: 1;
-  --accent-default: #2ea35f;
+  --accent-default: #10b981;
   --accent-base: var(--accentColor, var(--accent-default));
   --accent: var(--accent-base);
   --accent-dark: color-mix(in srgb, var(--accent) 80%, #000);

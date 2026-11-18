@@ -45,7 +45,7 @@ if (!fs.existsSync(SITE_FILE)) {
 const site = YAML.parse(fs.readFileSync(SITE_FILE, 'utf-8')) || {}
 const siteName = String(site.homepage?.siteName || 'Chronicle Aurora').trim()
 const description = String(site.homepage?.siteDescription || '').trim()
-const accent = /^#[0-9a-fA-F]{6}$/.test(String(site.appearance?.accent || '')) ? site.appearance.accent : '#36a32e'
+const accent = /^#[0-9a-fA-F]{6}$/.test(String(site.appearance?.accent || '')) ? site.appearance.accent : '#10b981'
 
 const escapeXml = (value) => String(value)
   .replace(/&/g, '&amp;')
@@ -110,14 +110,11 @@ function ogSvg() {
       <stop offset="0" stop-color="${accent}" stop-opacity="0.55"/>
       <stop offset="1" stop-color="${accent}" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${accent}"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0.55"/>
-    </linearGradient>
+    ${AURORA_DEFS}
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
-  <g transform="translate(80 80) scale(0.96)">${MARK_SVG(accent)}</g>
+  <g transform="translate(80 81.9) scale(0.96)">${AURORA_MARK}</g>
   ${titleLines.map((line, index) => `<text x="80" y="${titleY + index * 92}" font-family="${FONT_STACK}"
         font-size="${titleSize}" font-weight="700" fill="#f7f8fa">${escapeXml(line)}</text>`).join('\n  ')}
   ${descLines.map((line, index) => `<text x="82" y="${descY + index * 46}" font-family="${FONT_STACK}"
@@ -127,30 +124,40 @@ function ogSvg() {
 </svg>`
 }
 
-/** 默认品牌标记：圆角块 + 三行文本条 + 一个点（中性，不依赖字母/语言）。 */
-const MARK_SVG = (fill = 'url(#mark)') => `<g>
-  <rect width="100" height="100" rx="23" fill="${fill}"/>
-  <rect x="21" y="30" width="46" height="10" rx="5" fill="#ffffff"/>
-  <rect x="21" y="50" width="30" height="10" rx="5" fill="#ffffff" opacity="0.82"/>
-  <circle cx="72" cy="55" r="8" fill="#ffffff"/>
-</g>`
+/**
+ * 默认品牌标记：空心等边三角形 + 中横杠 → 字母「A」；青绿极光渐变 + 柔光，透明背景。
+ * 不使用站点强调色，也不加纯色底；想换色/换底请用 data/branding/ 覆盖。
+ */
+const AURORA_DEFS = `<linearGradient id="aurora" gradientUnits="userSpaceOnUse" x1="22" y1="22" x2="80" y2="82">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.55" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="auroraGlow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="3.4"/>
+    </filter>`
 
-function iconSvg(size = 512, padded = false) {
-  const padding = padded ? Math.round(size * 0.16) : 0
-  const inner = size - padding * 2
+// 等边三角形（顶点 50,24.5；底边 18..82，y=80）+ 中横杠
+const A_PATH = 'M50 24.5 18 80 82 80Z M30 60H70'
+
+const AURORA_MARK = `<g transform="translate(6.45 -16.82) scale(1.021) rotate(60 50 50) translate(0 -3)">
+    <g fill="none" stroke="url(#aurora)" stroke-linecap="round" stroke-linejoin="round">
+      <path d="${A_PATH}" stroke-width="14" opacity="0.55" filter="url(#auroraGlow)"/>
+      <path d="${A_PATH}" stroke-width="9.5"/>
+    </g>
+  </g>`
+
+function iconSvg(size = 512) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <defs>
-    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${accent}"/>
-      <stop offset="1" stop-color="${accent}" stop-opacity="0.72"/>
-    </linearGradient>
+    ${AURORA_DEFS}
   </defs>
-  ${padded ? `<rect width="${size}" height="${size}" fill="#ffffff"/>` : ''}
-  <g transform="translate(${padding} ${padding}) scale(${(inner / 100).toFixed(4)})">
-    ${MARK_SVG()}
+  <g transform="scale(${(size / 100).toFixed(4)})">
+    ${AURORA_MARK}
   </g>
 </svg>`
 }
+
 /** 极简 ICO 容器：一个 32×32 的 PNG 条目（Vista+ 支持 PNG-in-ICO）。 */
 function pngToIco(png, size) {
   const header = Buffer.alloc(6)
@@ -183,7 +190,7 @@ async function main() {
       .toFile(path.join(outPublic, `favicon-${size}.png`))
   }
 
-  await sharp(Buffer.from(iconSvg(512, true)))
+  await sharp(Buffer.from(iconSvg(512)))
     .resize(180, 180)
     .png({ compressionLevel: 9 })
     .toFile(path.join(outPublic, 'apple-touch-icon.png'))

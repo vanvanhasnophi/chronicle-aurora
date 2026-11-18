@@ -1,5 +1,7 @@
 # Chronicle Aurora
 
+[![Version](https://img.shields.io/badge/version-3.1.0--snapshot.10-2f855a)](CHANGELOG.md)
+
 [中文](README.zh.md) English
 
 **Live demo:** [chr.eightyfor.top](https://chr.eightyfor.top) — built from the `demo` branch of this repository. Your copy starts empty: `data/` ships schema defaults and no posts.

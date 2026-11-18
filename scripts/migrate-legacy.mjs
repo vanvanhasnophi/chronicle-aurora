@@ -143,7 +143,7 @@ function migrateSettings(legacy) {
   }
 
   doc.setIn(['appearance', 'theme'], str(legacy.frontendTheme || legacy.theme || 'follow'))
-  doc.setIn(['appearance', 'accent'], str(legacy.frontendAccent || legacy.accent || '#2ea35f'))
+  doc.setIn(['appearance', 'accent'], str(legacy.frontendAccent || legacy.accent || '#10b981'))
   doc.setIn(['appearance', 'font'], str(legacy.frontendFont || legacy.font || 'sans'))
   doc.setIn(['appearance', 'locale'], str(legacy.frontendLocale || legacy.locale || 'follow'))
 

@@ -82,7 +82,7 @@
         },
         "accent": {
           "type": "string",
-          "default": "#36a32e",
+          "default": "#10b981",
           "pattern": "^#[0-9a-fA-F]{6}$",
           "x-widget": "color",
           "x-tab": "template-appearance",

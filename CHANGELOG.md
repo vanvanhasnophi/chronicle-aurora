@@ -8,7 +8,18 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ## [Unreleased]
 
-No release has been cut since 3.0.12. The entries below describe what is on `main` now.
+**Highlights of 3.1.0**
+
+- A template repository that starts empty: `data/` ships schema defaults and no posts, the demo content
+  lives on a content-only `demo` branch, and `.chronicle/` is generated on first launch.
+- One build pipeline for any host: GitHub Pages root or project sites, custom domains, and a documented
+  static `dist/` for any CDN. `SITE_URL` and `BASE_PATH` are resolved automatically in CI.
+- CI you can trust: workspace typechecks, indexer unit tests, two plugin-isolation assertions, a
+  base-path link audit, and a browser-mode CMS end-to-end test.
+- Social and brand assets out of the box: canonical/Open Graph tags, a generated 1200×630 card, a full
+  favicon set, and directory-as-setting icons (or your avatar).
+- A clear upgrade path for forks: `npm run update` follows the `upstream` remote, and this file is the
+  contract for what changed.
 
 ### Added
 
@@ -45,6 +56,9 @@ No release has been cut since 3.0.12. The entries below describe what is on `mai
 - `scripts/reset-site.mjs` follows the current schema layout (homepage / appearance / post-page /
   friends / collections) and skips `x-site-flag` fields.
 - Plugin-isolation checks run against the demo fixtures and refuse to run when those fixtures are absent.
+- The default accent colour is now emerald green (#10b981, previously #36a32e); existing sites keep the accent configured in data/site.yml, and the default icon uses a fixed aurora gradient rather than the accent.
+- Schema `x-version` fields describe the schema, not the package: they stay independent of the
+  package version (post-page 3.0.0, profile/collections 2.0.2, system-settings 1.0.0).
 
 ### Fixed
 
@@ -54,6 +68,20 @@ No release has been cut since 3.0.12. The entries below describe what is on `mai
   `stop.sh`; `.gitattributes` now forces LF for `*.sh`.
 - `scripts/migrate-legacy.mjs` used `cp -r`, which does not exist in the Windows `cmd` shell used by npm.
 - README screenshots lived under `data/assets/`, so emptying `data/` broke the first screen of the README.
+
+### Upgrade notes
+
+This release rewrote the **upstream git history**: the `v3.0.5`–`v3.0.10` tags were removed, and every
+patch from `3.0.5` to `3.0.12` is now recorded as `3.1.0 snapshot 1`–`9`. If you forked before 3.1.0, do
+**not** try to merge the two histories: re-create your repository from the template (or
+`git reset --hard upstream/main`), then copy your `data/` back.
+
+- `data/` is now the clean template (schema defaults, no posts). Demo content lives on the `demo` branch
+  and is not copied by "Use this template" — fetch it with `npm run demo:fetch`.
+- `.chronicle/` is no longer tracked; the CMS regenerates its defaults on first launch.
+- README screenshots moved from `data/assets/` to `.github/assets/`, so emptying `data/` no longer breaks
+  the first screen of the README.
+- Shell scripts are forced to LF via `.gitattributes`; Windows checkouts of `*.sh` are now stable.
 
 ## [3.0.x] — 2026-08-07 → 2026-11-18
 

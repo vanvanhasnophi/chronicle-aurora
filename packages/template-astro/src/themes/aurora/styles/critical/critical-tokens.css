@@ -21,7 +21,7 @@
   color-scheme: dark;
 
   /* Brand */
-  --accent-default: #2ea35f;
+  --accent-default: #10b981;
   --accent-base: var(--accentColor, var(--accent-default));
   --accent: var(--accent-base);
   --accent-readable: color-mix(in srgb, var(--accent) 70%, #fff);
