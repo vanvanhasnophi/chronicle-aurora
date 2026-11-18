@@ -1,6 +1,6 @@
 # Chronicle Aurora
 
-[![Version](https://img.shields.io/badge/version-3.1.0--snapshot.10-2f855a)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.1.0-snapshot.11-2f855a)](CHANGELOG.md)
 
 中文 [English](README.md)
 

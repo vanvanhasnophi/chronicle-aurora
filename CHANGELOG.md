@@ -8,6 +8,8 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ## [Unreleased]
 
+## [3.1.0] — 2026-11-18
+
 **Highlights of 3.1.0**
 
 - A template repository that starts empty: `data/` ships schema defaults and no posts, the demo content
