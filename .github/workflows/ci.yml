@@ -31,6 +31,14 @@ jobs:
           node-version: '24'
           cache: npm
 
+      # npm resolves platform-specific optional deps (the wasm fallbacks of
+      # sharp / lightningcss, `@emnapi/*`) differently on Windows and Linux. A
+      # lockfile regenerated on Windows is missing the Linux-only entries, which
+      # makes `npm ci` fail here even though the project is fine. Re-resolving
+      # the lock on the runner is cheap; the committed lock still pins versions.
+      - name: Repair lockfile for platform-optional deps
+        run: npm install --package-lock-only --no-audit --no-fund
+
       - name: Install
         run: npm ci --no-audit --no-fund
 
