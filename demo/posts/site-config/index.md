@@ -130,7 +130,7 @@ Drives the "Recently Updated" card. Two thresholds:
 | Field | Description | Datatype | Sample |
 | --- | --- | --- | --- |
 | `theme` | Color scheme. `"follow"` matches the visitor's OS preference. | `"follow"` \| `"light"` \| `"dark"` | `follow` |
-| `accent` | Accent color in hex. Used for links, buttons, selection highlights, and the homepage gradient. | string (valid #Hex code for RGB) | `#36a32e` |
+| `accent` | Accent color in hex. Used for links, buttons, selection highlights, and the homepage gradient. | string (valid #Hex code for RGB) | `#10b981` |
 | `font` | Body typeface family. Affects all text (except post content) across the site. | `"sans"` \| `"serif"` \| `"mono"` | `sans` |
 | `locale` | Default UI language for navigation, buttons, dates, and search. Does not translate post content. | `"follow"` \| `"en"` \| `"zh"` | `follow` |
 | `defaultPerformanceMode` | Default visual-effects tier — controls backdrop blur, glow, and GPU-composited effects. User can override via a toggle in the site header. | `"auto"` \| `"full"` \| `"reduced"` | `auto` |
@@ -145,7 +145,7 @@ Picks the color scheme. `"follow"` (default) respects the visitor's OS-level lig
 
 ### `accent`
 
-A hex color code that tints links, buttons, text selection, and the homepage hero gradient. The default green (`#36a32e`) is deliberately neutral. Test your choice in both light and dark mode — a color that pops on a white background may vanish on a black one. Must include the `#` prefix.
+A hex color code that tints links, buttons, text selection, and the homepage hero gradient. The default emerald green (`#10b981`) is deliberately neutral. Test your choice in both light and dark mode — a color that pops on a white background may vanish on a black one. Must include the `#` prefix.
 
 ### `font`
 
