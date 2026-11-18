@@ -135,7 +135,7 @@ Drives the "Recently Updated" card. Two thresholds:
 | `locale` | Default UI language for navigation, buttons, dates, and search. Does not translate post content. | `"follow"` \| `"en"` \| `"zh"` | `follow` |
 | `defaultPerformanceMode` | Default visual-effects tier — controls backdrop blur, glow, and GPU-composited effects. User can override via a toggle in the site header. | `"auto"` \| `"full"` \| `"reduced"` | `auto` |
 
-> **Renamed in 3.1.x:** the old flat keys `frontendTheme`, `frontendAccent`, `frontendFont` and `frontendLocale` are gone. They are now `theme`, `accent`, `font` and `locale` under the `appearance` block.
+> **Renamed in 3.x:** the old flat keys `frontendTheme`, `frontendAccent`, `frontendFont` and `frontendLocale` are gone. They are now `theme`, `accent`, `font` and `locale` under the `appearance` block.
 
 ### `theme`
 
@@ -172,7 +172,7 @@ The user's choice is saved to `localStorage` and persists across sessions. This 
 
 ### Base colors (`baseColorLight` / `baseColorDark`)
 
-> **Moved in 3.1.x:** these are no longer `frontendBackgroundColorLight` / `frontendBackgroundColorDark` keys in `site.yml`. They are stored in **`data/background/background.yml`**, next to the other background metadata (mode, position, blur, overlays).
+> **Moved in 3.x:** these are no longer `frontendBackgroundColorLight` / `frontendBackgroundColorDark` keys in `site.yml`. They are stored in **`data/background/background.yml`**, next to the other background metadata (mode, position, blur, overlays).
 
 They override the base background color behind all page content, replacing the theme-derived default. Each theme gets its own color:
 
@@ -249,7 +249,7 @@ Traffic analytics with a pluggable backend. `enabled` is the master switch; `bac
 | `plausibleDomain` | Plausible domain. | string | — |
 | `baiduId` | Baidu Analytics ID (the part after `hm.js?`). | string | — |
 
-> **Renamed in 3.1.x:** the old flat `traffic` switch is gone. Analytics is now the `analytics` block with `enabled` + `backend` + per-backend credentials, supporting Google Analytics, Cloudflare, Umami, Plausible and Baidu.
+> **Renamed in 3.x:** the old flat `traffic` switch is gone. Analytics is now the `analytics` block with `enabled` + `backend` + per-backend credentials, supporting Google Analytics, Cloudflare, Umami, Plausible and Baidu.
 
 With `enabled: false` (the default) no analytics script is loaded at all. With `enabled: true`, set `backend` to one of the providers and fill in its fields — `gaMeasurementId` for `ga`, `cloudflareToken` for `cloudflare`, `umamiServerUrl` + `umamiWebsiteId` for `umami`, `plausibleServerUrl` + `plausibleDomain` for `plausible`, `baiduId` for `baidu`. The script is injected into every page and does not block rendering.
 
@@ -334,7 +334,7 @@ The comment backend and its options:
 | `imageUploadEndpoint` | Image host upload URL. Expects a `POST` multipart file and a response JSON `url` field (lsky-pro style: `data.links.url`). | string | — |
 | `imageUploadToken` | Image host token, sent as `Authorization: Bearer <token>`. | string | — |
 
-**How the comment system works in 3.1.x:**
+**How the comment system works in 3.x:**
 
 - **`backend: ""` (static JSON):** comments are stored in `data/comments/{id}.json` and rendered read-only. The public submission form is disabled — there is no interaction.
 - **`backend: "waline"` (headless):** Chronicle renders its own comment UI against the Waline headless REST API — no third-party Waline SDK is loaded. Visitors can post, react (like/dislike), and attach images if an image host is configured.

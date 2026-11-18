@@ -140,7 +140,7 @@ Global directives shape the whole deck; prefix with `_` to scope a single slide.
 | `transition` | global | `<!-- transition: fade -->` |
 | `paginate` | global | `<!-- paginate: true -->` |
 | `class` | local | `<!-- _class: lead -->` |
-| `header` / `footer` | local | `<!-- _footer: "Chronicle 3.1" -->` |
+| `header` / `footer` | local | `<!-- _footer: "Chronicle 3.x" -->` |
 | `backgroundColor` | local | `<!-- _backgroundColor: #fff -->` |
 
 This deck uses them live — see the cover and closing slides.

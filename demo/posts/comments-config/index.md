@@ -126,7 +126,7 @@ post:
 
 ### Moderation & pending review
 
-Comment moderation is **delegated entirely to the Waline admin dashboard** at `https://<your-server>/ui` — the first registered account is the administrator and approves, hides, or deletes comments there. The local Manager CMS has **no comment-management panel** in 3.1.x; `comments-pending/` exists only for the file-based (static JSON) flow.
+Comment moderation is **delegated entirely to the Waline admin dashboard** at `https://<your-server>/ui` — the first registered account is the administrator and approves, hides, or deletes comments there. The local Manager CMS has **no comment-management panel** in 3.x; `comments-pending/` exists only for the file-based (static JSON) flow.
 
 Whether a new comment is published immediately or held for review is decided **by the Waline server**, through its `COMMENT_AUDIT` environment variable — not by Chronicle. The frontend only submits content; it never sends a status field.
 

@@ -60,7 +60,7 @@ Blockquotes are styled as callouts, and they nest naturally — put a `>` inside
 ### Task Lists
 
 - [x] Build the CMS
-- [x] Ship 3.1
+- [x] Ship 3.x
 - [ ] Achieve world domination
 
 Task lists render as interactive checkboxes; the box state is controlled by the `[x]` / `[ ]` marker.

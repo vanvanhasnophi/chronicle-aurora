@@ -11,7 +11,7 @@ font: sans
 type: article
 ---
 
-Welcome to **Chronicle Aurora** — the 3.1.x release of Chronicle, a local-first, git-backed Jamstack blog system. This post is your starting point: it explains what Chronicle is, how the four-layer architecture works, and how the example posts in this blog double as its documentation.
+Welcome to **Chronicle Aurora** — the 3.x release of Chronicle, a local-first, git-backed Jamstack blog system. This post is your starting point: it explains what Chronicle is, how the four-layer architecture works, and how the example posts in this blog double as its documentation.
 
 ## The Core Philosophy
 
