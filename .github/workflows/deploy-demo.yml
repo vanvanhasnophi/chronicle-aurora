@@ -1,0 +1,17 @@
+name: Deploy demo
+
+# This branch is content-only. This trigger is the ONLY code here: the build
+# itself is the reusable workflow on `main`, so demo and template cannot drift.
+on:
+  push:
+    branches: [demo]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    uses: vanvanhasnophi/chronicle-aurora/.github/workflows/deploy.yml@main
