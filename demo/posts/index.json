@@ -1,0 +1,199 @@
+{
+  "c8n-config": {
+    "title": "Collections Guide",
+    "date": "2026-08-07T07:40:52.022Z",
+    "tags": [
+      "collections",
+      "guide"
+    ],
+    "status": "published",
+    "summary": "data/collections.yml lets you group articles into named sequences with a dedicated overview page, an article-side navigation panel, and collection-scoped…",
+    "font": "sans",
+    "author": "Eightyfor",
+    "authors": [
+      "Eightyfor"
+    ],
+    "aiGenerated": true,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
+  },
+  "comments-config": {
+    "title": "Comments Configuration",
+    "date": "2026-08-14",
+    "tags": [
+      "comments",
+      "guide"
+    ],
+    "status": "published",
+    "summary": "data/site.yml controls how comments work on your Chronicle site. Chronicle is local-first with no runtime server, so comments are either read from static JSON…",
+    "font": "sans",
+    "author": "Eightyfor",
+    "authors": [
+      "Eightyfor"
+    ],
+    "aiGenerated": true,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
+  },
+  "friend-config": {
+    "title": "Friends Management",
+    "date": "2026-08-07T07:41:27.554Z",
+    "tags": [
+      "friends",
+      "guide"
+    ],
+    "status": "published",
+    "summary": "data/friends.yml builds the /friends page — a blogroll of external links to people, projects, or communities you want to share with your readers. It's a single…",
+    "font": "sans",
+    "author": "Eightyfor",
+    "authors": [
+      "Eightyfor"
+    ],
+    "aiGenerated": true,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
+  },
+  "getting-started": {
+    "title": "Getting Started",
+    "date": "2026-08-02",
+    "tags": [
+      "guide",
+      "setup"
+    ],
+    "status": "published",
+    "summary": "Welcome to Chronicle Aurora — a local-first, git-backed Jamstack blog system. No runtime server, no API, no database: content lives as YAML + Markdown on your…",
+    "font": "sans",
+    "author": null,
+    "aiGenerated": false,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
+  },
+  "markdown-showcase": {
+    "title": "Markdown Showcase",
+    "date": "2026-08-03",
+    "tags": [
+      "markdown",
+      "demo",
+      "featured"
+    ],
+    "status": "published",
+    "summary": "Chronicle renders Markdown with markdown-it plus a curated set of plugins, then sanitizes the output with DOMPurify — content is cleaned at write time in the…",
+    "font": "sans",
+    "author": null,
+    "aiGenerated": false,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
+  },
+  "profile-config": {
+    "title": "Profile Configuration",
+    "date": "2026-08-07T07:40:03.556Z",
+    "tags": [
+      "guide",
+      "profile"
+    ],
+    "status": "published",
+    "summary": "data/profile.yml defines who owns the site and how you appear to readers. It drives the profile card on the About page and in the sidebar, supplies the site…",
+    "font": "sans",
+    "author": "Eightyfor",
+    "authors": [
+      "Eightyfor"
+    ],
+    "aiGenerated": true,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
+  },
+  "site-config": {
+    "title": "Site Configuration",
+    "date": "2026-08-07T07:39:14.750Z",
+    "tags": [
+      "guide",
+      "site"
+    ],
+    "status": "published",
+    "summary": "data/site.yml is the central control panel for your Chronicle site. Every global behavior — from the color of your links to which pages exist — is declared…",
+    "font": "sans",
+    "author": "Eightyfor",
+    "authors": [
+      "Eightyfor"
+    ],
+    "aiGenerated": true,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide / Configuration"
+      }
+    }
+  },
+  "slides-demo": {
+    "title": "Chronicle Presentation",
+    "date": "2026-08-04",
+    "tags": [
+      "slides",
+      "demo",
+      "featured"
+    ],
+    "status": "published",
+    "summary": "This deck is a slides post — everything on screen comes from one Markdown file.",
+    "author": null,
+    "aiGenerated": false,
+    "type": "slides",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
+  },
+  "welcome-to-chronicle": {
+    "title": "Welcome to Chronicle",
+    "date": "2026-08-01",
+    "tags": [
+      "chronicle",
+      "welcome",
+      "jamstack"
+    ],
+    "status": "published",
+    "summary": "Chronicle is a local-first, git-backed Jamstack blogging platform. No server, no database — just Markdown, YAML, and Git. Its frontend is a lightweight core with pluggable features registered by plugins.",
+    "font": "sans",
+    "author": null,
+    "aiGenerated": false,
+    "type": "article",
+    "extensions": {
+      "collections": {
+        "name": "Chronicle Guide",
+        "path": "Chronicle Guide"
+      }
+    }
+  }
+}

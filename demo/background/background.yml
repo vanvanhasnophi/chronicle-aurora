@@ -1,0 +1,15 @@
+# Chronicle Aurora — Site Background (images/videos are auto-discovered from this directory; metadata for rendering)
+mode: cover # Cover mode: cover / contain / fixed
+posX: 50 # Horizontal position (0-100)
+posY: 50 # Vertical position (0-100)
+size: 100 # Size (1-200)
+blur: 20 # Blur (0-100)
+overlayLightColor: '#fefbfb' # Light overlay color
+overlayLightOpacity: 75 # Light overlay opacity (0-100)
+overlayDarkColor: '#000000' # Dark overlay color
+overlayDarkOpacity: 80 # Dark overlay opacity (0-100)
+videoAutoplay: true # Video autoplay
+videoLoop: true # Video loop
+videoPlaybackRate: 1 # Video playback rate
+baseColorLight: '' # Light-mode base background color (empty = theme default)
+baseColorDark: '' # Dark-mode base background color (empty = theme default)

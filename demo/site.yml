@@ -1,0 +1,90 @@
+# Chronicle Aurora site configuration — written by the CMS settings pages; hand-written comments and untouched keys are preserved
+
+# ── 主板基础（非插件）──
+
+# Homepage settings (Template settings → Homepage)
+homepage:
+  siteName: Chronicle Aurora
+  siteDescription: Chronicle Aurora — a local-first, git-backed Jamstack blog.
+  icpNumber: ''
+  homepageMode: split
+  singleColumnHomepage: false
+  cardVisibility:
+    activity: true
+    taxonomy: true
+    author: true
+  recentUpdates:
+    aggregateDays: 7
+    staleDays: 30
+appearance:
+  theme: follow
+  accent: '#36a32e'
+  font: sans
+  locale: follow
+  defaultPerformanceMode: auto
+rss: true
+analytics:
+  enabled: false
+  backend: ''
+  gaMeasurementId: ''
+  cloudflareToken: ''
+  umamiServerUrl: ''
+  umamiWebsiteId: ''
+  plausibleServerUrl: ''
+  plausibleDomain: ''
+  baiduId: ''
+# 文章页基础（主板预设）：头部信息 meta
+post:
+  meta:
+    metaUpdated: true
+    metaStats: true
+    metaAiBadge: true
+    showTags: true
+
+# ── 插件分组（每插件一段：开关 + 配置；开关键 = 该插件 featureFlag 名）──
+# 演示站现状：search / comments / reading-experience / friends / collections / slides 开启，ai-enhance 关闭
+search:
+  enabled: true
+  searchSuggestions: true
+  globalSearch: true
+  fullTextSearch: true
+ai-enhance:
+  enabled: false
+  summary: true
+comments:
+  enabled: true
+  comments: true
+  backend: ''
+  walineServerUrl: ''
+  attitude: true
+  showGeoAddress: true
+  imageUploadEnabled: false
+  imageUploadEndpoint: ''
+  imageUploadToken: ''
+reading-experience:
+  enabled: true
+  readingExperience: true
+  toc:
+    enabled: true
+    inlineToc: true
+    tocFloat: true
+    tocFloatAlwaysExpanded: false
+    mobileTocControl: true
+  endOfArticle:
+    share: true
+    shareChannels:
+      - twitter
+      - linkedin
+      - weibo
+    prevNextMode: both
+    prevNextScope: collection
+    prevNext: true
+    relatedPosts: true
+    authorCard: false
+    prevNextOrder: desc
+friends:
+  enabled: true
+collections:
+  enabled: true
+slides:
+  enabled: true

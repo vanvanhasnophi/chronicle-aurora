@@ -1,0 +1,31 @@
+collections:
+  - name: Chronicle Guide
+    description: Everything you need to get started with Chronicle — from first principles to advanced features.
+    slug: chronicle-guide
+    nodes:
+      - id: welcome-to-chronicle
+        type: post
+      - id: getting-started
+        type: post
+      - id: ""
+        type: group
+        title: Configuration
+        children:
+          - id: site-config
+            type: post
+          - id: profile-config
+            type: post
+          - id: c8n-config
+            type: post
+          - id: friend-config
+            type: post
+          - id: comments-config
+            type: post
+      - id: slides-demo
+        type: post
+      - id: markdown-showcase
+        type: post
+post:
+  collectionNav:
+    enabled: true
+    alwaysCollapsed: false
