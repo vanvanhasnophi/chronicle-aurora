@@ -10,4 +10,4 @@ main carries the template and stays clean (data/ = schema defaults, empty posts)
 The demo build always takes its **code from main** and its **content from this branch**,
 so the demo cannot drift from the template.
 
-Edit content here, then run the deploy workflow manually or wait for the nightly build.
+Pushing here deploys immediately (`.github/workflows/deploy-demo.yml` calls the reusable workflow on `main`); the nightly run is only a backstop.
