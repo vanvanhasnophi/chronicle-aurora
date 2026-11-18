@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import { withBase, BASE_PATH } from '../utils/basePath';
 import NavHeader from '../components/NavHeader.astro';
 import FilePreviewModal from '../components/FilePreviewModal.astro';
 import { getPluginSlot } from '../plugins';
@@ -119,6 +120,8 @@ export interface Props {
 
 const { title, settings, locale: propLocale, meta, navTitle, navBackHref, navBackLabel, scrollable, disableMainContentTransition, bodyClass } = Astro.props;
 const pageMeta = typeof meta === 'string' ? { description: meta } : (meta || {});
+// Icons resolved at build time: data/branding/ overrides, avatar fallback (appearance.useAvatarAsIcon).
+const brandIcons = typeof __BRAND_ICONS__ !== 'undefined' ? __BRAND_ICONS__ : null;
 const featureFlags = resolveFeatureFlags(settings?.featureFlags || Astro.props.featureFlags);
 // 全局搜索弹层槽位：search 插件注册；when.featureFlag='globalSearch' 由 getPluginSlot 门控
 // （与 NavHeader 搜索按钮同 flag，配置关闭 → 弹层与入口一起消失）
@@ -154,9 +157,25 @@ const metaKeywords = Array.isArray(pageMeta.keywords)
   ? pageMeta.keywords.filter(Boolean).join(', ')
   : String(pageMeta.keywords || '').trim();
 const metaType = String(pageMeta.type || 'website').trim();
-const metaImage = String(pageMeta.image || '').trim();
-const metaUrl = String(pageMeta.url || '').trim();
 const metaRobots = String(pageMeta.robots || (pageMeta.noIndex ? 'noindex,nofollow' : '')).trim();
+
+// Canonical + Open Graph URLs. The origin comes from `site` (SITE_URL), so the
+// bilingual /zh and /en routes each declare themselves instead of competing.
+const siteOrigin = String(Astro.site?.origin || '').replace(/\/+$/, '');
+const canonicalPath = Astro.url.pathname.replace(/\/index\.html?$/i, '/').replace(/\/{2,}/g, '/');
+const metaUrl = String(pageMeta.url || '').trim() || (siteOrigin ? `${siteOrigin}${canonicalPath}` : '');
+
+/** Social cards need an absolute http(s) URL; asset:// and bare relative paths are unusable. */
+function toAbsoluteUrl(value: any): string {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('//')) return `https:${raw}`;
+  if (!raw.startsWith('/')) return '';
+  return siteOrigin ? `${siteOrigin}${raw}` : '';
+}
+const DEFAULT_OG_IMAGE = '/branding/og-default.png';
+const metaImage = toAbsoluteUrl(pageMeta.image) || toAbsoluteUrl(withBase(DEFAULT_OG_IMAGE));
 
 // 从settings获取样式配置
 const theme = settings?.theme || 'follow';
@@ -341,7 +360,7 @@ if (hasSurfaceLight || hasSurfaceDark) {
 const locale = propLocale || getLocale(Astro.locals);
 const htmlLang = locale === 'zh-CN' ? 'zh-CN' : 'en';
 const t = (key: string) => getTranslation(locale, key);
-const routePrefix = locale === 'zh-CN' ? '/zh' : '/en';
+const routePrefix = withBase(locale === 'zh-CN' ? '/zh' : '/en');
 // ── Analytics (3.1.x) — multi-backend, from the site.yml analytics: block ──
 const analyticsCfg = ((settings as Record<string, any>)?.analytics || {}) as Record<string, any>;
 const analyticsEnabled = analyticsCfg.enabled === true;
@@ -349,14 +368,25 @@ const analyticsBackend = analyticsEnabled ? String(analyticsCfg.backend || '') :
 const ANALYTICS_GA_ID = String(process.env.GA_MEASUREMENT_ID || analyticsCfg.gaMeasurementId || '').trim();
 ---
 <!DOCTYPE html>
-<html lang={htmlLang} class={"immersive"} data-perf-default={defaultPerformanceMode} data-featured-alt={featuredAlt ? "true" : undefined} style={`--accent-base:${accent}`}>
+<html lang={htmlLang} data-base={BASE_PATH} class={"immersive"} data-perf-default={defaultPerformanceMode} data-featured-alt={featuredAlt ? "true" : undefined} style={`--accent-base:${accent}`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    {brandIcons?.primary && (
+      <link rel="icon" href={withBase(brandIcons.primary.href)} type={brandIcons.primary.type} sizes={brandIcons.primary.sizes} />
+    )}
+    {brandIcons?.pngLink && (
+      <link rel="icon" href={withBase(brandIcons.pngLink.href)} sizes={brandIcons.pngLink.sizes} type={brandIcons.pngLink.type} />
+    )}
+    {brandIcons?.appleTouch && <link rel="apple-touch-icon" href={withBase(brandIcons.appleTouch)} />}
+    <link rel="manifest" href={withBase('/site.webmanifest')} />
+    <meta name="theme-color" content={brandIcons?.themeColor || accent} />
     {settings?.post?.postComments?.walineServerUrl ? <link rel="dns-prefetch" href={String(settings.post.postComments.walineServerUrl).replace(/\/+$/, '')} /> : null}
     <meta name="description" content={metaDescription} />
     {metaKeywords ? <meta name="keywords" content={metaKeywords} /> : null}
     {metaRobots ? <meta name="robots" content={metaRobots} /> : null}
+    {metaUrl ? <link rel="canonical" href={metaUrl} /> : null}
+    <meta property="og:site_name" content={siteTitle} />
     <meta property="og:title" content={metaTitle} />
     <meta property="og:description" content={metaDescription} />
     <meta property="og:type" content={metaType} />

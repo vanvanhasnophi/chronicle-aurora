@@ -1,4 +1,5 @@
 import type { Locale } from './i18n';
+import { withBase, stripBase } from './basePath';
 
 /** All valid URL route locale prefixes. Add a new language here — the type derives from this. */
 const ROUTE_LOCALES = ['en', 'zh'] as const;
@@ -32,7 +33,8 @@ export function toContentLocale(routeLocale: string | undefined): Locale {
 }
 
 export function getRouteLocaleFromPath(pathname: string): RouteLocale | undefined {
-  const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const bare = stripBase(pathname.startsWith('/') ? pathname : `/${pathname}`);
+  const normalized = bare.startsWith('/') ? bare : `/${bare}`;
   const segments = normalized.split('/').filter(Boolean);
 
   if (isRouteLocale(segments[0])) {
@@ -49,14 +51,15 @@ export function buildLocalizedPath(locale: string | undefined, path: string): st
   if (normalizedPath === '/') {
     // 首页保留尾斜杠：/zh/ 直接命中 index.html；
     // /zh 在静态托管上会 301/308 到 /zh/，软路由会多一个 RTT。
-    return `/${routeLocale}/`;
+    return withBase(`/${routeLocale}/`);
   }
 
-  return `/${routeLocale}${normalizedPath}`;
+  return withBase(`/${routeLocale}${normalizedPath}`);
 }
 
 export function stripRouteLocale(pathname: string): string {
-  const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const bare = stripBase(pathname.startsWith('/') ? pathname : `/${pathname}`);
+  const normalized = bare.startsWith('/') ? bare : `/${bare}`;
   const segments = normalized.split('/').filter(Boolean);
 
   if (isRouteLocale(segments[0])) {

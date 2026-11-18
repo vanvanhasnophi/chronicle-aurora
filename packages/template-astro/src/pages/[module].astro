@@ -12,17 +12,18 @@ export function getStaticPaths() {
 const { module } = Astro.params;
 ---
 
-<html lang="en">
+<html lang="en" data-base={import.meta.env.BASE_URL}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Redirecting…</title>
-    <noscript><meta http-equiv="refresh" content={`0; url=/zh/${module}`} /></noscript>
+    <noscript><meta http-equiv="refresh" content={`0; url=${import.meta.env.BASE_URL}zh/${module}`} /></noscript>
   </head>
   <body>
     <script define:vars={{ module }}>
       (function () {
         var path = String(module || window.location.pathname.replace(/\/+$/, '').replace(/^\//, ''));
+        var base = String(document.documentElement.dataset.base || '/').replace(/\/+$/, '');
         var zh = false;
         try {
           var pref = localStorage.getItem('locale') || '';
@@ -38,7 +39,7 @@ const { module } = Astro.params;
         } catch (e) {
           zh = (navigator.language || '').toLowerCase().indexOf('zh') === 0;
         }
-        window.location.replace((zh ? '/zh/' : '/en/') + path + window.location.search + window.location.hash);
+        window.location.replace(base + (zh ? '/zh/' : '/en/') + path + window.location.search + window.location.hash);
       })();
     </script>
   </body>

@@ -1,6 +1,7 @@
 ---
 import './styles/search-experience.css';
 import SearchBox from "./SearchBox.astro";
+import { withBase } from "../../utils/basePath";
 
 interface Props {
   mode?: 'page' | 'overlay';
@@ -19,12 +20,12 @@ interface Props {
 const {
   mode = 'page',
   locale = 'zh-CN',
-  routePrefix = '/zh',
+  routePrefix = withBase('/zh'),
   t = (key: string) => key,
   searchSuggestionsEnabled = false,
   fullTextSearchEnabled = false,
-  indexUrl = '/posts/index.json',
-  fullIndexUrl = '/posts/full_index.json',
+  indexUrl = withBase('/posts/index.json'),
+  fullIndexUrl = withBase('/posts/full_index.json'),
   initialTitle = '',
   initialTags = [],
   featuredLabel = '',

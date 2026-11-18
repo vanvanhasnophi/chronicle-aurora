@@ -4,13 +4,11 @@
   "private": true,
   "description": "Chronicle Gen — content generation: Astro builds, post indexing",
   "type": "module",
-  "main": "./src/index.ts",
   "bin": {
     "chronicle-gen": "./bin/cli.mjs"
   },
   "scripts": {
-    "build": "node bin/cli.mjs build",
-    "typecheck": "tsc --noEmit"
+    "build": "node bin/cli.mjs build"
   },
   "dependencies": {
     "yaml": "^2.9.0"

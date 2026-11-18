@@ -51,7 +51,7 @@
     "expand": "Expand",
     "allPosts": "All Posts",
     "loadingPosts": "Loading posts...",
-    "noPostsStartWriting": "No posts found. Start writing!",
+    "noPostsNote": "No posts found. Start writing!",
     "daySuffix": ""
   },
   "dashboard": {

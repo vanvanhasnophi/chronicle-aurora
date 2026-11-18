@@ -1,20 +1,4 @@
 # Chronicle Aurora — Friends page (友链卡片)
 # `globalStyle` picks the card layout (left-sm / left-lg / top-lg); `cards` is the sortable list.
 globalStyle: left-sm
-cards:
-  - name: Astro
-    avatar: https://astro.build/favicon.svg
-    intro: The web framework behind Chronicle's static site generation. Build fast, ship less JS.
-    homeUrl: https://astro.build
-  - name: Markdown
-    avatar: https://github.com/dcurtis/markdown-mark/raw/master/png/66x40.png
-    intro: The plain-text formatting syntax that powers every Chronicle post.
-    homeUrl: https://commonmark.org
-  - name: Mermaid
-    avatar: https://mermaid.js.org/favicon.ico
-    intro: JavaScript diagramming library. Flowcharts, sequence diagrams, and more — right in Markdown.
-    homeUrl: https://mermaid.js.org
-  - name: GitHub Pages
-    avatar: https://github.githubassets.com/favicons/favicon.svg
-    intro: Chronicle's recommended deployment target. Free HTTPS, CDN, and CI/CD integration.
-    homeUrl: https://pages.github.com
+cards: []

@@ -246,11 +246,13 @@ const rootId = isSidebar ? "collection-nav-root" : "collection-nav-inline";
           }
           const pc = t.closest(".ct-card.post") as HTMLElement | null;
           if (pc && pc.dataset.pid) {
-            const p = window.location.pathname.startsWith("/en")
-              ? "/en"
-              : "/zh";
+            const base = (document.documentElement.dataset.base || "/").replace(/\/+$/, "");
+            const bare = window.location.pathname.startsWith(base + "/")
+              ? window.location.pathname.slice(base.length)
+              : window.location.pathname;
+            const p = bare.startsWith("/en") ? "/en" : "/zh";
             window.location.href =
-              p + "/post/" + encodeURIComponent(pc.dataset.pid);
+              base + p + "/post/" + encodeURIComponent(pc.dataset.pid);
           }
         });
         r.addEventListener("keydown", (e) => {

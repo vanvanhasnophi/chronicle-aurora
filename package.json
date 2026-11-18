@@ -5,19 +5,38 @@
     "yaml": "^2.9.0"
   },
   "name": "chronicle-aurora",
+  "version": "3.1.0-snapshot.9",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "init": "npm install",
+    "release": "node scripts/release.mjs",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "node --test \"packages/gen/test/*.test.mjs\"",
+    "test:cms": "node scripts/test-cms-icons.mjs",
+    "init:clean": "node scripts/init-clean.mjs",
+    "reset:site": "node scripts/reset-site.mjs",
+    "reset:cms": "node scripts/reset-cms.mjs",
+    "reset:data": "node scripts/reset-data.mjs",
+    "migrate": "node scripts/migrate-legacy.mjs",
+    "update": "bash scripts/update-app.sh",
     "dev:cms": "npm run dev --workspace=@chronicle/manager",
     "dev:astro": "npm run dev --workspace=@chronicle/template-astro",
     "build:astro": "node packages/gen/bin/cli.mjs build --dataDir data --codeDir packages/template-astro --targetDir dist",
+    "demo:fetch": "node scripts/fetch-demo.mjs",
+    "demo:commit": "node scripts/demo-commit.mjs",
+    "dev:demo": "node scripts/demo-dev.mjs",
+    "build:demo": "node scripts/fetch-demo.mjs && node packages/gen/bin/cli.mjs build --dataDir demo --codeDir packages/template-astro --targetDir dist-demo",
+    "preview:demo": "node scripts/serve-dist.mjs --dir dist-demo",
     "verify:isolation": "node scripts/verify-plugin-isolation.mjs",
     "verify:isolation:all": "node scripts/verify-plugin-isolation-all.mjs",
     "ai:summaries": "node scripts/ai-summaries.mjs",
-    "preview:astro": "npm run preview --workspace=@chronicle/template-astro",
+    "shots": "node scripts/screenshots.mjs",
+    "assets": "node scripts/brand-assets.mjs",
+    "check:base": "node scripts/check-base-links.mjs",
+    "preview": "node scripts/serve-dist.mjs",
     "stop": "bash scripts/stop.sh"
   }
 }

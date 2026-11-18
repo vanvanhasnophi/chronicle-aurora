@@ -303,6 +303,22 @@
           "x-allow-empty": true,
           "x-tab": "template-appearance",
           "x-file": "data/background/background.yml"
+        },
+        "useAvatarAsIcon": {
+          "type": "boolean",
+          "default": false,
+          "x-widget": "toggle",
+          "x-tab": "template-appearance",
+          "x-group": "theme",
+          "x-order": 4,
+          "title": {
+            "en": "Use Avatar as Icon",
+            "zh-CN": "用头像作为站点图标"
+          },
+          "description": {
+            "en": "When data/branding/ has no icon files, use the profile avatar (data/avatar/) as the favicon and app icon.",
+            "zh-CN": "当 data/branding/ 下没有图标文件时，把头像（data/avatar/）用作 favicon 与应用图标。"
+          }
         }
       },
       "x-tab": "template-appearance"

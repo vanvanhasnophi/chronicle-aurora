@@ -3,11 +3,11 @@ mode: cover # Cover mode: cover / contain / fixed
 posX: 50 # Horizontal position (0-100)
 posY: 50 # Vertical position (0-100)
 size: 100 # Size (1-200)
-blur: 20 # Blur (0-100)
-overlayLightColor: '#fefbfb' # Light overlay color
-overlayLightOpacity: 75 # Light overlay opacity (0-100)
-overlayDarkColor: '#000000' # Dark overlay color
-overlayDarkOpacity: 80 # Dark overlay opacity (0-100)
+blur: 0 # Blur (0-100)
+overlayLightColor: '' # Light overlay color
+overlayLightOpacity: 0 # Light overlay opacity (0-100)
+overlayDarkColor: '' # Dark overlay color
+overlayDarkOpacity: 0 # Dark overlay opacity (0-100)
 videoAutoplay: true # Video autoplay
 videoLoop: true # Video loop
 videoPlaybackRate: 1 # Video playback rate

@@ -11,7 +11,8 @@
  */
 
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, rmSync, copyFileSync, statSync } from 'node:fs'
+import YAML from 'yaml'
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, rmSync, copyFileSync, cpSync, statSync } from 'node:fs'
 import { join, parse, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -76,8 +77,8 @@ function toYaml(obj, indent = '') {
 console.log('[migrate] 1/6 Backing up data/ → data.bak/')
 if (existsSync(DATA_BAK)) rmSync(DATA_BAK, { recursive: true, force: true })
 if (existsSync(DATA)) {
-  copyFileSync ? null : null // cpSync is better
-  execSync(`cp -r "${DATA}" "${DATA_BAK}"`)
+  // cpSync 而非 `cp -r`：Windows 上 npm script 走 cmd.exe，没有 cp 命令
+  cpSync(DATA, DATA_BAK, { recursive: true })
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -111,59 +112,124 @@ if (!existsSync(legacyData)) {
 
 console.log('[migrate] 3/6 Converting configs JSON → YAML')
 
-// Clean up data/ (keep existing files not in legacy)
-const configMap = {
-  'settings.json': { dest: 'site.yml', transform: s => ({
-    siteName: s.siteName || s.sitename || '',
-    siteDescription: s.siteDescription || '',
-    frontendTheme: s.frontendTheme || 'follow', frontendAccent: s.frontendAccent || '#2ea35f',
-    frontendFont: s.frontendFont || 'sans', frontendLocale: s.frontendLocale || 'follow',
-    searchSuggestions: s.searchSuggestions ?? false,
-    collectionPage: s.collectionPage ?? true, aboutPage: s.aboutPage ?? true,
-    friendsPage: s.friendsPage ?? true, traffic: s.traffic ?? true,
-    rss: s.rss ?? true,
-    gaMeasurementId: s.gaMeasurementId || '', icpNumber: s.icpNumber || '',
-    homepageMode: s.homepageMode || 'split', singleColumnHomepage: s.singleColumnHomepage ?? false,
-    cardVisibility: s.cardVisibility || {},
-    comment: s.comment || {},
-  })},
-  'profile.json': { dest: 'profile.yml', transform: p => ({
-    name: p.name || '', bio: p.bio || '', location: p.location || '',
-    showProfileCard: p.showProfileCard ?? true,
-    links: (p.links || []).map(l => ({ label: l.label || '', url: l.url || '' })),
-  })},
-  'friends.json': { dest: 'friends.yml', transform: f => ({
-    globalStyle: f.globalStyle || null,
-    cards: (f.cards || []).map(c => ({
-      name: c.name || '', avatar: c.avatar || '', intro: c.intro || '',
-      homeUrl: c.homeUrl || '', storyPostId: c.storyPostId || '',
-    })),
-  })},
-  'collections.json': { dest: 'collections.yml', transform: c => {
-    const arr = Array.isArray(c) ? c : (c.collections || [])
-    return arr.map(col => ({
-      name: col.name || '', description: col.description || '',
-      cover: col.cover || '', slug: col.slug || slugify(col.name || ''), nodes: col.nodes || [],
-    }))
-  }},
+// Legacy JSON → structured YAML. The template's data/*.yml (schema defaults) is
+// used as the base document, so hand-written comments and untouched keys survive.
+const str = (value) => (value === undefined || value === null ? '' : String(value))
+const bool = (value, fallback) => (typeof value === 'boolean' ? value : fallback)
+
+function readDoc(dest) {
+  const file = join(DATA, dest)
+  return existsSync(file)
+    ? YAML.parseDocument(readFileSync(file, 'utf-8'), { keepSourceTokens: true })
+    : new YAML.Document()
 }
 
-for (const [src, { dest, transform }] of Object.entries(configMap)) {
-  const srcPath = join(legacyData, src)
-  const dstPath = join(DATA, dest)
-  if (existsSync(srcPath)) {
-    try {
-      const json = JSON.parse(readFileSync(srcPath, 'utf-8'))
-      const data = transform(json)
-      const yml = typeof data === 'object' && !Array.isArray(data)
-        ? `# Chronicle Aurora\n${toYaml(data)}`
-        : `# Chronicle Aurora\n${toYaml(data)}`
-      writeFileSync(dstPath, yml + '\n', 'utf-8')
-      console.log(`  ${src} → ${dest}`)
-    } catch (e) { console.error(`  FAILED ${src}:`, e.message) }
+function writeDoc(dest, doc) {
+  writeFileSync(join(DATA, dest), doc.toString({ lineWidth: -1 }), 'utf-8')
+}
+
+function migrateSettings(legacy) {
+  const doc = readDoc('site.yml')
+
+  doc.setIn(['homepage', 'siteName'], str(legacy.siteName || legacy.sitename))
+  doc.setIn(['homepage', 'siteDescription'], str(legacy.siteDescription))
+  doc.setIn(['homepage', 'icpNumber'], str(legacy.icpNumber))
+  doc.setIn(['homepage', 'homepageMode'], str(legacy.homepageMode || 'split'))
+  doc.setIn(['homepage', 'singleColumnHomepage'], bool(legacy.singleColumnHomepage, false))
+  if (legacy.cardVisibility && typeof legacy.cardVisibility === 'object') {
+    for (const [key, value] of Object.entries(legacy.cardVisibility)) {
+      doc.setIn(['homepage', 'cardVisibility', key], !!value)
+    }
   }
+
+  doc.setIn(['appearance', 'theme'], str(legacy.frontendTheme || legacy.theme || 'follow'))
+  doc.setIn(['appearance', 'accent'], str(legacy.frontendAccent || legacy.accent || '#2ea35f'))
+  doc.setIn(['appearance', 'font'], str(legacy.frontendFont || legacy.font || 'sans'))
+  doc.setIn(['appearance', 'locale'], str(legacy.frontendLocale || legacy.locale || 'follow'))
+
+  doc.setIn(['rss'], bool(legacy.rss, true))
+  doc.setIn(['analytics', 'enabled'], bool(legacy.traffic, false))
+  if (legacy.gaMeasurementId) {
+    doc.setIn(['analytics', 'backend'], 'ga')
+    doc.setIn(['analytics', 'gaMeasurementId'], str(legacy.gaMeasurementId))
+  }
+
+  // Plugin blocks: single-purpose plugins keep only `enabled` (feature flag).
+  doc.setIn(['search', 'enabled'], true)
+  if (legacy.searchSuggestions !== undefined) doc.setIn(['search', 'searchSuggestions'], !!legacy.searchSuggestions)
+  doc.setIn(['friends', 'enabled'], bool(legacy.friendsPage, true))
+  doc.setIn(['collections', 'enabled'], bool(legacy.collectionPage, true))
+
+  if (legacy.comment && typeof legacy.comment === 'object') {
+    if (legacy.comment.enabled !== undefined) doc.setIn(['comments', 'enabled'], !!legacy.comment.enabled)
+    if (legacy.comment.backend) doc.setIn(['comments', 'backend'], str(legacy.comment.backend))
+    if (legacy.comment.walineServerUrl) doc.setIn(['comments', 'walineServerUrl'], str(legacy.comment.walineServerUrl))
+  }
+
+  // aboutPage is a site-level flag (x-site-flag in the profile schema), not a profile.yml key.
+  doc.setIn(['aboutPage'], bool(legacy.aboutPage, true))
+
+  writeDoc('site.yml', doc)
 }
 
+function migrateProfile(legacy) {
+  const doc = readDoc('profile.yml')
+  doc.setIn(['name'], str(legacy.name || 'Chronicle Aurora'))
+  doc.setIn(['bio'], str(legacy.bio))
+  doc.setIn(['location'], str(legacy.location))
+  doc.setIn(['showProfileCard'], bool(legacy.showProfileCard, false))
+  doc.setIn(['links'], (legacy.links || [])
+    .filter((link) => link && (link.url || link.label))
+    .map((link) => ({ label: str(link.label), url: str(link.url) })))
+  writeDoc('profile.yml', doc)
+}
+
+function migrateFriends(legacy) {
+  const doc = readDoc('friends.yml')
+  if (legacy.globalStyle) doc.setIn(['globalStyle'], str(legacy.globalStyle))
+  doc.setIn(['cards'], (legacy.cards || []).map((card) => ({
+    name: str(card.name),
+    avatar: str(card.avatar),
+    intro: str(card.intro),
+    homeUrl: str(card.homeUrl),
+    storyPostId: str(card.storyPostId),
+  })))
+  writeDoc('friends.yml', doc)
+}
+
+function migrateCollections(legacy) {
+  const doc = readDoc('collections.yml')
+  const list = Array.isArray(legacy) ? legacy : (legacy.collections || [])
+  doc.setIn(['collections'], list.map((collection) => ({
+    name: str(collection.name),
+    description: str(collection.description),
+    cover: str(collection.cover),
+    slug: str(collection.slug || slugify(collection.name || '')),
+    nodes: collection.nodes || [],
+  })))
+  // Article-side navigation defaults (current collections schema).
+  if (!doc.hasIn(['post', 'collectionNav', 'enabled'])) {
+    doc.setIn(['post', 'collectionNav', 'enabled'], true)
+    doc.setIn(['post', 'collectionNav', 'alwaysCollapsed'], false)
+  }
+  writeDoc('collections.yml', doc)
+}
+
+const handlers = {
+  'settings.json': migrateSettings,
+  'profile.json': migrateProfile,
+  'friends.json': migrateFriends,
+  'collections.json': migrateCollections,
+}
+
+for (const [src, handler] of Object.entries(handlers)) {
+  const srcPath = join(legacyData, src)
+  if (!existsSync(srcPath)) continue
+  try {
+    handler(JSON.parse(readFileSync(srcPath, 'utf-8')))
+    console.log(`  ${src} → structured YAML`)
+  } catch (e) { console.error(`  FAILED ${src}:`, e.message) }
+}
 // ═══════════════════════════════════════════════════════════
 // Step 4: Migrate posts
 // ═══════════════════════════════════════════════════════════

@@ -33,6 +33,8 @@ export interface PostMeta {
     updatedAt?: string;
     filename: string;
     summary: string;
+    /** Social-preview image (frontmatter `image`): absolute URL or /root path. */
+    image?: string;
     tags: string[];
     status: string;
     font?: string;

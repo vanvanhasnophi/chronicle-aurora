@@ -55,6 +55,7 @@ if (localPost) {
     updatedAt: localPost.updatedAt,
     tags: localPost.tags || [],
     summary: localPost.summary || '',
+    image: localPost.image,
     content: localPost.content,
     html: localPost.compiledHtml,
     toc: localPost.toc || [],
@@ -262,12 +263,12 @@ const pluginPostCritical = getPluginCritical('post');
 ---
 
 {isSlidesView && post ? (
-<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article' }} bodyClass={pluginPostBodyClass}>
+<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article', image: post?.image }} bodyClass={pluginPostBodyClass}>
   {pluginPostCritical && <Fragment slot="head"><style is:inline set:html={pluginPostCritical} /></Fragment>}
   {SlidesSlot ? <SlidesSlot id={post.id} locale={locale} config={post.slideshow || {}} /> : null}
 </Layout>
 ) : (
-<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article' }} bodyClass={pluginPostBodyClass}>
+<Layout title={pageTitle} settings={settings} locale={locale} navTitle={post?.title} navBackHref={backToBlogs} navBackLabel={t('inblog.backToBlogs')} meta={{ description: metaDescription, type: 'article', image: post?.image }} bodyClass={pluginPostBodyClass}>
   {pluginPostCritical && <Fragment slot="head"><style is:inline set:html={pluginPostCritical} /></Fragment>}
   <div class="post-detail-container" id="post-top">
     {error ? (

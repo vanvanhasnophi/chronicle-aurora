@@ -249,7 +249,7 @@ const blogI18n = {
 
         <div class="empty" id="blog-filter-empty" hidden>{t('blog.noMatchingPosts')}</div>
         {sorted.length === 0 && (
-          <div class="empty">{t('blog.noPostsStartWriting')}</div>
+          <div class="empty">{t('blog.noPostsNote')}</div>
         )}
       </section>
     </main>
@@ -494,6 +494,10 @@ const blogI18n = {
         archive.innerHTML = original;
         archive.hidden = false;
 
+        // Total posts in this site (before any tag filter) — used to decide which
+        // empty state to show: no posts at all vs. no matches for the filter.
+        const total = items().length;
+
         let visible = items();
         if (state.tag) {
           visible = visible.filter((item) => {
@@ -570,7 +574,10 @@ const blogI18n = {
           clearBtn.tabIndex = visible ? 0 : -1;
         }
 
-        if (emptyEl) emptyEl.hidden = count !== 0;
+        // "No matching posts" belongs to a filter that removed everything; with
+        // zero posts in the site the server-rendered "start writing" state is the
+        // only message that should be visible.
+        if (emptyEl) emptyEl.hidden = !(total > 0 && count === 0);
         archive.hidden = count === 0;
 
         applyMonthStates();

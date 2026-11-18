@@ -10,9 +10,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const siteFile = path.join(root, 'data/site.yml');
-const indexFile = path.join(root, 'data/posts/index.json');
+// Fixtures (getting-started / slides-demo) live in the demo content, so run
+// against demo/ when it is present; override with CHRONICLE_ISOLATION_DATA_DIR.
+const dataDirName = process.env.CHRONICLE_ISOLATION_DATA_DIR
+  || (fs.existsSync(path.join(root, 'demo', 'posts')) ? 'demo' : 'data');
+const siteFile = path.join(root, dataDirName, 'site.yml');
+const indexFile = path.join(root, dataDirName, 'posts/index.json');
 const target = path.join(root, 'dist-isolation-test');
+
+if (!fs.existsSync(path.join(root, dataDirName, 'posts/getting-started/index.md'))) {
+  console.error(`[isolation] fixtures missing in ${dataDirName}/posts — run: npm run demo:fetch`);
+  process.exit(1);
+}
+
 const siteBackup = fs.readFileSync(siteFile, 'utf-8');
 const indexBackup = fs.existsSync(indexFile) ? fs.readFileSync(indexFile, 'utf-8') : null;
 
@@ -38,7 +48,7 @@ try {
 
   const result = spawnSync(
     process.execPath,
-    ['packages/gen/bin/cli.mjs', 'build', '--dataDir', 'data', '--codeDir', 'packages/template-astro', '--targetDir', 'dist-isolation-test', '--granularity', 'full'],
+    ['packages/gen/bin/cli.mjs', 'build', '--dataDir', dataDirName, '--codeDir', 'packages/template-astro', '--targetDir', 'dist-isolation-test', '--granularity', 'full'],
     { cwd: root, stdio: 'inherit' },
   );
   check(result.status === 0, `disabled build failed (${result.status})`);

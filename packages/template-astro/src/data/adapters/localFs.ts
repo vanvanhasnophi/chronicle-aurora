@@ -393,6 +393,7 @@ function scanPostsFromDisk(): PostMeta[] {
             updatedAt: attrs.updatedAt ? normalizeDate(attrs.updatedAt) : undefined,
             filename: contentFile,
             summary: String(attrs.summary || ''),
+            image: attrs.image ? String(attrs.image) : undefined,
             tags: Array.isArray(attrs.tags) ? attrs.tags.map(String) : [],
             status: String(attrs.status || 'published'),
             font: attrs.font ? String(attrs.font) : undefined,

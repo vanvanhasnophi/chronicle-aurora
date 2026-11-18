@@ -2,11 +2,7 @@
 # `name` is the site author: the frontmatter placeholder `$site$` expands to it.
 # Avatar is auto-discovered from data/avatar/ (put the image there, it just works).
 showProfileCard: false
-name: Eightyfor
-bio: Author of the site. This is a placeholder bio.
-location: GitHub
-links:
-  - label: GitHub
-    url: https://github.com/vanvanhasnophi/chronicle-aurora
-  - label: Docs
-    url: https://github.com/vanvanhasnophi/chronicle-aurora#readme
+name: Chronicle Aurora
+bio: ""
+location: ""
+links: []

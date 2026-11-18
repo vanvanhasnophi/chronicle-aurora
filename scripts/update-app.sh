@@ -12,10 +12,9 @@
 #   conflicts) → restore both from backup. Any merge conflict in
 #   protected dirs is harmless — the backup overwrites it all.
 #
-# The upstream remote is auto-detected from git:
-#   1. "upstream" remote if present
-#   2. "origin" if its URL contains "chronicle-aurora"
-#   3. Otherwise exits with instructions
+# The upstream remote is explicit: it must be named "upstream". A downstream
+# repo's "origin" usually contains "chronicle-aurora" too (same repo name), so
+# falling back to origin would silently compare the repo against itself.
 
 set -euo pipefail
 
@@ -65,26 +64,21 @@ if ! git diff-index --quiet HEAD -- . "${EXCLUDE_PATHS[@]}" 2>/dev/null; then
   [[ "${answer,,}" =~ ^y ]] || exit 0
 fi
 
-# Auto-detect upstream remote
+# Upstream remote — only "upstream" is trusted (see header).
 UPSTREAM_REMOTE=""
 if git remote get-url upstream &>/dev/null; then
   UPSTREAM_REMOTE="upstream"
-elif git remote get-url origin &>/dev/null; then
-  ORIGIN_URL=$(git remote get-url origin)
-  if echo "$ORIGIN_URL" | grep -qi "chronicle-aurora"; then
-    UPSTREAM_REMOTE="origin"
-  fi
 fi
 
 if [ -z "$UPSTREAM_REMOTE" ]; then
-  err "Could not auto-detect the Chronicle Aurora upstream remote."
+  err "No \"upstream\" remote in this repository."
   say ""
-  say "  None of these matched:"
-  say "    1. A remote named \"upstream\""
-  say "    2. An \"origin\" remote whose URL contains \"chronicle-aurora\""
+  say "  A template-generated repo (and a fork) has origin pointing at your own copy,"
+  say "  so origin is never used. Add the upstream remote once:"
   say ""
-  say "  Add the upstream remote manually, for example:"
   say "    git remote add upstream https://github.com/vanvanhasnophi/chronicle-aurora.git"
+  say ""
+  say "  Then re-run: npm run update"
   exit 1
 fi
 

@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../utils/basePath';
 /**
  * ChronicleImage — adaptive <img> / <picture> component.
  *
@@ -11,6 +12,8 @@
  *   <ChronicleImage src="https://example.com/photo.jpg" alt="External" />
  */
 const { src, alt = '', class: cls = '' } = Astro.props;
+// Root-relative images follow the deploy base path too (BASE_PATH).
+const imageSrc = withBase(String(src || ''));
 const IS_EXTERNAL = /^https?:\/\//i.test(String(src));
 const IS_RASTER = /\.(jpg|jpeg|png|gif)$/i.test(String(src));
 
@@ -26,11 +29,11 @@ for (const [k, v] of Object.entries(Astro.props)) {
 {
   !IS_EXTERNAL && IS_RASTER ? (
     <picture>
-      <source srcset={String(src).replace(/\.(jpg|jpeg|png|gif)$/i, '.avif')} type="image/avif" />
-      <source srcset={String(src).replace(/\.(jpg|jpeg|png|gif)$/i, '.webp')} type="image/webp" />
-      <img src={src} alt={alt} class={cls} {...imgProps} />
+      <source srcset={imageSrc.replace(/\.(jpg|jpeg|png|gif)$/i, '.avif')} type="image/avif" />
+      <source srcset={imageSrc.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp')} type="image/webp" />
+      <img src={imageSrc} alt={alt} class={cls} {...imgProps} />
     </picture>
   ) : (
-    <img src={src} alt={alt} class={cls} {...imgProps} />
+    <img src={imageSrc} alt={alt} class={cls} {...imgProps} />
   )
 }

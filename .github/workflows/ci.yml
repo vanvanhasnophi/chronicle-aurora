@@ -1,0 +1,85 @@
+name: CI
+
+# Quality gate for downstream safety: a bad commit here becomes every fork's
+# site, so this runs on PRs and on main before/independent of deployment.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck (manager / gen / shared)
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Fetch demo fixtures
+        id: demo
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin demo >/dev/null 2>&1; then
+            git fetch --no-tags origin demo:refs/remotes/origin/demo
+            git checkout refs/remotes/origin/demo -- demo
+            git reset -q -- demo
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "DATA_DIR=demo" >> "$GITHUB_ENV"
+            echo "Demo fixtures: demo branch"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "DATA_DIR=data" >> "$GITHUB_ENV"
+            echo "No demo branch — skipping isolation checks (they assert on the demo fixtures)."
+          fi
+
+      - name: Build template data
+        run: npm run build:astro
+
+      # The template is also deployable under a sub-path (GitHub Pages project
+      # sites). Build one artifact with a base path and assert every absolute
+      # link carries it, so a broken link cannot reach a project-site deploy.
+      - name: Build with a base path
+        env:
+          BASE_PATH: /ci-base/
+          SITE_URL: https://ci-base.example.com
+        run: |
+          node packages/gen/bin/cli.mjs build \
+            --dataDir "${DATA_DIR:-data}" \
+            --codeDir packages/template-astro \
+            --targetDir dist-ci-base
+
+      - name: Verify base-path links
+        run: node scripts/check-base-links.mjs --dir dist-ci-base --base /ci-base/
+
+      - name: Plugin isolation — collections disabled
+        if: steps.demo.outputs.available == 'true'
+        run: npm run verify:isolation
+
+      - name: Plugin isolation — all optional plugins disabled
+        if: steps.demo.outputs.available == 'true'
+        run: npm run verify:isolation:all

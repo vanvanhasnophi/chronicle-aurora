@@ -4,6 +4,7 @@ import './styles/slideshow.css';
 // Reads post content directly from data source (no base64 encoding needed).
 
 import { dataSource } from "../../data";
+import { withBase } from "../../utils/basePath";
 import { getPostExtension } from "../../data/extensions";
 import TagLinks from "../../components/TagLinks.astro";
 import { hasCapability } from "../../plugins";
@@ -35,7 +36,7 @@ const postMeta = {
   collectionPath: collectionInfo?.path || "",
   tags: post?.tags || [],
 };
-const collectionUrl = locale === "en" ? "/en/collection" : "/collection";
+const collectionUrl = withBase(locale === "en" ? "/en/collection" : "/collection");
 // tag 展示是 core 功能（TagLinks 组件）；搜索可用时才渲染为链接——搜索禁用时降级纯展示
 
 let slideHTML = "";

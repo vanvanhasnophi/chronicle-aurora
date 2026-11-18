@@ -267,10 +267,7 @@
   padding: 2rem 1rem;
   text-align: center;
   color: var(--comp-text-sec);
-  font-size: 0.95rem;
-  border: 1px dashed var(--border-color-blur);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--comp-bg) 78%, transparent);
 }
 
 /* Mobile overrides must come after the 980px rule, otherwise 2 columns win. */

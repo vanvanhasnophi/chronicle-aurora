@@ -1,6 +1,7 @@
 ---
 import './styles/global-search-overlay.css';
 import SearchExperience from "./SearchExperience.astro";
+import { withBase } from "../../utils/basePath";
 
 interface Props {
   locale?: string;
@@ -12,7 +13,7 @@ interface Props {
 
 const {
   locale = 'zh-CN',
-  routePrefix = '/zh',
+  routePrefix = withBase('/zh'),
   t = (key: string) => key,
   searchSuggestionsEnabled = false,
   fullTextSearchEnabled = false,
@@ -29,8 +30,8 @@ const {
       t={t}
       searchSuggestionsEnabled={searchSuggestionsEnabled}
       fullTextSearchEnabled={fullTextSearchEnabled}
-      indexUrl="/posts/index.json"
-      fullIndexUrl="/posts/full_index.json"
+      indexUrl={withBase("/posts/index.json")}
+      fullIndexUrl={withBase("/posts/full_index.json")}
       featuredLabel={t("tag.featured")}
     />
   </div>

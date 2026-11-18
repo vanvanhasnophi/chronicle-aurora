@@ -22,6 +22,7 @@ import { extractBodySummary } from '../../../shared/src/utils/summary.ts'
  * @property {string[]} tags
  * @property {string} status
  * @property {string} [summary]
+ * @property {string} [image]
  * @property {string} [font]
  * @property {string} [author]
  * @property {string[]} [authors]
@@ -166,6 +167,7 @@ export function buildPostIndex(dataDir) {
       tags: Array.isArray(fm.tags) ? fm.tags : [],
       status: fm.status || 'draft',
       summary,
+      image: typeof fm.image === 'string' ? fm.image : undefined,
       font: fm.font,
       author: authors[0] || null,
       authors: authors.length ? authors : undefined,

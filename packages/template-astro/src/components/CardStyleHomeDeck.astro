@@ -1,6 +1,7 @@
 ---
 import '../themes/aurora/styles/components/card-style-home-deck.css';
 import { buildLocalizedPath } from "../utils/routeLocale";
+import { withBase } from "../utils/basePath";
 import { loadSiteSettings } from "../utils/siteSettings";
 import { loadSiteProfile } from "../utils/siteProfile";
 import { getTranslation, getLocale } from "../utils/i18n";
@@ -81,7 +82,7 @@ const footerLinks: FooterLink[] = [
     ? [
         {
           label: t("home.rssSubscribe") as string,
-          href: "/rss.xml",
+          href: withBase("/rss.xml"),
           attrs: {
             rel: "alternate nofollow",
             type: "application/rss+xml",

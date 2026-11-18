@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../../../utils/basePath';
 // ── 主题初始化（head 内联，FOUC 防护）────────────────────
 // 必须早于任何依赖 data-theme 的 CSS（Layout 在 critical tokens 之前渲染本组件）。
 // 由主题拥有：focus 清除、字体加载、主题首帧应用。
@@ -11,8 +12,8 @@
 </script>
 
 <!-- font-display:swap 保证文本立即可见；media="print" onload 移出渲染阻塞关键路径 -->
-<link rel="stylesheet" href="/fonts/inter.css" media="print" onload="this.media='all'" data-astro-transition-persist="font-inter" />
-<noscript><link rel="stylesheet" href="/fonts/inter.css" /></noscript>
+<link rel="stylesheet" href={withBase("/fonts/inter.css")} media="print" onload="this.media='all'" data-astro-transition-persist="font-inter" />
+<noscript><link rel="stylesheet" href={withBase("/fonts/inter.css")} /></noscript>
 
 <!-- 主题首帧应用：MUST run before any CSS that depends on data-theme -->
 <script is:inline>

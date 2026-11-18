@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Called by `.github/workflows/deploy-demo.yml` on the content-only `demo`
+  # branch, so pushing demo content deploys immediately.
+  workflow_call:
+  # Nightly rebuild as a backstop: keeps the demo fresh if a demo-branch
+  # deploy was skipped or failed.
+  schedule:
+    - cron: '0 3 * * *'
 
 permissions:
   contents: read
@@ -21,6 +28,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # Demo content lives on the `demo` branch, which carries no code: when
+          # this run comes from there (directly or through its deploy trigger),
+          # build the code from main.
+          ref: ${{ github.ref_name == 'demo' && 'main' || github.ref_name }}
           # Partial clone: full commit+tree history (needed by `git log --since`
           # and `git diff <base>..HEAD`), but no blob content. Historical media
           # is never downloaded — only the current files' blobs (fetched lazily
@@ -35,6 +46,112 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+
+      - name: Resolve content directory
+        run: |
+          set -euo pipefail
+
+          # Upstream guard: this repository publishes the demo site. If its demo
+          # branch is missing (e.g. it was never pushed), fail instead of quietly
+          # deploying the empty template site to the demo domain.
+          REPO="${{ github.repository }}"
+          UPSTREAM_REPO="vanvanhasnophi/chronicle-aurora"
+
+          if git ls-remote --exit-code --heads origin demo >/dev/null 2>&1; then
+            # This repo publishes the demo site: code from main, content from the
+            # `demo` branch. Template-generated repos have no demo branch and
+            # simply build their own data/.
+            git fetch --no-tags origin demo:refs/remotes/origin/demo
+            git checkout refs/remotes/origin/demo -- demo
+            git reset -q -- demo
+
+            # Invariant: the demo branch carries content only (plus the 6-line
+            # deploy trigger that lives there). If code ever lands there, the
+            # demo could drift from main — reject it.
+            EXTRA=$(git ls-tree -r --name-only refs/remotes/origin/demo | grep -v -E '^(demo/|README\.md$|\.github/workflows/deploy-demo\.yml$)' || true)
+            if [ -n "$EXTRA" ]; then
+              echo "::error::The demo branch must contain only demo/ and README.md. Found:"
+              echo "$EXTRA"
+              exit 1
+            fi
+
+            echo "DATA_DIR=demo" >> "$GITHUB_ENV"
+            echo "Content: demo branch → demo/ (content-only invariant ok)"
+          else
+            if [ "$REPO" = "$UPSTREAM_REPO" ]; then
+              echo "::error::$REPO publishes the demo site, but the demo branch is missing."
+              echo "::error::Push it first: git push origin demo"
+              exit 1
+            fi
+            echo "DATA_DIR=data" >> "$GITHUB_ENV"
+            echo "Content: this repo's data/"
+          fi
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: Resolve site URL
+        run: |
+          set -euo pipefail
+
+          # 1) Explicit override wins (repository variable SITE_URL).
+          #    Read from the `vars` context and export it here, so later steps
+          #    get exactly one source of truth for SITE_URL.
+          OVERRIDE="${{ vars.SITE_URL }}"
+          if [ -n "$OVERRIDE" ]; then
+            echo "SITE_URL=$OVERRIDE" >> "$GITHUB_ENV"
+            echo "Using SITE_URL from repository variable: $OVERRIDE"
+            OVERRIDE_BASE="${{ vars.BASE_PATH }}"
+            if [ -n "$OVERRIDE_BASE" ]; then
+              echo "BASE_PATH=$OVERRIDE_BASE" >> "$GITHUB_ENV"
+              echo "Using BASE_PATH from repository variable: $OVERRIDE_BASE"
+            fi
+            exit 0
+          fi
+
+          # 2) Infer from the Pages configuration. With a custom domain (or a
+          #    root Pages repo) origin is the public origin and base_path is "".
+          PAGES_ORIGIN="${{ steps.pages.outputs.origin }}"
+          PAGES_BASE="${{ steps.pages.outputs.base_path }}"
+          if [ -n "$PAGES_ORIGIN" ] && [ -z "$PAGES_BASE" ]; then
+            echo "SITE_URL=$PAGES_ORIGIN" >> "$GITHUB_ENV"
+            echo "SITE_URL inferred from Pages settings: $PAGES_ORIGIN"
+            {
+              echo "### Site URL"
+              echo ""
+              echo "Inferred from Pages settings: $PAGES_ORIGIN"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # 3) Project site: Pages serves this repo under a sub-path. The template
+          #    prefixes absolute links with BASE_PATH (see src/utils/basePath.ts).
+          if [ -n "$PAGES_ORIGIN" ] && [ -n "$PAGES_BASE" ]; then
+            echo "SITE_URL=$PAGES_ORIGIN" >> "$GITHUB_ENV"
+            echo "BASE_PATH=$PAGES_BASE/" >> "$GITHUB_ENV"
+            echo "Project site: $PAGES_ORIGIN$PAGES_BASE/"
+            {
+              echo "### Site URL"
+              echo ""
+              echo "Project site: $PAGES_ORIGIN$PAGES_BASE/"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # 4) No Pages metadata — fall back to the root-Pages naming rule.
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          if [ "$REPO" = "$OWNER.github.io" ]; then
+            echo "SITE_URL=https://$OWNER.github.io" >> "$GITHUB_ENV"
+            echo "SITE_URL derived from repo name: https://$OWNER.github.io"
+            exit 0
+          fi
+
+          echo "::error::Could not determine the site URL."
+          echo "::error::Enable Pages first: Settings → Pages → Source: GitHub Actions."
+          echo "::error::Or set a repository variable SITE_URL=https://<your-origin>."
+          exit 1
 
       - name: Cache template node_modules
         uses: actions/cache@v4
@@ -67,14 +184,41 @@ jobs:
       - name: Build
         run: |
           node packages/gen/bin/cli.mjs build \
-            --dataDir data \
+            --dataDir "${DATA_DIR:-data}" \
             --codeDir packages/template-astro \
             --targetDir dist
           # GitHub Pages 自定义响应头（缓存策略：HTML 短 TTL / 指纹资源 immutable）
           cp _headers dist/_headers
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      - name: Verify production URLs
+        run: |
+          set -euo pipefail
+          LEAKED=$(grep -l "localhost:4321" dist/rss.xml dist/sitemap.xml dist/robots.txt 2>/dev/null || true)
+          if [ -n "$LEAKED" ]; then
+            echo "::error::localhost leaked into production output: $LEAKED"
+            echo "::error::SITE_URL resolution failed at build time — check the 'Resolve site URL' step above."
+            exit 1
+          fi
+          echo "Sample sitemap entries:"
+          (grep -o '<loc>[^<]*</loc>' dist/sitemap.xml | head -3) || true
+
+      # Project sites deploy under a sub-path: assert every absolute link in the
+      # artifact carries BASE_PATH before it can reach Pages.
+      - name: Verify base-path links
+        if: env.BASE_PATH != ''
+        run: node scripts/check-base-links.mjs --dir dist --base "$BASE_PATH"
+
+      - name: Verify demo build is not empty
+        if: env.DATA_DIR == 'demo'
+        run: |
+          set -euo pipefail
+          PAGES=$(find dist -name '*.html' | wc -l)
+          ITEMS=$(grep -c '<item>' dist/rss.xml || true)
+          echo "HTML pages: $PAGES, RSS items: $ITEMS"
+          if [ "${ITEMS:-0}" -lt 1 ]; then
+            echo "::error::Demo build produced no posts — the demo branch content was not picked up."
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -12,6 +12,7 @@
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
     "build:dev": "vue-tsc -b && vite build",
     "build": "node --max_old_space_size=1536 ../../node_modules/.bin/vite build",
     "preview": "vite preview",

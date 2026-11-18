@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { dataSource } from '../data';
 import { loadSiteSettings } from '../utils/siteSettings';
 import { buildLocalizedPath } from '../utils/routeLocale';
+import { withBase } from '../utils/basePath';
 
 export const prerender = true;
 
@@ -106,10 +107,10 @@ export const GET: APIRoute = async ({ site }) => {
   <channel>
     <title>${escapeXml(feedTitle)}</title>
     <description>${escapeXml(siteDescription)}</description>
-    <link>${escapeXml(baseUrl)}</link>
+    <link>${escapeXml(buildAbsoluteUrl(baseUrl, withBase('/')))}</link>
     <language>zh-CN</language>
     <lastBuildDate>${escapeXml(latestBuildDate)}</lastBuildDate>
-    <atom:link href="${escapeXml(buildAbsoluteUrl(baseUrl, '/rss.xml'))}" rel="self" type="application/rss+xml" />
+    <atom:link href="${escapeXml(buildAbsoluteUrl(baseUrl, withBase('/rss.xml')))}" rel="self" type="application/rss+xml" />
 ${feedItems.map((post) => {
       const postUrl = buildPostUrl(baseUrl, post.id);
       const title = escapeXml(post.title || 'Untitled');

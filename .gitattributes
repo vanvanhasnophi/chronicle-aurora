@@ -1,0 +1,4 @@
+# Shell scripts are run through bash on every platform (including Windows
+# downstream forks, via Git Bash / WSL). Bash rejects CRLF: force LF in the
+# working tree regardless of core.autocrlf.
+*.sh text eol=lf

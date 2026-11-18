@@ -6,6 +6,9 @@ import { resolve } from 'node:path'
 import chronicleData from './vite-data.mjs'
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'))
+// Single source of truth for the app version: the root package.json.
+const rootPkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'))
+const VERSION = rootPkg.version || pkg.version
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const sharedPath = resolve(__dirname, '..', 'shared')
 const repoRoot = resolve(__dirname, '..', '..')
@@ -24,7 +27,7 @@ export default defineConfig({
     },
   },
   base: isElectron ? './' : '/',
-  define: { __VERSION__: JSON.stringify(pkg.version), __YEAR__: JSON.stringify(new Date().getFullYear()) },
+  define: { __VERSION__: JSON.stringify(VERSION), __YEAR__: JSON.stringify(new Date().getFullYear()) },
   server: {
     fs: { strict: false, allow: [repoRoot, resolve(__dirname, '..', 'template-astro'), sharedPath] },
     proxy: {

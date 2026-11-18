@@ -51,7 +51,7 @@
     "expand": "展开",
     "allPosts": "全部文章",
     "loadingPosts": "正在加载文章...",
-    "noPostsStartWriting": "暂无文章，开始写第一篇吧！",
+    "noPostsNote": "暂无文章，开始写第一篇吧！",
     "daySuffix": "日"
   },
   "dashboard": {

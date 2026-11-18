@@ -1,5 +1,6 @@
 ---
 import './styles/share-buttons.css';
+import { withBase } from '../../utils/basePath';
 interface Props {
   post: any;
   locale: string;
@@ -7,7 +8,7 @@ interface Props {
   channels?: string[];
 }
 const { post, locale, lang, channels = ['twitter', 'weibo', 'linkedin'] } = Astro.props as Props;
-const postUrl = `/${lang}/post/${encodeURIComponent(post?.id || '')}`;
+const postUrl = `${withBase(`/${lang}`)}/post/${encodeURIComponent(post?.id || '')}`;
 const postTitle = String(post?.title || '');
 
 // 渠道定义表（有标准网页分享 URL 的社交渠道）：显隐与顺序由 channels 数组驱动；加渠道 = 加表项 + script 分支

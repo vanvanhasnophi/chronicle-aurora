@@ -15,15 +15,15 @@ CLAUDE.md
 .dsh/
 
 # Local dev docs (not committed)
-docs/
+docs/*
+!docs/aurora-assessment-2026-11-18.md
 
 # Astro — track type declarations, ignore dev artifacts
 packages/template-astro/.astro/collections/
 packages/template-astro/.astro/dev.json
 packages/template-astro/.astro/settings.json
 
-# temp assets
-data/branding
+# build output
 dist/
 .chronicle/gen-cache
 
@@ -33,3 +33,12 @@ site.legacy/
 
 *.bak
 src/plugins/generated-registry.ts
+
+# CMS local state — generated on first launch from the settings schema
+.chronicle/
+
+# Demo site content lives on the `demo` branch, fetched by `npm run demo:fetch`
+demo/
+
+# Local build output (demo / screenshots / base-path / isolation checks)
+dist-*/

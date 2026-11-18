@@ -57,7 +57,7 @@ function buildDefaults(schema: Record<string, any>): Record<string, any> {
   return defaults
 }
 
-/** 剔除不入 site.yml 的字段：x-persist:false / x-file / $ 前缀虚拟键 */
+/** 剔除不写入本文件的字段：x-persist:false / x-file / x-site-flag（值存 site.yml）/ $ 前缀虚拟键 */
 function stripVirtual(defaults: Record<string, any>, schema: Record<string, any>): Record<string, any> {
   const out: Record<string, any> = {}
   for (const [k, v] of Object.entries(defaults)) {
@@ -65,6 +65,7 @@ function stripVirtual(defaults: Record<string, any>, schema: Record<string, any>
     if (k.startsWith('$')) continue
     if (prop?.['x-persist'] === false) continue
     if (prop?.['x-file']) continue
+    if (prop?.['x-site-flag']) continue
     if (prop?.['x-widget'] === 'fieldset' && prop.properties) {
       out[k] = stripVirtual(v as Record<string, any>, prop)
     } else {

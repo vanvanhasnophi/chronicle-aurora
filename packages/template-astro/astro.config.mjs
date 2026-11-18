@@ -10,6 +10,13 @@ import YAML from 'yaml';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
+// Single source of truth for the template version: the root package.json.
+const rootPkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8'));
+const VERSION = rootPkg.version || pkg.version;
+// Deploy base path: '/' for a domain root, '/repo/' for a GitHub Pages project
+// site. CI passes BASE_PATH; absolute links rendered by the template go through
+// src/utils/basePath.ts so they follow this value.
+const BASE_PATH = ('/' + (process.env.BASE_PATH || '/').replace(/^\/+|\/+$/g, '') + '/').replace(/^\/\/$/, '/');
 
 // ── Image formats to compress ─────────────────────────────
 const IMG_RE = /\.(jpg|jpeg|png|gif)$/i;
@@ -44,9 +51,87 @@ function readSiteConfig() {
 
 // Module-level site config (used by feature flags).
 const siteConfig = readSiteConfig();
+// ── Brand icons: directory-as-setting, like avatars ────────
+// Drop files into data/branding/ (favicon.svg, favicon-32.png, favicon.ico,
+// apple-touch-icon.png, icon-192.png, icon-512.png) and they are used as-is.
+// With appearance.useAvatarAsIcon, the avatar from data/avatar/ fills any slot
+// that has no explicit file.
+function brandIconType(href) {
+  const ext = extname(href).toLowerCase();
+  if (ext === '.svg') return 'image/svg+xml';
+  if (ext === '.ico') return 'image/x-icon';
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  if (ext === '.webp') return 'image/webp';
+  return 'image/png';
+}
 
-// Deploy-time origin — edit for production (see README → Deployment).
-const SITE_URL = 'http://localhost:4321';
+function resolveBrandIcons() {
+  const brandingDir = join(DATA_DIR, 'branding');
+  const avatarDir = join(DATA_DIR, 'avatar');
+  const custom = (file) => (existsSync(join(brandingDir, file)) ? `/branding/${file}` : '');
+
+  let avatar = '';
+  try {
+    const files = readdirSync(avatarDir)
+      .filter((file) => /\.(svg|png|jpe?g|webp|avif|gif)$/i.test(file) && !file.startsWith('.'));
+    if (files.length) avatar = `/data/avatar/${files[0]}`;
+  } catch { /* no avatar directory */ }
+
+  const useAvatar = (siteConfig.appearance?.useAvatarAsIcon === true || siteConfig.useAvatarAsIcon === true) && Boolean(avatar);
+  const avatarOr = (fallback) => (useAvatar ? avatar : fallback);
+
+  const svg = custom('favicon.svg');
+  const png = custom('favicon-32.png') || custom('favicon.png');
+  const ico = custom('favicon.ico');
+  const apple = custom('apple-touch-icon.png') || avatarOr('');
+  const icon192 = custom('icon-192.png') || avatarOr('/favicon-192.png');
+  const icon512 = custom('icon-512.png') || avatarOr('/favicon-512.png');
+
+  const primary = svg
+    ? { href: svg, type: 'image/svg+xml' }
+    : png
+      ? { href: png, type: brandIconType(png), sizes: '32x32' }
+      : ico
+        ? { href: ico, type: 'image/x-icon' }
+        : useAvatar
+          ? { href: avatar, type: brandIconType(avatar) }
+          : { href: '/favicon.svg', type: 'image/svg+xml' };
+
+  const pngLink = png
+    ? { href: png, type: brandIconType(png), sizes: '32x32' }
+    : useAvatar
+      ? { href: avatar, type: brandIconType(avatar), sizes: 'any' }
+      : { href: '/favicon-32.png', type: 'image/png', sizes: '32x32' };
+
+  const manifestIcons = [
+    { src: icon192, sizes: custom('icon-192.png') || !useAvatar ? '192x192' : 'any', type: brandIconType(icon192) },
+    { src: icon512, sizes: custom('icon-512.png') || !useAvatar ? '512x512' : 'any', type: brandIconType(icon512) },
+  ].filter((icon, index, list) => list.findIndex((other) => other.src === icon.src) === index);
+
+  return {
+    primary,
+    pngLink,
+    appleTouch: apple || '/apple-touch-icon.png',
+    manifestIcons,
+    themeColor: /^#[0-9a-fA-F]{6}$/.test(String(siteConfig.appearance?.accent || '')) ? siteConfig.appearance.accent : '#36a32e',
+  };
+}
+
+const BRAND_ICONS = resolveBrandIcons();
+
+// Deploy-time origin (see README → Deployment).
+// CI sets SITE_URL; local dev falls back to localhost. Absolute links in
+// rss.xml / sitemap.xml / robots.txt come from here, so a production build
+// without this env var would ship localhost URLs.
+const SITE_URL = (process.env.SITE_URL || 'http://localhost:4321').trim().replace(/\/+$/, '');
+try {
+  const parsed = new URL(SITE_URL);
+  if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    console.warn(`[chronicle] SITE_URL should be an origin only (no path), got: ${SITE_URL}`);
+  }
+} catch {
+  throw new Error(`[chronicle] SITE_URL is not a valid absolute URL: ${SITE_URL}`);
+}
 
 function isFullTextEnabled() {
   const site = readSiteConfig();
@@ -78,6 +163,7 @@ function markdownToPlainText(md) {
 
 export default defineConfig({
   site: SITE_URL,
+  base: BASE_PATH,
   output: 'static',
   // Deferred prefetch — Astro's built-in `prefetch` config injects prefetch.js +
   // preload-helper.js (~4 KiB) into the initial bundle, hurting FCP. Instead, we
@@ -373,7 +459,8 @@ export default defineConfig({
       },
     },
     define: {
-      __VERSION__: JSON.stringify(pkg.version),
+      __VERSION__: JSON.stringify(VERSION),
+    __BRAND_ICONS__: JSON.stringify(BRAND_ICONS),
       __YEAR__: new Date().getFullYear(),
       'process.env.DATA_SOURCE': JSON.stringify(process.env.DATA_SOURCE || 'local'),
       'process.env.CHRONICLE_DATA_DIR': JSON.stringify(process.env.CHRONICLE_DATA_DIR || ''),
@@ -652,7 +739,28 @@ export default defineConfig({
             // ── Branding ─────────────────────────────────────
             await syncDir(join(DATA_DIR, 'branding'), join(distDir, 'branding'));
 
-            saveCache();
+            // site.webmanifest reflects the resolved icons (branding/ or avatar).
+            try {
+              const siteName = String(siteConfig.homepage?.siteName || 'Chronicle Aurora').trim();
+              const manifest = {
+                name: siteName,
+                short_name: siteName.length <= 12 ? siteName : (siteName.split(/\s+/)[0] || siteName).slice(0, 12),
+                description: String(siteConfig.homepage?.siteDescription || '').trim(),
+                start_url: './',
+                scope: './',
+                display: 'standalone',
+                background_color: '#0a0c10',
+                theme_color: BRAND_ICONS.themeColor,
+                icons: BRAND_ICONS.manifestIcons.map((icon) => ({
+                  src: String(icon.src).replace(/^\/+/, ''),
+                  sizes: icon.sizes,
+                  type: icon.type,
+                })),
+              };
+              writeFileSync(join(distDir, 'site.webmanifest'), JSON.stringify(manifest, null, 2) + '\n');
+            } catch (error) {
+              console.warn('[chronicle-brand-manifest] could not write site.webmanifest:', error.message);
+            }            saveCache();
             if (sharp) console.log(`[chronicle-asset-pipeline] ${hits} hits, ${misses} misses`);
           },
         };
@@ -674,7 +782,8 @@ export default defineConfig({
             return null;
           }
         };
-      })()
+      })(),
+
     ]
   }
 });

@@ -1,6 +1,7 @@
 ---
 import './styles/collection.css';
 import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../utils/basePath";
 import collectionCritical from "./styles/critical.css?raw";
 import CollectionTreeNode from "./CollectionTreeNode.astro";
 import { getTranslation, getLocale } from "../../utils/i18n";
@@ -12,7 +13,7 @@ import { dataSource } from "../../data";
 
 const locale = getLocale(Astro.locals);
 const t = (key: string) => getTranslation(locale, key);
-const routePrefix = locale === "zh-CN" ? "/zh" : "/en";
+const routePrefix = withBase(locale === "zh-CN" ? "/zh" : "/en");
 
 const settings = await loadSiteSettings();
 

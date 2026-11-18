@@ -594,6 +594,48 @@ ipcMain.handle('posts:reindex', async () => {
 // migrate legacy settings.json → data/site.yml + .chronicle/workspace.json
 // when the new format files are missing but the old one is present.
 
+const WORKSPACE_SCHEMA_PATH = path.join(__dirname, '..', 'schemas', 'system-settings.schema.json');
+
+/**
+ * Recursive schema → defaults. Same rules as scripts/lib/schema-defaults.mjs
+ * and manager/src/composables/useSchemaForm.ts, so a fresh `.chronicle/` boots
+ * with exactly the values the settings UI would show.
+ */
+function buildSchemaDefaults(schema) {
+  if (schema?.type === 'array') return [];
+  const out = {};
+  for (const [key, prop] of Object.entries(schema?.properties || {})) {
+    const p = prop || {};
+    if (p.default !== undefined) out[key] = JSON.parse(JSON.stringify(p.default));
+    else if (p.type === 'object') out[key] = buildSchemaDefaults(p);
+    else if (p.type === 'array') out[key] = [];
+    else if (p.type === 'boolean') out[key] = false;
+    else if (p.type === 'number' || p.type === 'integer') out[key] = 0;
+    else out[key] = '';
+  }
+  return out;
+}
+
+/** .chronicle/workspace.json defaults (schema-driven; see T3 in the assessment). */
+function buildWorkspaceDefaults() {
+  let defaults;
+  try {
+    const schema = JSON.parse(fs.readFileSync(WORKSPACE_SCHEMA_PATH, 'utf-8'));
+    defaults = buildSchemaDefaults(schema);
+  } catch (e) {
+    console.warn('[chronicle] Could not read system-settings schema, using minimal defaults:', e.message);
+    defaults = { backendTheme: 'dark', backendAccent: '#2ea35f', backendFont: 'sans', backendLocale: 'en' };
+  }
+  // Component-held background meta (kept in sync with scripts/reset-cms.mjs).
+  defaults.backendBackgroundMeta = {
+    mode: 'cover', posX: 50, posY: 50, size: 100, blur: 0,
+    overlayLightColor: '#000000', overlayLightOpacity: 0,
+    overlayDarkColor: '#000000', overlayDarkOpacity: 0,
+    videoAutoplay: true, videoLoop: true, videoPlaybackRate: 1,
+  };
+  return defaults;
+}
+
 function ensureChronicleDir() {
   if (!fs.existsSync(CHRONICLE_DIR)) {
     fs.mkdirSync(CHRONICLE_DIR, { recursive: true, mode: 0o775 })
@@ -603,25 +645,9 @@ function ensureChronicleDir() {
   // Create defaults if missing
   const workspacePath = path.join(CHRONICLE_DIR, 'workspace.json')
   if (!fs.existsSync(workspacePath)) {
-    const defaults = {
-      backendTheme: 'dark',
-      backendAccent: '#2ea336',
-      backendFont: 'sans',
-      backendLocale: 'en',
-      frontendCodeDir: path.join(REPO_ROOT, 'packages', 'template-astro'),
-      frontendBuildTargetDir: path.join(REPO_ROOT, 'dist'),
-      autoBuildOnPublish: true,
-      buildGranularity: 'full',
-      scheduledBuildEnabled: false,
-      scheduledBuildMode: 'daily',
-      scheduledBuildMinute: 0,
-      scheduledBuildHour: 3,
-      scheduledBuildWeekday: 0,
-      scheduledBuildCron: '0 3 * * *',
-      frontendUrl: '',
-    }
+    const defaults = buildWorkspaceDefaults()
     fs.writeFileSync(workspacePath, JSON.stringify(defaults, null, 2) + '\n', 'utf-8')
-    console.log('[chronicle] Created default workspace:', workspacePath)
+    console.log('[chronicle] Created default workspace from settings schema:', workspacePath)
   }
 
   const statePath = path.join(CHRONICLE_DIR, 'state.json')
@@ -633,13 +659,6 @@ function ensureChronicleDir() {
       settingsTab: null,
     }
     fs.writeFileSync(statePath, JSON.stringify(defaults, null, 2) + '\n', 'utf-8')
-  }
-
-  // Default .gitignore for .chronicle/ (P4-6): editor-local state ignored,
-  // workspace.json + background tracked by default. User adjusts as they wish.
-  const gitignorePath = path.join(CHRONICLE_DIR, '.gitignore')
-  if (!fs.existsSync(gitignorePath)) {
-    fs.writeFileSync(gitignorePath, ['state.json', 'recently-opened.json', 'thumbs/', ''].join('\n') + '\n', 'utf-8')
   }
 
   const recentPath = path.join(CHRONICLE_DIR, 'recently-opened.json')

@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
 import { dataSource } from '../data';
+import { BASE_PATH } from '../utils/basePath';
 
 export const GET: APIRoute = ({ site }) => {
-  const origin = site ? site.origin.replace(/\/$/, '') : '';
+  const origin = site ? site.origin.replace(/\/$/, '') + BASE_PATH.replace(/\/+$/, '') : '';
   const lines = [
     'User-agent: *',
     'Allow: /',

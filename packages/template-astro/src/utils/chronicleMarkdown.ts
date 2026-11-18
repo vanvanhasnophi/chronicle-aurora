@@ -9,6 +9,7 @@
  */
 
 import MarkdownIt from 'markdown-it';
+import { withBase } from './basePath';
 import markdownItFootnote from 'markdown-it-footnote';
 import hljs from 'highlight.js';
 import katex from 'katex';
@@ -61,12 +62,12 @@ export function setRenderLocale(locale: string) { _currentLocale = locale }
 
 /** Resolve asset://<file> → /assets/<file> */
 export function resolveAssetUrl(file: string): string {
-  return '/assets/' + encodeURI(file)
+  return withBase('/assets/' + encodeURI(file))
 }
 
 /** Resolve post://<slug> → /{lang}/post/<slug> */
 export function resolvePostUrl(slug: string): string {
-  return '/' + _currentLocale + '/post/' + encodeURI(slug)
+  return withBase('/' + _currentLocale + '/post/' + encodeURI(slug))
 }
 
 function encodeFilename(url: string): string {
@@ -82,9 +83,11 @@ md.normalizeLink = (url: string) => {
   if (url.startsWith('post://')) return resolvePostUrl(url.slice(7));
   // Relative path → resolve to post attachment directory
   if (_currentPostId && !url.startsWith('/') && !/^[a-zA-Z][\w+.-]*:/.test(url)) {
-    const base = _currentPostId === '__about__' ? '/about' : `/post_attachment/${_currentPostId}`;
+    const base = withBase(_currentPostId === '__about__' ? '/about' : `/post_attachment/${_currentPostId}`);
     return `${base}/${encodeFilename(url)}`;
   }
+  // Site-root links written in Markdown follow the deploy base path too.
+  if (url.startsWith('/') && !url.startsWith('//')) return _normalizeLink(withBase(url));
   return _normalizeLink(url);
 };
 
