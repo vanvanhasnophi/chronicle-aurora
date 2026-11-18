@@ -98,7 +98,7 @@ push    = deploy
 pull    = sync
 ```
 
-- Manager (Electron CMS) writes files, then commits & pushes via `simple-git`
+- Manager (browser CMS) writes files, then commits & pushes via `simple-git`
 - CI pre-build scans `posts/` → rebuilds `index.json` → `astro build` → static HTML
 - Static files land on any CDN / Pages — nothing to patch, nothing to back up
 
@@ -222,7 +222,7 @@ Slides are fullscreen shows, not articles — they never enter prev/next navigat
 ```bash
 git clone https://github.com/vanvanhasnophi/chronicle-aurora
 cd chronicle-aurora/packages/manager
-npm install && npm run dev   # Electron CMS
+npm install && npm run dev   # CMS in the browser
 ```
 
 1. Open the CMS — local machine is trusted, no login

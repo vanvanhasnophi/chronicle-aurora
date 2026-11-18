@@ -16,7 +16,7 @@ Chronicle takes a different path. **Your content is a Git repository.** The CMS 
 
 | Layer | Technology |
 |-------|-----------|
-| Editor | Electron + Vue 3 + CodeMirror |
+| Editor | Vue 3 + CodeMirror (browser; optional Electron shell) |
 | Build | Astro SSG |
 | Images | Sharp → WebP + AVIF |
 | Markdown | markdown-it + KaTeX + Mermaid |

@@ -25,13 +25,13 @@ Chronicle Aurora is a monorepo (npm workspaces). One command from the repo root 
 npm run init
 ```
 
-### The CMS (Electron)
+### The CMS (browser)
 
 ```bash
 npm run dev:cms        # from the repo root — equivalent to cd packages/manager && npm run dev
 ```
 
-This launches the CMS in a dedicated **Electron window** — not a browser tab, and there is no `localhost:5173`. There is also no login or auth: the local machine is trusted, and the Manager reads and writes `data/` directly through the filesystem. Git (commit/push) and local builds are handled from inside the app.
+This starts the CMS on **http://localhost:5173** in your browser. There is no login or auth: the local machine is trusted, and the Manager reads and writes `data/` directly through the filesystem. Git (commit/push) and local builds are handled from inside the app.
 
 ![Landing Page](image.png "CMS Landing Page in Dark Mode" =70%x)
 

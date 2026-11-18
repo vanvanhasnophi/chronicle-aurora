@@ -48,7 +48,7 @@ The Manager mirrors this structure under **Settings**: **Template** (Homepage / 
 # 1. Install every package (npm workspaces, from the repo root)
 npm run init
 
-# 2. Local CMS (opens an Electron window)
+# 2. Local CMS (opens in the browser)
 npm run dev:cms
 
 # 3. Blog frontend (reads data/ directly)
