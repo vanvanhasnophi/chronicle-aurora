@@ -592,6 +592,9 @@ export function getPublicSettings(): LocalSettings {
         homepageMode: raw.homepageMode,
         singleColumnHomepage: raw.singleColumnHomepage,
         cardColumns: normalizeHomeColumns(raw.cardColumns ?? raw.columns),
+        cardFlowMaxWidth: Number.isFinite(Number(raw.cardFlowMaxWidth ?? raw.maxWidth)) && Number(raw.cardFlowMaxWidth ?? raw.maxWidth) > 0
+          ? Number(raw.cardFlowMaxWidth ?? raw.maxWidth)
+          : undefined,
         cardVisibility: raw.cardVisibility || {},
         recentUpdates: raw.recentUpdates || {},
         gaMeasurementId: raw.analytics?.gaMeasurementId ?? raw.gaMeasurementId,

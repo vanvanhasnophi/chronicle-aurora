@@ -2,6 +2,8 @@
    自 src/components/CardStyleHomeDeck.astro <style> 迁出（与 critical 同值+附加细化，bundled 后加载赢平局，安全）。 */
   .home-shell{
     --home-ui-scale: 0.9;
+    width: 100%;
+    box-sizing: border-box;
     max-width: 1200px;
     zoom: var(--home-ui-scale);
     margin: 0 auto;
@@ -17,14 +19,25 @@
 
   .home-shell .card-flows{
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+    grid-template-columns: var(--home-cols, minmax(0, 1.45fr) minmax(320px, 0.85fr));
     gap: 1rem;
     align-items: start;
   }
 
-  /* Single column: forced by toggle OR right column has no visible cards */
+  /* Single column: one configured column, the legacy toggle, or an empty right column */
   .home-shell .card-flows.single-col{
-    grid-template-columns: 1fr;
+    grid-template-columns: var(--home-cols, 1fr);
+  }
+
+  /* Three configured columns fall back to two tracks below 1200px; the third
+     column drops below them and spans the full width. */
+  @media (max-width: 1200px) {
+    .home-shell .card-flows[data-columns="3"]{
+      grid-template-columns: var(--home-cols-2, 1fr 1fr);
+    }
+    .home-shell .card-flows[data-columns="3"] > .flow-column:nth-child(3){
+      grid-column: 1 / -1;
+    }
   }
 
   /* Hide the empty right column to avoid wasted gap space */
@@ -719,8 +732,13 @@
   }
 
   @media (max-width: 900px) {
-    .home-shell .card-flows{
+    .home-shell .card-flows,
+    .home-shell .card-flows.single-col,
+    .home-shell .card-flows[data-columns="3"]{
       grid-template-columns: 1fr;
+    }
+    .home-shell .card-flows > .flow-column{
+      grid-column: 1 / -1;
     }
   }
 

@@ -138,6 +138,24 @@
             }
           ]
         },
+        "cardFlowMaxWidth": {
+          "type": "number",
+          "default": 1200,
+          "minimum": 480,
+          "maximum": 2400,
+          "x-widget": "number",
+          "x-tab": "template-homepage",
+          "x-group": "cards",
+          "x-order": 8,
+          "title": {
+            "en": "Overall Max Width (px)",
+            "zh-CN": "整体最大宽度（px）"
+          },
+          "description": {
+            "en": "Caps the whole homepage card area (columns and footer). Per-column max-width still applies inside it.",
+            "zh-CN": "限制整个主页卡片区域（含页脚）。列级 max-width 仍在其内部生效。"
+          }
+        },
         "cardColumns": {
           "type": "array",
           "x-widget": "homepage-columns",

@@ -100,6 +100,7 @@ html[data-perf="reduced"] .scroll-hint__arrow { animation:none; opacity:1; }
 /* ── Card grid shell (split + cards mode, above fold) ── */
 .home-shell {
   --home-ui-scale:0.9; zoom:var(--home-ui-scale);
+  width:100%; box-sizing:border-box;
   max-width:1200px; margin:0 auto; padding:1.25rem clamp(1rem,2vw,2rem) 3rem;
 }
 .card-flows { display:grid; grid-template-columns:var(--home-cols, minmax(0,1.45fr) minmax(320px,.85fr)); gap:1rem; align-items:start; }

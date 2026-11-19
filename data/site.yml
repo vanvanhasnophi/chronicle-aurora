@@ -1,18 +1,24 @@
-# Chronicle Aurora site configuration — written by the CMS settings pages; hand-written comments and untouched keys are preserved
+# Chronicle Aurora site configuration 闁?written by the CMS settings pages; hand-written comments and untouched keys are preserved
 
-# ── 主板基础（非插件）──
+# 闁冲厜鍋撻柍鍏夊亾 濞戞挾绮姗€宕洪搹璇℃敤闁挎稑鐗撳顏堝箵閹哄秵顐介柨娑橆槴閺€銏ゅ煘閳?
 
-# Homepage settings (Template settings → Homepage)
+# Homepage settings (Template settings 闁?Homepage)
 homepage:
   siteName: Chronicle Aurora
-  siteDescription: Chronicle Aurora — a local-first, git-backed Jamstack blog.
+  siteDescription: Chronicle Aurora 闁?a local-first, git-backed Jamstack blog.
   icpNumber: ''
-  homepageMode: split
-  singleColumnHomepage: false
-  cardVisibility:
-    activity: true
-    taxonomy: true
-    author: true
+  homepageMode: cards
+  cardFlowMaxWidth: 1200
+  cardColumns:
+    - width: 300
+      cards:
+        intro: {}
+        recent: {}
+    - width: 200
+      cards:
+        author: {}
+        taxonomy: {}
+        activity: {}
   recentUpdates:
     aggregateDays: 7
     staleDays: 30
@@ -33,7 +39,7 @@ analytics:
   plausibleServerUrl: ''
   plausibleDomain: ''
   baiduId: ''
-# 文章页基础（主板预设）：头部信息 meta
+# 闁哄倸娲ㄩ悵閿嬨亜闂堟稓鍞ㄧ痪顓涘亾闁挎稑鐗呯€靛矂寮堕崸妤婃殨閻犱焦鎷濈槐姘舵晬濮橆兙浠堥梺顔哄妺娣囧﹪骞?meta
 post:
   meta:
     metaUpdated: true
@@ -41,8 +47,8 @@ post:
     metaAiBadge: true
     showTags: true
 
-# ── 插件分组（每插件一段：开关 + 配置；开关键 = 该插件 featureFlag 名）──
-# 默认开启：search / comments / reading-experience / friends / collections / slides；ai-enhance 关闭
+# 闁冲厜鍋撻柍鍏夊亾 闁圭粯甯婂▎銏ゅ礆閸℃瑧鐭嬮柨娑樼墛閻︼繝骞撻幒宥嗩偨濞戞挴鍋撴繛鍫㈩暜缁辨澘顕ｉ埀顒勫礂?+ 闂佹澘绉堕悿鍡涙晬濞戞纾婚柛蹇斿▕閺?= 閻犲洢鍎茶ぐ鍐╃?featureFlag 闁告艾绋勭槐姘跺煘閳ь剟鍩為埀?
+# 濮掓稒顭堥璇差嚕閳ь剟宕ラ銈囩獥search / comments / reading-experience / friends / collections / slides闁挎稒鐭榠-enhance 闁稿繑濞婂Λ?
 search:
   enabled: true
   searchSuggestions: true

@@ -103,6 +103,8 @@ export interface LocalSettings {
      * is present it replaces cardVisibility + singleColumnHomepage.
      */
     cardColumns?: Array<{ width?: number; maxWidth?: number; cards: string[] }>;
+    /** Overall max width (px) of the homepage card flow, footer included. */
+    cardFlowMaxWidth?: number;
     recentUpdates?: { staleDays?: number; aggregateDays?: number };
     gaMeasurementId?: string;
     /** 3.1.x — analytics backend config (site.yml analytics: block). */

@@ -430,7 +430,12 @@ const cardProps: Record<string, Record<string, unknown>> = {
 };
 ---
 
-<section class="home-shell">
+<section
+  class="home-shell"
+  style={Number.isFinite(Number(settings?.cardFlowMaxWidth)) && Number(settings?.cardFlowMaxWidth) > 0
+    ? `max-width:${Number(settings?.cardFlowMaxWidth)}px`
+    : undefined}
+>
   <div
     class="card-flows"
     class:list={[{ "single-col": columnCount === 1 }]}
@@ -441,7 +446,7 @@ const cardProps: Record<string, Record<string, unknown>> = {
       <div
         class:list={["flow-column", index === 0 ? "flow-column--left" : "flow-column--right"]}
         style={Number.isFinite(column.maxWidth) && column.maxWidth > 0
-          ? `max-width:${column.maxWidth}px;margin-inline:auto;`
+          ? `width:100%;max-width:${column.maxWidth}px;margin-inline:auto;`
           : undefined}
       >
         {column.cards.map((id) => {
