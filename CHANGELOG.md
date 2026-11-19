@@ -96,6 +96,7 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 - `scripts/reset-site.mjs` follows the current schema layout (homepage / appearance / post-page /
   friends / collections) and skips `x-site-flag` fields.
 - Plugin-isolation checks run against the demo fixtures and refuse to run when those fixtures are absent.
+- Plugin translations live with their plugins (src/plugins/<id>/locales/<locale>.json); src/locales/ now contains core strings only, and a disabled plugin contributes no translation text to the bundle.
 - The default accent colour is emerald green (`#10b981`, previously `#36a32e`); existing sites keep the
   accent configured in `data/site.yml`, and the default icon uses a fixed aurora gradient rather than the
   accent.

@@ -1,0 +1,15 @@
+{
+  "collection": {
+    "title": "合集",
+    "backToList": "返回合集列表",
+    "navTitlePattern": "合集：{name}",
+    "empty": "暂无合集",
+    "emptyCollection": "该合集暂无文章",
+    "postsCount": "{count} 篇"
+  },
+  "home": {
+    "newCollection": "新增合集",
+    "updatedCollection": "更新合集",
+    "unnamedCollection": "未命名合集"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "comment": {
+    "title": "Comments",
+    "count": "{count} comments",
+    "noComments": "No comments yet. Be the first to share your thoughts!",
+    "leaveComment": "Leave a Comment",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailHint": "never shown",
+    "emailPlaceholder": "your@email.com",
+    "website": "Website",
+    "websitePlaceholder": "https://your.site",
+    "content": "Comment",
+    "contentPlaceholder": "Share your thoughts...",
+    "submit": "Submit",
+    "reviewNote": "Your comment will appear after review.",
+    "notConfigured": "Comment submission is not configured.",
+    "staticPlaceholder": "Comments are displayed in read-only mode, new comment submission is not available now.",
+    "loading": "Loading comments...",
+    "loadError": "Could not load latest comments.",
+    "loadMore": "Load more comments",
+    "submitted": "Comment submitted, awaiting review.",
+    "submitError": "Submission failed. Please try again.",
+    "reply": "Reply",
+    "replyTo": "Reply to",
+    "pinned": "Pinned",
+    "replyingTo": "Replying to",
+    "preview": "Preview",
+    "previewNow": "Now",
+    "imageUpload": "Attach image",
+    "imageDisabled": "Images are disabled in comments.",
+    "imageUploadError": "Image upload failed. Please try again."
+  },
+  "postPage": {
+    "attitudePrompt": "How was this post?",
+    "attitudeLike": "Like",
+    "attitudeDislike": "Dislike"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "postPage": {
+    "relatedPosts": "Related Posts",
+    "prevPost": "Previous",
+    "nextPost": "Next",
+    "noPrev": "This is the first post",
+    "noNext": "This is the last post"
+  },
+  "inblog": {
+    "aboutMe": "About Me"
+  }
+}

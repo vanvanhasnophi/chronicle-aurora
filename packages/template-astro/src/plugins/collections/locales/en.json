@@ -1,0 +1,15 @@
+{
+  "collection": {
+    "title": "Collections",
+    "backToList": "Back to collections",
+    "navTitlePattern": "Collection: {name}",
+    "empty": "No collections yet",
+    "emptyCollection": "This collection has no posts yet",
+    "postsCount": "{count} posts"
+  },
+  "home": {
+    "newCollection": "New collection",
+    "updatedCollection": "Updated collection",
+    "unnamedCollection": "Untitled collection"
+  }
+}

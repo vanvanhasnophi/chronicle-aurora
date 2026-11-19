@@ -1,0 +1,18 @@
+{
+  "search": {
+    "selectTags": "Select Tags",
+    "placeholder": "Search posts...",
+    "noTags": "No tags found",
+    "done": "Done",
+    "loading": "Loading...",
+    "noResults": "No posts found matching your criteria.",
+    "selectedTags": "Selected",
+    "resultsTitle": "Search results",
+    "resultsCount": "{count} items",
+    "resultDescription": "Search results for {searchDescription}",
+    "items": "{count} item(s)",
+    "tagsCount": " and {count} more tag(s)",
+    "suggestionEmpty": "No suggestions",
+    "allPosts": "All content"
+  }
+}

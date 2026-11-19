@@ -33,6 +33,7 @@ site.legacy/
 
 *.bak
 src/plugins/generated-registry.ts
+src/plugins/generated-locales.ts
 
 # CMS local state — generated on first launch from the settings schema
 .chronicle/

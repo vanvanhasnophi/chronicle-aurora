@@ -1,0 +1,12 @@
+{
+  "postPage": {
+    "relatedPosts": "相关文章",
+    "prevPost": "上一篇",
+    "nextPost": "下一篇",
+    "noPrev": "已是第一篇",
+    "noNext": "已是最后一篇"
+  },
+  "inblog": {
+    "aboutMe": "关于我"
+  }
+}

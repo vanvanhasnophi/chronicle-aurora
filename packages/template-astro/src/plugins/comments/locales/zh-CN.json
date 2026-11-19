@@ -1,0 +1,40 @@
+{
+  "comment": {
+    "title": "评论",
+    "count": "{count} 条评论",
+    "noComments": "暂无评论，来发表第一条想法吧！",
+    "leaveComment": "发表评论",
+    "name": "昵称",
+    "namePlaceholder": "你的昵称",
+    "email": "邮箱",
+    "emailHint": "不会公开",
+    "emailPlaceholder": "your@email.com",
+    "website": "网站",
+    "websitePlaceholder": "https://your.site",
+    "content": "评论",
+    "contentPlaceholder": "写下你的想法...",
+    "submit": "提交",
+    "reviewNote": "评论提交后将等待审核。",
+    "notConfigured": "评论提交功能尚未配置。",
+    "staticPlaceholder": "评论以只读模式展示。发布新评论入口暂不开放。",
+    "loading": "正在加载评论...",
+    "loadError": "无法加载最新评论。",
+    "loadMore": "加载更多评论",
+    "submitted": "评论已提交，等待审核。",
+    "submitError": "提交失败，请重试。",
+    "reply": "回复",
+    "replyTo": "回复",
+    "pinned": "置顶",
+    "replyingTo": "回复",
+    "preview": "预览",
+    "previewNow": "刚刚",
+    "imageUpload": "添加图片",
+    "imageDisabled": "评论不允许带图片。",
+    "imageUploadError": "图片上传失败，请重试。"
+  },
+  "postPage": {
+    "attitudePrompt": "给个评价：",
+    "attitudeLike": "赞",
+    "attitudeDislike": "踩"
+  }
+}

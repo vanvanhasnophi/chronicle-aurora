@@ -1,0 +1,18 @@
+{
+  "search": {
+    "selectTags": "选择标签",
+    "placeholder": "搜索文章...",
+    "noTags": "未找到标签",
+    "done": "完成",
+    "loading": "正在加载...",
+    "noResults": "未找到符合条件的文章。",
+    "selectedTags": "已选",
+    "resultsTitle": "搜索结果",
+    "resultsCount": "{count} 条",
+    "resultDescription": "{searchDescription} 的搜索结果",
+    "items": "{count} 条",
+    "tagsCount": "等{count}个标签",
+    "allPosts": "所有内容",
+    "suggestionEmpty": "无匹配建议"
+  }
+}

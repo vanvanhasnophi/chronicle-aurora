@@ -1,12 +1,37 @@
 import enJSON from '../locales/en.json';
 import zhCNJSON from '../locales/zh-CN.json';
+import { pluginLocales } from '../plugins/generated-locales';
 
 export type Locale = 'en' | 'zh-CN';
-type Translations = typeof enJSON;
+type LocaleDict = Record<string, any>;
 
-const translations: Record<Locale, Translations> = {
-  'en': enJSON,
-  'zh-CN': zhCNJSON
+/**
+ * Deep-merge plugin locale bundles over the core dictionary. Plugins only
+ * contribute the namespaces they own (e.g. `comment.*`), so a plugin can be
+ * disabled (and removed from the generated import list) without leaving its
+ * translations in the core files.
+ */
+function deepMerge(base: LocaleDict, extra: unknown): LocaleDict {
+  if (!extra || typeof extra !== 'object') return base;
+  for (const [key, value] of Object.entries(extra as LocaleDict)) {
+    const current = base[key];
+    const bothObjects =
+      value && typeof value === 'object' && !Array.isArray(value) &&
+      current && typeof current === 'object' && !Array.isArray(current);
+    base[key] = bothObjects ? deepMerge({ ...current }, value) : value;
+  }
+  return base;
+}
+
+const translations: Record<Locale, LocaleDict> = {
+  'en': pluginLocales.reduce(
+    (acc, pack) => deepMerge(acc, (pack as Record<string, unknown>).en),
+    { ...enJSON } as LocaleDict,
+  ),
+  'zh-CN': pluginLocales.reduce(
+    (acc, pack) => deepMerge(acc, (pack as Record<string, unknown>)['zh-CN']),
+    { ...zhCNJSON } as LocaleDict,
+  ),
 };
 
 /**
