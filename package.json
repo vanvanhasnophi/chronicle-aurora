@@ -14,6 +14,7 @@
     "init": "npm install",
     "release": "node scripts/release.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:encoding": "node scripts/check-encoding.mjs",
     "test": "node --test \"packages/gen/test/*.test.mjs\"",
     "test:cms": "node scripts/test-cms-icons.mjs",
     "init:clean": "node scripts/init-clean.mjs",

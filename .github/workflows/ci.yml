@@ -45,6 +45,9 @@ jobs:
       - name: Typecheck (manager / gen / shared)
         run: npm run typecheck
 
+      - name: Check text encoding
+        run: npm run check:encoding
+
       - name: Unit tests
         run: npm test
 
