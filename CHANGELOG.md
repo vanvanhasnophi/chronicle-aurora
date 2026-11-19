@@ -8,7 +8,7 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ## [Unreleased]
 
-## [3.1.0] — 2026-11-18
+## [3.1.0] — 2026-11-19
 
 **Highlights**
 

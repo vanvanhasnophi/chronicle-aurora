@@ -5,7 +5,7 @@
     "yaml": "^2.9.0"
   },
   "name": "chronicle-aurora",
-  "version": "3.1.0-snapshot.11",
+  "version": "3.1.0",
   "private": true,
   "workspaces": [
     "packages/*"
