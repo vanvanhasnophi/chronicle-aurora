@@ -10,16 +10,14 @@ homepage:
   homepageMode: split
   cardFlowMaxWidth: 1400
   cardColumns:
-    - width: 200
-      cards:
-        - type: intro
-        - type: author
     - width: 300
       cards:
-        - type: taxonomy
+        - type: intro
         - type: recent
     - width: 200
       cards:
+        - type: author
+        - type: taxonomy
         - type: activity
   recentUpdates:
     aggregateDays: 7

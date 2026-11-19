@@ -437,23 +437,7 @@
     "pluginBuiltinHint": "Built-in plugins cannot be removed, but can be disabled",
     "pluginRemoveConfirm": "Remove plugin \"{name}\"? Its source directory will be physically deleted. This cannot be undone.",
     "pluginRemoveDone": "Plugin removed",
-    "pluginRemoveFailed": "Remove failed",
-    "homepageColumnsColumn": "Column {n}",
-    "homepageColumnsWidth": "Width",
-    "homepageColumnsWidthHint": "Width is a relative ratio (100 : 50 = 2 : 1) and applies whenever two or three columns render; a single column ignores width.",
-    "homepageColumnsMaxWidth": "Max width (px)",
-    "homepageColumnsAddCard": "Add card",
-    "homepageColumnsAddColumn": "Add column",
-    "homepageColumnsRemoveColumn": "Remove column",
-    "homepageColumnsRemoveCard": "Remove card",
-    "homepageColumnsSeedDefault": "Start from the default layout",
-    "homepageColumnsDuplicate": "Repeated card — allowed, but not recommended",
-    "homepageColumnsLimit": "Maximum 3 columns",
-    "homepageColumnsCardIntro": "Intro",
-    "homepageColumnsCardRecent": "Latest posts",
-    "homepageColumnsCardTaxonomy": "Quick navigation",
-    "homepageColumnsCardAuthor": "Author",
-    "homepageColumnsCardActivity": "Activity"
+    "pluginRemoveFailed": "Remove failed"
   },
   "postPicker": {
     "inputPlaceholder": "Search and select a published post",
@@ -886,5 +870,21 @@
     "type": "Type",
     "article": "Article",
     "slides": "Slides"
+  },
+  "cardFlow": {
+    "column": "Column {n}",
+    "widthHint": "Width is a relative ratio (100 : 50 = 2 : 1) and applies whenever two or three columns render; a single column ignores width.",
+    "maxWidth": "Max width (px)",
+    "addCard": "Add card",
+    "addColumn": "Add column",
+    "removeColumn": "Remove column",
+    "removeCard": "Remove card",
+    "cardSettings": "Card settings",
+    "dropHere": "Drop cards here",
+    "emptyBoard": "No columns yet — start from the default layout or add a column.",
+    "seedDefault": "Start from the default layout",
+    "limit": "Maximum {n} columns",
+    "done": "Done",
+    "noSettings": "This card has no detailed settings yet."
   }
 }

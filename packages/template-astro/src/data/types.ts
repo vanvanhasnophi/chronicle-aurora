@@ -95,7 +95,9 @@ export interface LocalSettings {
     friendsCards?: unknown;
     friendsGlobalStyle?: unknown;
     homepageMode?: string;
+    /** @deprecated 3.1.0 — legacy homepage switch; use `cardColumns`. Removal planned for 4.0. */
     singleColumnHomepage?: boolean;
+    /** @deprecated 3.1.0 — legacy card visibility; use `cardColumns`. Removal planned for 4.0. */
     cardVisibility?: { author?: boolean; taxonomy?: boolean; activity?: boolean };
     /**
      * Custom homepage columns (3.2): each entry is one column, with an optional

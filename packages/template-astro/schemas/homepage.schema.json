@@ -158,7 +158,7 @@
         },
         "cardColumns": {
           "type": "array",
-          "x-widget": "homepage-columns",
+          "x-widget": "card-flow",
           "x-tab": "template-homepage",
           "x-group": "cards",
           "x-order": 9,
@@ -223,6 +223,74 @@
                 }
               }
             }
+          },
+          "x-card-flow": {
+            "maxColumns": 3,
+            "addColumnWidth": 60,
+            "types": [
+              {
+                "id": "intro",
+                "label": {
+                  "en": "Intro",
+                  "zh-CN": "介绍"
+                },
+                "icon": "header",
+                "tone": "#38bdf8"
+              },
+              {
+                "id": "recent",
+                "label": {
+                  "en": "Latest posts",
+                  "zh-CN": "最新文章"
+                },
+                "icon": "list",
+                "tone": "#34d399"
+              },
+              {
+                "id": "taxonomy",
+                "label": {
+                  "en": "Quick navigation",
+                  "zh-CN": "快速导航"
+                },
+                "icon": "hash",
+                "tone": "#a78bfa"
+              },
+              {
+                "id": "author",
+                "label": {
+                  "en": "Author",
+                  "zh-CN": "作者"
+                },
+                "icon": "person",
+                "tone": "#fbbf24"
+              },
+              {
+                "id": "activity",
+                "label": {
+                  "en": "Activity",
+                  "zh-CN": "动态"
+                },
+                "icon": "clock",
+                "tone": "#fb7185"
+              }
+            ],
+            "defaultColumns": [
+              {
+                "width": 300,
+                "cards": [
+                  "intro",
+                  "recent"
+                ]
+              },
+              {
+                "width": 200,
+                "cards": [
+                  "author",
+                  "taxonomy",
+                  "activity"
+                ]
+              }
+            ]
           }
         },
         "singleColumnHomepage": {
@@ -239,7 +307,8 @@
           "description": {
             "en": "Deprecated — use “Homepage Columns” instead. Only read when no columns are configured.",
             "zh-CN": "已弃用——请改用“主页分列”。仅在未配置分列时读取。"
-          }
+          },
+          "deprecated": true
         },
         "cardVisibility": {
           "type": "object",
@@ -283,7 +352,8 @@
           "description": {
             "en": "Deprecated — use “Homepage Columns” instead. Only read when no columns are configured.",
             "zh-CN": "已弃用——请改用“主页分列”。仅在未配置分列时读取。"
-          }
+          },
+          "deprecated": true
         },
         "recentUpdates": {
           "type": "object",

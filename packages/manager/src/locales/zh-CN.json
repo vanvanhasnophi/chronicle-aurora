@@ -443,23 +443,7 @@
     "pluginBuiltinHint": "内置插件不可删除，但可禁用",
     "pluginRemoveConfirm": "确定删除插件「{name}」？将物理删除其源码目录，不可恢复。",
     "pluginRemoveDone": "插件已删除",
-    "pluginRemoveFailed": "删除失败",
-    "homepageColumnsColumn": "第 {n} 列",
-    "homepageColumnsWidth": "宽度",
-    "homepageColumnsWidthHint": "宽度是相对比例（100 : 50 = 2 : 1），两列或三列时都生效；一列忽略宽度。",
-    "homepageColumnsMaxWidth": "最大宽度（px）",
-    "homepageColumnsAddCard": "添加卡片",
-    "homepageColumnsAddColumn": "添加列",
-    "homepageColumnsRemoveColumn": "删除该列",
-    "homepageColumnsRemoveCard": "移除卡片",
-    "homepageColumnsSeedDefault": "从默认布局开始",
-    "homepageColumnsDuplicate": "重复卡片——允许，但不建议",
-    "homepageColumnsLimit": "最多 3 列",
-    "homepageColumnsCardIntro": "介绍",
-    "homepageColumnsCardRecent": "最新文章",
-    "homepageColumnsCardTaxonomy": "快速导航",
-    "homepageColumnsCardAuthor": "作者",
-    "homepageColumnsCardActivity": "动态"
+    "pluginRemoveFailed": "删除失败"
   },
   "postPicker": {
     "inputPlaceholder": "搜索并选择已发布帖子",
@@ -892,5 +876,21 @@
     "type": "类型",
     "article": "文章",
     "slides": "幻灯片"
+  },
+  "cardFlow": {
+    "column": "第 {n} 列",
+    "widthHint": "宽度是相对比例（100 : 50 = 2 : 1），两列或三列时都生效；一列忽略宽度。",
+    "maxWidth": "最大宽度（px）",
+    "addCard": "添加卡片",
+    "addColumn": "添加列",
+    "removeColumn": "删除该列",
+    "removeCard": "移除卡片",
+    "cardSettings": "卡片设置",
+    "dropHere": "拖放卡片到这里",
+    "emptyBoard": "还没有列——可从默认布局开始，或直接添加一列。",
+    "seedDefault": "从默认布局开始",
+    "limit": "最多 {n} 列",
+    "done": "完成",
+    "noSettings": "这张卡片暂时没有详细设置。"
   }
 }
