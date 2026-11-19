@@ -372,10 +372,10 @@ const legacyCards = (ids: string[]) =>
   });
 
 const legacyColumns = isSingleColumn
-  ? [{ cards: legacyCards(['intro', 'recent', 'taxonomy', 'author', 'activity']) }]
+  ? [{ width: 300, cards: legacyCards(['intro', 'recent', 'taxonomy', 'author', 'activity']) }]
   : [
-      { cards: legacyCards(['intro', 'recent']) },
-      { cards: legacyCards(['author', 'taxonomy', 'activity']) },
+      { width: 300, cards: legacyCards(['intro', 'recent']) },
+      { width: 200, cards: legacyCards(['author', 'taxonomy', 'activity']) },
     ];
 
 const configuredColumns =

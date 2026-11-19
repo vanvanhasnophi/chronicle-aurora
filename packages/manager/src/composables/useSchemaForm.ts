@@ -101,7 +101,29 @@ export function useSchemaForm(schemaId: string) {
   }
 
   // ── Load data from filesystem ────────────────────────────
-  async function load(schemaIdOverride?: string) {
+  /** Legacy homepage switches -> cardColumns (mirrors the template data layer). */
+function deriveLegacyHomeColumns(home: Record<string, any>): Array<{
+  width: number
+  cards: Array<{ type: string }>
+}> {
+  const visibility = home.cardVisibility || {}
+  const secondary = [
+    ...(visibility.author === false ? [] : ['author']),
+    ...(visibility.taxonomy === false ? [] : ['taxonomy']),
+    ...(visibility.activity === false ? [] : ['activity']),
+  ].map((type) => ({ type }))
+
+  if (home.singleColumnHomepage === true) {
+    return [{ width: 300, cards: [{ type: 'intro' }, { type: 'recent' }, ...secondary] }]
+  }
+
+  return [
+    { width: 300, cards: [{ type: 'intro' }, { type: 'recent' }] },
+    { width: 200, cards: secondary },
+  ].filter((column) => column.cards.length > 0)
+}
+
+async function load(schemaIdOverride?: string) {
     const id = schemaIdOverride || schemaId
     activeSchemaId.value = id
     loading.value = true
@@ -197,6 +219,19 @@ export function useSchemaForm(schemaId: string) {
             } catch { metaRefs.value[baseKey] = merged[key] }
           }
         }
+        // Legacy homepage settings (singleColumnHomepage / cardVisibility)
+        // are rendered through the new column editor so an old site can be
+        // edited and saved without losing its layout.
+        if (id === 'chronicle:homepage') {
+          const home = merged.homepage as Record<string, any> | undefined
+          if (home && typeof home === 'object') {
+            if (!Array.isArray(home.cardColumns) || home.cardColumns.length === 0) {
+              home.cardColumns = deriveLegacyHomeColumns(home)
+            }
+            if (!(Number(home.cardFlowMaxWidth) > 0)) home.cardFlowMaxWidth = 1200
+          }
+        }
+
         data.value = merged
         console.log('[load] merged.appearance:', JSON.stringify((merged as any)?.appearance))
       }

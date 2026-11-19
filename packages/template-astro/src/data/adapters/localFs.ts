@@ -499,6 +499,35 @@ const HOME_CARD_IDS = ['intro', 'recent', 'taxonomy', 'author', 'activity'] as c
  * configured, so the legacy layout (cardVisibility / singleColumnHomepage) keeps
  * working for existing sites.
  */
+/**
+ * Legacy sites (pre cardColumns) describe the homepage with
+ * singleColumnHomepage + cardVisibility. Derive the equivalent columns so the
+ * renderer and the CMS both see the new shape:
+ *   [ { width: 300, cards: [intro, recent] },
+ *     { width: 200, cards: [author, taxonomy, activity] } ]
+ * A true singleColumnHomepage collapses everything into one 300-wide column.
+ */
+function deriveLegacyHomeColumns(raw: Record<string, any>): Array<{
+  width: number;
+  cards: Array<{ type: string }>;
+}> {
+  const visibility = raw.cardVisibility || {};
+  const secondary = [
+    ...(visibility.author === false ? [] : ['author']),
+    ...(visibility.taxonomy === false ? [] : ['taxonomy']),
+    ...(visibility.activity === false ? [] : ['activity']),
+  ].map((type) => ({ type }));
+
+  if (raw.singleColumnHomepage === true) {
+    return [{ width: 300, cards: [{ type: 'intro' }, { type: 'recent' }, ...secondary] }];
+  }
+
+  return [
+    { width: 300, cards: [{ type: 'intro' }, { type: 'recent' }] },
+    { width: 200, cards: secondary },
+  ].filter((column) => column.cards.length > 0);
+}
+
 function normalizeHomeColumns(value: unknown): Array<{ width?: number; maxWidth?: number; cards: string[] }> | undefined {
   if (!Array.isArray(value)) return undefined;
   const columns = value
@@ -593,10 +622,10 @@ export function getPublicSettings(): LocalSettings {
         },
         homepageMode: raw.homepageMode,
         singleColumnHomepage: raw.singleColumnHomepage,
-        cardColumns: normalizeHomeColumns(raw.cardColumns ?? raw.columns),
-        cardFlowMaxWidth: Number.isFinite(Number(raw.cardFlowMaxWidth ?? raw.maxWidth)) && Number(raw.cardFlowMaxWidth ?? raw.maxWidth) > 0
-          ? Number(raw.cardFlowMaxWidth ?? raw.maxWidth)
-          : undefined,
+        cardColumns: normalizeHomeColumns(raw.cardColumns) ?? deriveLegacyHomeColumns(raw),
+        cardFlowMaxWidth: Number.isFinite(Number(raw.cardFlowMaxWidth)) && Number(raw.cardFlowMaxWidth) > 0
+          ? Number(raw.cardFlowMaxWidth)
+          : 1200,
         cardVisibility: raw.cardVisibility || {},
         recentUpdates: raw.recentUpdates || {},
         gaMeasurementId: raw.analytics?.gaMeasurementId ?? raw.gaMeasurementId,
