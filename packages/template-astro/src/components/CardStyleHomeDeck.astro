@@ -517,22 +517,28 @@ const cardProps: Record<string, Record<string, unknown>> = {
 
 <script>
   // Responsive column overflow: when the viewport cannot fit every configured
-  // column, cards from the dropped columns are merged into the remaining ones
-  // (evenly by default, or appended end-to-end). Pure CSS cannot move cards.
+  // column, cards from the dropped columns append to the last surviving column.
+  // Pure CSS cannot move cards between columns.
   (() => {
-    let destroy = null;
-
     function init() {
-      if (destroy) destroy();
       const flows = document.querySelector('.card-flows');
-      if (!flows) return;
+      if (!flows || flows.dataset.columnLayout === '1') return;
       const columns = [...flows.querySelectorAll('.flow-column')];
       if (columns.length < 2) return;
 
       const slots = [...flows.querySelectorAll('.home-card-slot')];
       const configured = columns.length;
-      const baseCols = flows.style.getPropertyValue('--home-cols').trim();
-      const twoCols = flows.style.getPropertyValue('--home-cols-2').trim();
+      // Capture the SSR widths once: this runs from both DOMContentLoaded and
+      // astro:page-load, and a second run would otherwise read back the already
+      // collapsed `1fr` value and never restore the wide layout.
+      if (!flows.dataset.baseCols) {
+        flows.dataset.baseCols = flows.style.getPropertyValue('--home-cols').trim();
+      }
+      if (!flows.dataset.twoCols) {
+        flows.dataset.twoCols = flows.style.getPropertyValue('--home-cols-2').trim();
+      }
+      const baseCols = flows.dataset.baseCols;
+      const twoCols = flows.dataset.twoCols;
       const original = columns.map((_, index) =>
         slots.filter((slot) => Number(slot.dataset.column) === index),
       );
@@ -564,9 +570,9 @@ const cardProps: Record<string, Record<string, unknown>> = {
       };
 
       layout();
+      flows.dataset.columnLayout = '1';
       const onResize = () => window.requestAnimationFrame(layout);
       window.addEventListener('resize', onResize, { passive: true });
-      destroy = () => window.removeEventListener('resize', onResize);
     }
 
     document.addEventListener('astro:page-load', init);
