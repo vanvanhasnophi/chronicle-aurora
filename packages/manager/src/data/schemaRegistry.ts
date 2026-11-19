@@ -15,6 +15,7 @@ import { searchMeta } from '../../../template-astro/src/plugins/search/meta'
 import { readingExperienceMeta } from '../../../template-astro/src/plugins/reading-experience/meta'
 import { aiEnhanceMeta } from '../../../template-astro/src/plugins/ai-enhance/meta'
 import '../plugins/collections'
+import '../plugins/homepageColumns'
 
 export interface SchemaMapping {
   /** JSON Schema $id，如 "chronicle:template-settings" */

@@ -1,0 +1,40 @@
+---
+import ChronicleImage from '../ChronicleImage.astro';
+
+interface Props {
+  name: string;
+  bio: string;
+  avatar: string;
+  avatarSource: string;
+  initials: string;
+  fallbackLine: string;
+  t: (key: string) => string;
+}
+const { name, bio, avatar, avatarSource, initials, fallbackLine, t } = Astro.props;
+---
+
+<article class="author-card panel-card mtl-container">
+  <div class="author-card__top">
+    {avatar ? (
+      <ChronicleImage
+        src={avatar}
+        alt={name}
+        class="author-avatar u-zoomable"
+        width="64"
+        height="64"
+        loading="eager"
+        decoding="async"
+        fetchpriority="auto"
+        data-source={avatarSource}
+        onclick="window.__openFilePreview?.({ url: event.target.dataset.source || event.target.src, title: event.target.alt, type: 'image' })"
+      />
+    ) : (
+      <div class="author-avatar" aria-hidden="true">{initials}</div>
+    )}
+    <div>
+      <h2 class="panel-kicker">{t('home.authorInfo')}</h2>
+      <h3>{name}</h3>
+    </div>
+  </div>
+  {bio ? <p class="author-bio">{bio}</p> : <p class="u-mb-0">{fallbackLine}</p>}
+</article>

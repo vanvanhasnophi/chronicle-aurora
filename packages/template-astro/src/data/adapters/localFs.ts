@@ -491,6 +491,41 @@ export function getPostById(id: string, locale?: string): LocalPost | null {
 // ── Settings ─────────────────────────────────────────────
 
 /** Get public-safe settings */
+const HOME_CARD_IDS = ['intro', 'recent', 'taxonomy', 'author', 'activity'] as const;
+
+/**
+ * Normalize homepage `columns` from site.yml (3.2): max 3 columns, unknown card
+ * ids dropped, empty columns removed. Returns undefined when nothing valid is
+ * configured, so the legacy layout (cardVisibility / singleColumnHomepage) keeps
+ * working for existing sites.
+ */
+function normalizeHomeColumns(value: unknown): Array<{ width?: number; maxWidth?: number; cards: string[] }> | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const columns = value
+    .slice(0, 3)
+    .map((entry) => {
+      const source = (entry ?? {}) as { cards?: unknown; width?: unknown };
+      // Cards are a child map (order = key order). The string-array form is
+      // still accepted so repositories created during the preview keep working.
+      const rawCards = source.cards;
+      const cardIds = Array.isArray(rawCards)
+        ? rawCards.map((id) => String(id))
+        : rawCards && typeof rawCards === 'object'
+          ? Object.keys(rawCards as Record<string, unknown>)
+          : [];
+      const cards = cardIds.filter((id) => (HOME_CARD_IDS as readonly string[]).includes(id));
+      const width = Number(source.width);
+      const maxWidth = Number(source.maxWidth);
+      return {
+        cards,
+        ...(Number.isFinite(width) && width > 0 ? { width } : {}),
+        ...(Number.isFinite(maxWidth) && maxWidth > 0 ? { maxWidth } : {}),
+      };
+    })
+    .filter((column) => column.cards.length > 0);
+  return columns.length > 0 ? columns : undefined;
+}
+
 export function getPublicSettings(): LocalSettings {
     // Aurora: read from data/site.yml (single source of truth)
     const siteYml = path.join(DATA_DIR, 'site.yml');
@@ -556,6 +591,7 @@ export function getPublicSettings(): LocalSettings {
         },
         homepageMode: raw.homepageMode,
         singleColumnHomepage: raw.singleColumnHomepage,
+        cardColumns: normalizeHomeColumns(raw.cardColumns ?? raw.columns),
         cardVisibility: raw.cardVisibility || {},
         recentUpdates: raw.recentUpdates || {},
         gaMeasurementId: raw.analytics?.gaMeasurementId ?? raw.gaMeasurementId,

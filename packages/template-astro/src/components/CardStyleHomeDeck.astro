@@ -7,6 +7,11 @@ import { loadSiteProfile } from "../utils/siteProfile";
 import { getTranslation, getLocale } from "../utils/i18n";
 import { getPluginSlots } from '../plugins';
 import ChronicleImage from "./ChronicleImage.astro";
+import IntroCard from "./home-cards/IntroCard.astro";
+import RecentCard from "./home-cards/RecentCard.astro";
+import TaxonomyCard from "./home-cards/TaxonomyCard.astro";
+import AuthorCard from "./home-cards/AuthorCard.astro";
+import ActivityCard from "./home-cards/ActivityCard.astro";
 
 const { locale, featureFlags } = Astro.props || {
   locale: "zh-CN",
@@ -346,241 +351,106 @@ const authorInitials =
     .join("") || "C";
 
 const yearLabel = new Date().getFullYear();
+
+// ── Homepage columns (3.2) ───────────────────────────────
+// site.yml homepage.columns wins; otherwise the legacy two-column layout
+// (cardVisibility + singleColumnHomepage) is derived into the same shape.
+const cardComponents: Record<string, any> = {
+  intro: IntroCard,
+  recent: RecentCard,
+  taxonomy: TaxonomyCard,
+  author: AuthorCard,
+  activity: ActivityCard,
+};
+
+const legacyCards = (ids: string[]) =>
+  ids.filter((id) => {
+    if (id === 'taxonomy') return showTaxonomyCard && TaxonomyBlocks.length > 0;
+    if (id === 'author') return showAuthorCard;
+    if (id === 'activity') return showActivityCard;
+    return true;
+  });
+
+const legacyColumns = isSingleColumn
+  ? [{ cards: legacyCards(['intro', 'recent', 'taxonomy', 'author', 'activity']) }]
+  : [
+      { cards: legacyCards(['intro', 'recent']) },
+      { cards: legacyCards(['author', 'taxonomy', 'activity']) },
+    ];
+
+const configuredColumns =
+  Array.isArray(settings?.cardColumns) && settings.cardColumns.length ? settings.cardColumns : null;
+
+const columns = (configuredColumns ?? legacyColumns)
+  .map((column: any) => ({
+    width: Number(column?.width),
+    maxWidth: Number(column?.maxWidth),
+    cards: legacyCards(Array.isArray(column?.cards) ? column.cards : []),
+  }))
+  .filter((column: any) => column.cards.length > 0);
+
+if (columns.length === 0) {
+  columns.push({ width: NaN, maxWidth: NaN, cards: legacyCards(['intro', 'recent']) });
+}
+
+const columnCount = Math.min(columns.length, 3);
+const columnWidths = columns.slice(0, 2).map((column: any, index: number) =>
+  Number.isFinite(column.width) && column.width > 0
+    ? column.width
+    : columnCount === 2
+      ? [1.45, 0.85][index]
+      : 1,
+);
+let gridStyle = '--home-cols:1fr';
+if (columnCount === 2) gridStyle = `--home-cols:${columnWidths[0]}fr ${columnWidths[1]}fr`;
+if (columnCount === 3) {
+  gridStyle = `--home-cols:1fr 1fr 1fr;--home-cols-2:${columnWidths[0] ?? 1}fr ${columnWidths[1] ?? 1}fr`;
+}
+
+const cardProps: Record<string, Record<string, unknown>> = {
+  intro: {
+    siteTitle,
+    subtitle: cardSubtitle,
+    leadHref: leadPost ? buildPostUrl(leadPost.id) : blogsPath,
+    blogsHref: blogsPath,
+    t,
+  },
+  recent: { posts: recentPosts, blogsHref: blogsPath, locale, t },
+  taxonomy: { blocks: TaxonomyBlocks, locale, t },
+  author: {
+    name: authorName,
+    bio: authorBio,
+    avatar: authorAvatar,
+    avatarSource: authorAvatarSource,
+    initials: authorInitials,
+    fallbackLine: cardAuthorLine,
+    t,
+  },
+  activity: { items: activityItems, updateTimeLabel, isStale, icons: activityIcons, t },
+};
 ---
 
 <section class="home-shell">
   <div
     class="card-flows"
-    class:list={[{ "single-col": isSingleColumn || rightColumnEmpty }]}
+    class:list={[{ "single-col": columnCount === 1 }]}
+    data-columns={columnCount}
+    style={gridStyle}
   >
-    <main class="flow-column flow-column--left">
-      <article class="panel-card mtl-container flow-intro">
-        <h1>{siteTitle}</h1>
-        <p class="hero-description">{cardSubtitle}</p>
-
-        <div class="hero-actions">
-          <a
-            class="float-btn primary"
-            href={leadPost ? buildPostUrl(leadPost.id) : blogsPath}
-          >
-            {t("home.readingLatest")}
-          </a>
-          <a class="float-btn" href={blogsPath}>
-            {t("home.browseAllPosts")}
-          </a>
-        </div>
-      </article>
-
-      <section class="panel-card mtl-container content-panel">
-        <div class="section-head">
-          <div>
-            <h2 class="panel-kicker">{t("home.articleCardTitle")}</h2>
-            <h3>{t("home.latestArticles")}</h3>
-          </div>
-          <a href={blogsPath}>{t("home.viewAll")}</a>
-        </div>
-
-        <div class="recent-stream">
-          {
-            recentPosts.length ? (
-              recentPosts.map((post) => (
-                <a href={buildPostUrl(post.id)} class="stream-card-link">
-                  <article class="stream-card mtl-surface interactive glowable scalable">
-                    <div class="stream-card__date">
-                      {formatDate(safeDateValue(post.date))}
-                    </div>
-                    <div class="stream-card__body">
-                      <div class="stream-card__top">
-                        <h4>{post.title}</h4>
-                        {Array.isArray(post.tags) &&
-                        post.tags.some(isFeaturedTag) ? (
-                          <span class="stream-card__flag featured">
-                            {t("blog.featured")}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p>{pickSummary(post)}</p>
-                      <div class="stream-card__tags">
-                        {Array.isArray(post.tags) &&
-                          post.tags
-                            .slice(0, 3)
-                            .map((tag: string) => (
-                              <span
-                                class:list={[
-                                  "tag",
-                                  canonicalTag(tag) === "featured" &&
-                                    "featured",
-                                ]}
-                              >
-                                # {tag}
-                              </span>
-                            ))}
-                      </div>
-                    </div>
-                  </article>
-                </a>
-              ))
-            ) : (
-              <div class="empty-state">{t("home.noPostsAvailable")}</div>
-            )
-          }
-        </div>
-      </section>
-
-      {/* 卡片流自定义卡片：home-card-flow 槽位注册（插件自含整卡骨架） */}
-      {FlowCards.map((Card: any) => (
-        <Card locale={locale} t={t} />
-      ))}
-    </main>
-
-    <aside
-      class="flow-column flow-column--right"
-      class:list={[{ "column-empty": rightColumnEmpty }]}
-    >
-      {
-        showAuthorCard && (
-          <article class="author-card panel-card mtl-container">
-            <div class="author-card__top">
-              {authorAvatar ? (
-                <ChronicleImage
-                  src={authorAvatar}
-                  alt={authorName}
-                  class="author-avatar u-zoomable"
-                  width="64"
-                  height="64"
-                  loading="eager"
-                  decoding="async"
-                  fetchpriority="auto"
-                  data-source={authorAvatarSource}
-                  onclick="window.__openFilePreview?.({ url: event.target.dataset.source || event.target.src, title: event.target.alt, type: 'image' })"
-                />
-              ) : (
-                <div class="author-avatar" aria-hidden="true">
-                  {authorInitials}
-                </div>
-              )}
-              <div>
-                <h2 class="panel-kicker">{t("home.authorInfo")}</h2>
-                <h3>{authorName}</h3>
-              </div>
-            </div>
-            {authorBio ? (
-              <p class="author-bio">{authorBio}</p>
-            ) : (
-              <p class="u-mb-0">{cardAuthorLine}</p>
-            )}
-          </article>
-        )
-      }
-
-      {
-        // taxonomy 卡片：主板只留模板骨架，内容块经 home-card-taxonomy 槽位注册
-        // （search→快速搜索/标签云、collections→合集列表；插件禁用/删除 → 块消失）
-        showTaxonomyCard && TaxonomyBlocks.length > 0 && (
-          <section class="panel-card mtl-container taxonomy-card">
-            <div class="section-head flush">
-              <div>
-                <h2 class="panel-kicker">{t("home.topicNavigation")}</h2>
-              </div>
-            </div>
-
-            {TaxonomyBlocks.map((Block: any) => (
-              <Block locale={locale} t={t} />
-            ))}
-          </section>
-        )
-      }
-
-      {
-        showActivityCard && (
-          <section class="panel-card mtl-container activity-card">
-            <div class="section-head flush">
-              <div>
-                <h2 class="panel-kicker">{t("home.recentUpdates")}</h2>
-              </div>
-            </div>
-            <div class="taxonomy-block">
-              <h3>{t("home.updateTime")}</h3>
-              <div class="activity-item date mtl-surface">
-                <span
-                  class="activity-item__icon"
-                  aria-hidden="true"
-                  set:html={activityIcons.date}
-                />
-                <span class="activity-item__text">
-                  <strong>{updateTimeLabel}</strong>
-                </span>
-              </div>
-            </div>
-            {isStale && (
-              <div class="activity-item stale">
-                <span
-                  class="activity-item__icon"
-                  aria-hidden="true"
-                  set:html={activityIcons.stale}
-                />
-                <span class="activity-item__text">
-                  <strong>{t("home.staleNotice")}</strong>
-                </span>
-              </div>
-            )}
-              <div class="taxonomy-block">
-                <h3>{t("home.updateContent")}</h3>
-                <div class="activity-list">
-                  {activityItems.length ? (
-                    activityItems.map((item) =>
-                      item.href ? (
-                        <a
-                          class:list={[
-                            "activity-item",
-                            item.tone,
-                            "mtl-surface interactive glowable scalable",
-                          ]}
-                          href={item.href}
-                          target={item.external ? "_blank" : undefined}
-                          rel={item.external ? "noopener noreferrer" : undefined}
-                        >
-                          <span
-                            class="activity-item__icon"
-                            aria-hidden="true"
-                            set:html={activityIcons[item.tone] ?? activityIcons.app}
-                          />
-                          <span class="activity-item__text">
-                            {item.label ? (
-                              <span class="activity-item__label">
-                                {item.label}
-                              </span>
-                            ) : null}
-                            <strong>{item.title}</strong>
-                          </span>
-                        </a>
-                      ) : (
-                        <div class:list={["activity-item", item.tone, "mtl-surface"]}>
-                          <span
-                            class="activity-item__icon"
-                            aria-hidden="true"
-                            set:html={activityIcons[item.tone] ?? activityIcons.app}
-                          />
-                          <span class="activity-item__text">
-                            {item.label ? (
-                              <span class="activity-item__label">
-                                {item.label}
-                              </span>
-                            ) : null}
-                            <strong>{item.title}</strong>
-                          </span>
-                        </div>
-                      )
-                    )
-                  ) : (
-                    <div class="empty-state">{t("home.noRecentChanges")}</div>
-                  )}
-                </div>
-              </div>
-          </section>
-        )
-      }
-    </aside>
+    {columns.map((column, index) => (
+      <div
+        class:list={["flow-column", index === 0 ? "flow-column--left" : "flow-column--right"]}
+        style={Number.isFinite(column.maxWidth) && column.maxWidth > 0
+          ? `max-width:${column.maxWidth}px;margin-inline:auto;`
+          : undefined}
+      >
+        {column.cards.map((id) => {
+          const Card = cardComponents[id];
+          return Card ? <Card {...cardProps[id]} /> : null;
+        })}
+        {index === 0 && FlowCards.map((Card: any) => <Card locale={locale} t={t} />)}
+      </div>
+    ))}
   </div>
 
   <footer class="panel-card mtl-container home-footer">

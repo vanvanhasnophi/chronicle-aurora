@@ -1,0 +1,76 @@
+---
+interface ActivityItem {
+  tone: string;
+  title: string;
+  href?: string;
+  external?: boolean;
+  label?: string;
+}
+
+interface Props {
+  items: ActivityItem[];
+  updateTimeLabel: string;
+  isStale: boolean;
+  icons: Record<string, string>;
+  t: (key: string) => string;
+}
+const { items, updateTimeLabel, isStale, icons, t } = Astro.props;
+---
+
+<section class="panel-card mtl-container activity-card">
+  <div class="section-head flush">
+    <div>
+      <h2 class="panel-kicker">{t('home.recentUpdates')}</h2>
+    </div>
+  </div>
+  <div class="taxonomy-block">
+    <h3>{t('home.updateTime')}</h3>
+    <div class="activity-item date mtl-surface">
+      <span class="activity-item__icon" aria-hidden="true" set:html={icons.date} />
+      <span class="activity-item__text">
+        <strong>{updateTimeLabel}</strong>
+      </span>
+    </div>
+  </div>
+  {isStale && (
+    <div class="activity-item stale">
+      <span class="activity-item__icon" aria-hidden="true" set:html={icons.stale} />
+      <span class="activity-item__text">
+        <strong>{t('home.staleNotice')}</strong>
+      </span>
+    </div>
+  )}
+  <div class="taxonomy-block">
+    <h3>{t('home.updateContent')}</h3>
+    <div class="activity-list">
+      {items.length ? (
+        items.map((item) =>
+          item.href ? (
+            <a
+              class:list={['activity-item', item.tone, 'mtl-surface interactive glowable scalable']}
+              href={item.href}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener noreferrer' : undefined}
+            >
+              <span class="activity-item__icon" aria-hidden="true" set:html={icons[item.tone] ?? icons.app} />
+              <span class="activity-item__text">
+                {item.label ? <span class="activity-item__label">{item.label}</span> : null}
+                <strong>{item.title}</strong>
+              </span>
+            </a>
+          ) : (
+            <div class:list={['activity-item', item.tone, 'mtl-surface']}>
+              <span class="activity-item__icon" aria-hidden="true" set:html={icons[item.tone] ?? icons.app} />
+              <span class="activity-item__text">
+                {item.label ? <span class="activity-item__label">{item.label}</span> : null}
+                <strong>{item.title}</strong>
+              </span>
+            </div>
+          ),
+        )
+      ) : (
+        <div class="empty-state">{t('home.noRecentChanges')}</div>
+      )}
+    </div>
+  </div>
+</section>

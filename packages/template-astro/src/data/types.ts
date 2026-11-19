@@ -97,6 +97,12 @@ export interface LocalSettings {
     homepageMode?: string;
     singleColumnHomepage?: boolean;
     cardVisibility?: { author?: boolean; taxonomy?: boolean; activity?: boolean };
+    /**
+     * Custom homepage columns (3.2): each entry is one column, with an optional
+     * relative width and its own ordered card ids. Cards may repeat; when this
+     * is present it replaces cardVisibility + singleColumnHomepage.
+     */
+    cardColumns?: Array<{ width?: number; maxWidth?: number; cards: string[] }>;
     recentUpdates?: { staleDays?: number; aggregateDays?: number };
     gaMeasurementId?: string;
     /** 3.1.x — analytics backend config (site.yml analytics: block). */

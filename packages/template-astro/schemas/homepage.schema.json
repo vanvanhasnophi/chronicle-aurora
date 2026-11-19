@@ -138,10 +138,72 @@
             }
           ]
         },
+        "cardColumns": {
+          "type": "array",
+          "x-widget": "homepage-columns",
+          "x-tab": "template-homepage",
+          "x-group": "cards",
+          "x-order": 9,
+          "title": {
+            "en": "Homepage Columns",
+            "zh-CN": "主页分列"
+          },
+          "description": {
+            "en": "Define each column and the cards it contains (max 3 columns). Cards may repeat, but that is not recommended. When set, this replaces card visibility and single-column mode.",
+            "zh-CN": "逐列定义卡片顺序（最多 3 列）。卡片允许重复，但不建议。设置后取代“卡片显隐”和“单列模式”。"
+          },
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 1000,
+                "title": {
+                  "en": "Width (ratio, two columns only)",
+                  "zh-CN": "宽度（比例，仅两列时生效）"
+                }
+              },
+              "maxWidth": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1920,
+                "title": {
+                  "en": "Max width (px)",
+                  "zh-CN": "最大宽度（px）"
+                }
+              },
+              "cards": {
+                "type": "object",
+                "title": {
+                  "en": "Cards",
+                  "zh-CN": "卡片"
+                },
+                "description": {
+                  "en": "Card id as child key, in display order. A YAML map cannot repeat a key, so each card appears once per column.",
+                  "zh-CN": "以卡片 id 为子键，按书写顺序展示。YAML 映射不能重复键，因此同一列中每张卡只出现一次。"
+                },
+                "propertyNames": {
+                  "enum": [
+                    "intro",
+                    "recent",
+                    "taxonomy",
+                    "author",
+                    "activity"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "singleColumnHomepage": {
           "type": "boolean",
           "default": false,
-          "x-widget": "toggle",
+          "x-widget": "hidden",
           "x-tab": "template-homepage",
           "x-group": "cards",
           "x-order": 10,
@@ -150,13 +212,13 @@
             "zh-CN": "单列布局"
           },
           "description": {
-            "en": "Force the homepage to render as a single column regardless of screen width.",
-            "zh-CN": "强制主页以单列布局显示，不论屏幕宽度。"
+            "en": "Deprecated — use “Homepage Columns” instead. Only read when no columns are configured.",
+            "zh-CN": "已弃用——请改用“主页分列”。仅在未配置分列时读取。"
           }
         },
         "cardVisibility": {
           "type": "object",
-          "x-widget": "fieldset",
+          "x-widget": "hidden",
           "x-tab": "template-homepage",
           "x-group": "cards",
           "x-order": 11,
@@ -192,6 +254,10 @@
                 "zh-CN": "动态卡片"
               }
             }
+          },
+          "description": {
+            "en": "Deprecated — use “Homepage Columns” instead. Only read when no columns are configured.",
+            "zh-CN": "已弃用——请改用“主页分列”。仅在未配置分列时读取。"
           }
         },
         "recentUpdates": {

@@ -1,0 +1,50 @@
+---
+import { formatHomeDate, isFeaturedTag, canonicalTag, pickSummary, postUrl } from '../../utils/homeCards';
+
+interface Props {
+  posts: any[];
+  blogsHref: string;
+  locale: string;
+  t: (key: string) => string;
+}
+const { posts, blogsHref, locale, t } = Astro.props;
+---
+
+<section class="panel-card mtl-container content-panel">
+  <div class="section-head">
+    <div>
+      <h2 class="panel-kicker">{t('home.articleCardTitle')}</h2>
+      <h3>{t('home.latestArticles')}</h3>
+    </div>
+    <a href={blogsHref}>{t('home.viewAll')}</a>
+  </div>
+
+  <div class="recent-stream">
+    {posts.length ? (
+      posts.map((post) => (
+        <a href={postUrl(locale, post.id)} class="stream-card-link">
+          <article class="stream-card mtl-surface interactive glowable scalable">
+            <div class="stream-card__date">{formatHomeDate(new Date(post.date), locale)}</div>
+            <div class="stream-card__body">
+              <div class="stream-card__top">
+                <h4>{post.title}</h4>
+                {Array.isArray(post.tags) && post.tags.some(isFeaturedTag) ? (
+                  <span class="stream-card__flag featured">{t('blog.featured')}</span>
+                ) : null}
+              </div>
+              <p>{pickSummary(post, t)}</p>
+              <div class="stream-card__tags">
+                {Array.isArray(post.tags) &&
+                  post.tags.slice(0, 3).map((tag: string) => (
+                    <span class:list={['tag', canonicalTag(tag) === 'featured' && 'featured']}># {tag}</span>
+                  ))}
+              </div>
+            </div>
+          </article>
+        </a>
+      ))
+    ) : (
+      <div class="empty-state">{t('home.noPostsAvailable')}</div>
+    )}
+  </div>
+</section>

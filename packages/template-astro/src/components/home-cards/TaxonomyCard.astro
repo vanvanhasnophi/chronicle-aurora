@@ -1,0 +1,18 @@
+---
+interface Props {
+  blocks: any[];
+  locale: string;
+  t: (key: string) => string;
+}
+const { blocks, locale, t } = Astro.props;
+---
+
+<section class="panel-card mtl-container taxonomy-card">
+  <div class="section-head flush">
+    <div>
+      <h2 class="panel-kicker">{t('home.topicNavigation')}</h2>
+    </div>
+  </div>
+
+  {blocks.map((Block: any) => <Block locale={locale} t={t} />)}
+</section>

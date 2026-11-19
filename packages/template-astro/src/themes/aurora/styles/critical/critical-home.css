@@ -102,8 +102,18 @@ html[data-perf="reduced"] .scroll-hint__arrow { animation:none; opacity:1; }
   --home-ui-scale:0.9; zoom:var(--home-ui-scale);
   max-width:1200px; margin:0 auto; padding:1.25rem clamp(1rem,2vw,2rem) 3rem;
 }
-.card-flows { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(320px,.85fr); gap:1rem; align-items:start; }
-.card-flows.single-col { grid-template-columns:1fr; }
+.card-flows { display:grid; grid-template-columns:var(--home-cols, minmax(0,1.45fr) minmax(320px,.85fr)); gap:1rem; align-items:start; }
+.card-flows.single-col { grid-template-columns:var(--home-cols, 1fr); }
+/* Three columns need room; at 1200px and below the third column drops below the
+   first two, which then share the width using their configured weights. */
+@media (max-width:1200px) {
+  .card-flows[data-columns="3"] { grid-template-columns:var(--home-cols-2, 1fr 1fr); }
+  .card-flows[data-columns="3"] > .flow-column:nth-child(3) { grid-column:1 / -1; }
+}
+@media (max-width:900px) {
+  .card-flows, .card-flows.single-col, .card-flows[data-columns="3"] { grid-template-columns:1fr; }
+  .card-flows > .flow-column { grid-column:1 / -1; }
+}
 .flow-column { display:grid; gap:1rem; align-content:start; min-width:0; }
 .flow-column--right.column-empty { display:none; }
 .panel-card {
@@ -145,7 +155,6 @@ h3, .story-card--empty h2 { margin: 0; font-size: 1.2rem; }
   .cover-title { font-size:2.2rem; }
   .cover-subtitle { font-size:1rem; margin-bottom:2rem; }
   .home-shell { padding:.9rem .85rem 2rem; }
-  .card-flows { grid-template-columns:1fr; }
   .stream-card { grid-auto-flow:row; grid-template-columns:1fr; }
   .section-head { align-items:flex-start; flex-direction:column; }
 }

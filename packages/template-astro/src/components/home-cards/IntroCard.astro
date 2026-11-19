@@ -1,0 +1,24 @@
+---
+interface Props {
+  siteTitle: string;
+  subtitle: string;
+  leadHref: string;
+  blogsHref: string;
+  t: (key: string) => string;
+}
+const { siteTitle, subtitle, leadHref, blogsHref, t } = Astro.props;
+---
+
+<article class="panel-card mtl-container flow-intro">
+  <h1>{siteTitle}</h1>
+  <p class="hero-description">{subtitle}</p>
+
+  <div class="hero-actions">
+    <a class="float-btn primary" href={leadHref}>
+      {t('home.readingLatest')}
+    </a>
+    <a class="float-btn" href={blogsHref}>
+      {t('home.browseAllPosts')}
+    </a>
+  </div>
+</article>
