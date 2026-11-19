@@ -4,14 +4,11 @@
   },
   "nav": {
     "home": "首页",
-    "blogs": "博客",
     "search": "搜索",
     "friends": "朋友",
     "collection": "合集",
     "posts": "文章",
-    "files": "文件管理",
     "settings": "设置",
-    "newPost": "写文章",
     "about": "关于",
     "menu": "菜单"
   },
@@ -19,11 +16,11 @@
     "relatedPosts": "相关文章",
     "prevPost": "上一篇",
     "nextPost": "下一篇",
-    "noPrev": "已经是第一篇",
-    "noNext": "已经是最后一篇",
-    "attitudePrompt": "觉得这篇文章怎么样？",
-    "attitudeLike": "喜欢",
-    "attitudeDislike": "不喜欢"
+    "noPrev": "已是第一篇",
+    "noNext": "已是最后一篇",
+    "attitudePrompt": "给个评价：",
+    "attitudeLike": "赞",
+    "attitudeDislike": "踩"
   },
   "inblog": {
     "toc-title": "目录",

@@ -198,7 +198,8 @@
   /* ── Browse: absolute size, both scroll directions ── */
   .marp-slides-browse {
     overflow: auto;
-    padding: var(--nav-h) 0 0;
+    /* Keep the scrollbar below the toolbar instead of running underneath it. */
+    margin-top: var(--nav-h);
     margin-bottom: 50px;
   }
   .marp-slides-browse .marp-slides {

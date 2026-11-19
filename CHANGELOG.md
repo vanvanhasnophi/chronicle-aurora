@@ -74,6 +74,9 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
   `<summary>` is injected when the author omits one), styled glass header and chevron in posts and the TOC.
 - Optional build-time AI summaries: a schema-driven `ai-enhance` plugin plus `scripts/ai-summaries.mjs`;
   disabled by default and removable like every other plugin.
+- Comment likes and comment submissions give immediate feedback: the vote or comment appears at once and
+  is never rolled back, whether or not the request reaches the server. Comments and reaction counts are
+  fetched once per visit and served from an in-memory session cache, so soft navigation does not re-query.
 - Soft-navigation progress indicator, with the accent colour preserved across page transitions.
 - Light-mode accent and featured colour adaptation, including a gold-friendly featured alternative and
   token-based featured detection.
@@ -111,6 +114,7 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 - `scripts/migrate-legacy.mjs` used `cp -r`, which does not exist in the Windows `cmd` shell used by npm.
 - README screenshots lived under `data/assets/`, so emptying `data/` broke the first screen of the README.
 - Large images and diagrams in slides no longer overflow the printed page.
+- The slides browse view let its scrollbar run underneath the toolbar; the scroll area now starts below it.
 - The nav popup switch had insufficient contrast in the light theme.
 - The accent colour could reset after a soft navigation; it is now preserved.
 - A featured accent expressed as a token was not detected as gold, mis-selecting the featured alternative.

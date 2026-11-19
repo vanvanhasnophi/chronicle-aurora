@@ -38,7 +38,10 @@ const t = (key: string) => getTranslation(locale, key);
     if (!server) { root.remove(); return; }
     const lang = root.dataset.lang || 'zh-CN';
     const path = location.pathname;
-    const storageKey = 'chronicle-attitude:' + path;
+    const voteKey = 'chronicle-attitude:' + path;
+    // Session cache shared across soft navigations; a hard refresh clears it.
+    // Counts are only fetched once per visit — votes never refetch.
+    const cache = (window.__chronicleAttitude = window.__chronicleAttitude || {});
     const buttons = Array.from(root.querySelectorAll('.attitude-btn'));
     const countEls = Array.from(root.querySelectorAll('[data-count-for]'));
 
@@ -47,49 +50,59 @@ const t = (key: string) => getTranslation(locale, key);
     }
     function lockVote(i) {
       buttons.forEach((b, idx) => { b.classList.toggle('voted', idx === i); b.disabled = true; });
-      try { localStorage.setItem(storageKey, String(i)); } catch (e) {}
+      try { localStorage.setItem(voteKey, String(i)); } catch (e) {}
+    }
+    function paint(c0, c1) {
+      setCount(0, c0); setCount(1, c1);
+      buttons.forEach((b) => { b.disabled = false; });
+      // Re-apply a previous vote for this path (local-only).
+      try {
+        const v = localStorage.getItem(voteKey);
+        if (v !== null) lockVote(Number(v));
+      } catch (e) {}
     }
 
     function init() {
-      // 1. Load counts — Waline 计数 API：GET /api/article?path=&type=reaction0,reaction1&lang=
-      fetch(server + '/api/article?path=' + encodeURIComponent(path) + '&type=reaction0,reaction1&lang=' + encodeURIComponent(lang), { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((json) => {
-          // Waline 计数返回 { errno: 0, data: [{reaction0, reaction1}] }（数组按 path 顺序）
-          const d = Array.isArray(json && json.data) ? (json.data[0] || {}) : (json && json.data) || json;
-          const c0 = Number(d.reaction0 || 0);
-          const c1 = Number(d.reaction1 || 0);
-          setCount(0, c0); setCount(1, c1);
-          buttons.forEach((b) => { b.disabled = false; });
-          // Re-apply a previous vote for this path (local-only).
-          try {
-            const v = localStorage.getItem(storageKey);
-            if (v !== null) lockVote(Number(v));
-          } catch (e) {}
-        })
-        .catch(() => {
-          // Server unreachable / shape mismatch — keep the widget but non-interactive.
-          buttons.forEach((b) => { b.disabled = true; });
-        });
+      const cached = cache[path];
+      if (cached) {
+        paint(cached.c0, cached.c1);
+      } else {
+        // 1. Load counts — Waline 计数 API：GET /api/article?path=&type=reaction0,reaction1&lang=
+        fetch(server + '/api/article?path=' + encodeURIComponent(path) + '&type=reaction0,reaction1&lang=' + encodeURIComponent(lang), { headers: { Accept: 'application/json' } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((json) => {
+            // Waline 计数返回 { errno: 0, data: [{reaction0, reaction1}] }（数组按 path 顺序）
+            const d = Array.isArray(json && json.data) ? (json.data[0] || {}) : (json && json.data) || json;
+            const c0 = Number(d.reaction0 || 0);
+            const c1 = Number(d.reaction1 || 0);
+            cache[path] = { c0: c0, c1: c1 };
+            paint(c0, c1);
+          })
+          .catch(() => {
+            // Server unreachable / shape mismatch — keep the widget but non-interactive.
+            buttons.forEach((b) => { b.disabled = true; });
+          });
+      }
 
-      // 2. Submit vote
+      // 2. Submit vote — optimistic: the count and the "voted" state update
+      //    immediately and are never rolled back, whether or not the request
+      //    succeeds. The list is not re-fetched afterwards.
       root.addEventListener('click', (e) => {
         const btn = (e.target).closest && (e.target).closest('.attitude-btn');
         if (!btn || btn.disabled) return;
         const i = Number(btn.dataset.reaction);
-        btn.disabled = true;
+        const state = cache[path] || { c0: 0, c1: 0 };
+        const cur = Number(state['c' + i] || 0);
+        const next = cur + 1;
+        state['c' + i] = next;
+        cache[path] = state;
+        setCount(i, next);
+        lockVote(i);
         fetch(server + '/api/article?lang=' + encodeURIComponent(lang), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path: path, type: 'reaction' + i, action: 'inc' }),
-        })
-          .then((r) => (r.ok ? r.json() : null))
-          .then(() => {
-            const cur = Number(countEls[i] && countEls[i].textContent || 0);
-            setCount(i, cur + 1);
-            lockVote(i);
-          })
-          .catch(() => { btn.disabled = false; });
+        }).catch(() => {});
       });
     }
 

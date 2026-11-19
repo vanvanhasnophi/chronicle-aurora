@@ -4,14 +4,11 @@
   },
   "nav": {
     "home": "Home",
-    "blogs": "Blogs",
     "search": "Search",
     "friends": "Friends",
     "collection": "Collection",
     "posts": "Posts",
-    "files": "Files",
     "settings": "Settings",
-    "newPost": "New Post",
     "about": "About",
     "menu": "Menu"
   },
@@ -21,7 +18,7 @@
     "nextPost": "Next",
     "noPrev": "This is the first post",
     "noNext": "This is the last post",
-    "attitudePrompt": "What do you think of this article?",
+    "attitudePrompt": "How would you rate this?",
     "attitudeLike": "Like",
     "attitudeDislike": "Dislike"
   },

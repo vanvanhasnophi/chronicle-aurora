@@ -331,7 +331,14 @@ function setupWalineForm(
   serverUrl: string,
   path: string,
   i18n: Record<string, string>,
-  refresh: () => void,
+  onOptimistic: (draft: {
+    author: string;
+    email?: string;
+    website?: string;
+    content: string;
+    parent?: string | null;
+    rootId?: string | null;
+  }) => void,
 ): void {
   const form = container.querySelector<HTMLFormElement>('[data-role="comment-form"]');
   if (!form) return;
@@ -491,6 +498,16 @@ function setupWalineForm(
     submitBtn.disabled = true;
     if (note) note.hidden = true;
 
+    // Optimistic UI: show the comment immediately, regardless of the request.
+    onOptimistic({
+      author,
+      email: email || undefined,
+      website: websiteInput?.value.trim() || undefined,
+      content: finalContent,
+      parent: parentInput?.value || null,
+      rootId: rootInput?.value || null,
+    });
+
     try {
       await submitWalineComment(serverUrl, path, {
         author,
@@ -509,7 +526,6 @@ function setupWalineForm(
         note.classList.remove('cs-form-note--error');
         note.hidden = false;
       }
-      refresh();
     } catch (err) {
       if (note) {
         const detail = err instanceof Error ? err.message : '';
@@ -535,6 +551,20 @@ function updateRelativeDates(container: HTMLElement, lang: string): void {
   });
 }
 
+interface CachedComments {
+  comments: CommentData[];
+  count: number;
+  hasMore: boolean;
+  page: number;
+}
+
+/**
+ * Session cache: each post's comments are fetched once and kept in memory for
+ * the rest of the visit. Soft navigation re-hydrates the section from this
+ * cache (no request); a hard refresh clears the module and fetches again.
+ */
+const commentsCache = new Map<string, CachedComments>();
+
 async function hydrateWaline(
   container: HTMLElement,
   serverUrl: string,
@@ -547,9 +577,35 @@ async function hydrateWaline(
 
   const PAGE_SIZE = 20;
   let allComments: CommentData[] = [];
+  let total = 0;
   let page = 1;
   let hasMore = true;
   let loading = false;
+
+  const paint = () => {
+    if (!listEl) return;
+    let html = renderCommentList(
+      allComments,
+      lang,
+      i18n.reply || 'Reply',
+      i18n.replyTo || 'Reply to',
+      i18n.pinned || 'Pinned',
+      i18n.noComments || 'No comments yet.',
+    );
+    if (hasMore) {
+      html += `<button type="button" class="cs-load-more" data-role="load-more">${escapeHtml(i18n.loadMore || 'Load more')}</button>`;
+    }
+    listEl.innerHTML = html;
+    applyLazyMedia(listEl);
+    if (countEl) {
+      countEl.textContent = String(total);
+      countEl.style.display = total > 0 ? '' : 'none';
+    }
+  };
+
+  const remember = () => {
+    commentsCache.set(path, { comments: allComments.slice(), count: total, hasMore, page });
+  };
 
   const render = async (append = false) => {
     if (!listEl || loading) return;
@@ -560,24 +616,10 @@ async function hydrateWaline(
     try {
       const { count, comments, hasMore: hm } = await fetchWalineComments(serverUrl, path, page, PAGE_SIZE);
       allComments = append ? allComments.concat(comments) : comments;
+      total = count;
       hasMore = hm;
-      let html = renderCommentList(
-        allComments,
-        lang,
-        i18n.reply || 'Reply',
-        i18n.replyTo || 'Reply to',
-        i18n.pinned || 'Pinned',
-        i18n.noComments || 'No comments yet.',
-      );
-      if (hasMore) {
-        html += `<button type="button" class="cs-load-more" data-role="load-more">${escapeHtml(i18n.loadMore || 'Load more')}</button>`;
-      }
-      listEl.innerHTML = html;
-      applyLazyMedia(listEl);
-      if (countEl) {
-        countEl.textContent = String(count);
-        countEl.style.display = count > 0 ? '' : 'none';
-      }
+      remember();
+      paint();
     } catch {
       if (!append) listEl.innerHTML = renderEmptyState(false, i18n.loadError || 'Could not load comments.');
     } finally {
@@ -585,7 +627,36 @@ async function hydrateWaline(
     }
   };
 
-  // 加载更多：下一批评论追加到列表尾部
+  /**
+   * Optimistic submit: the comment is rendered immediately and is never rolled
+   * back, even when the request fails. The list is not re-fetched afterwards —
+   * the local cache is the source of truth until the next hard refresh.
+   */
+  const addOptimistic = (draft: {
+    author: string;
+    email?: string;
+    website?: string;
+    content: string;
+    parent?: string | null;
+    rootId?: string | null;
+  }) => {
+    const optimistic: CommentData = {
+      id: 'local-' + Date.now(),
+      author: draft.author,
+      email: draft.email,
+      website: draft.website,
+      content: renderMarkdownPreview(draft.content),
+      date: new Date().toISOString(),
+      parent: draft.parent || null,
+      rootId: draft.rootId || null,
+    };
+    allComments = [optimistic, ...allComments];
+    total += 1;
+    remember();
+    paint();
+  };
+
+  // Load more: append the next page to the end of the list.
   listEl?.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-role="load-more"]');
     if (!btn) return;
@@ -593,8 +664,18 @@ async function hydrateWaline(
     void render(true);
   });
 
-  setupWalineForm(container, serverUrl, path, i18n, () => { void render(false); });
-  await render(false);
+  setupWalineForm(container, serverUrl, path, i18n, addOptimistic);
+
+  const cached = commentsCache.get(path);
+  if (cached) {
+    allComments = cached.comments.slice();
+    total = cached.count;
+    hasMore = cached.hasMore;
+    page = cached.page;
+    paint();
+  } else {
+    await render(false);
+  }
 }
 
 function hydrateContainer(container: HTMLElement): void {
