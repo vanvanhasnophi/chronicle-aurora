@@ -12,16 +12,17 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 **Highlights**
 
-- A template repository that starts empty: `data/` ships schema defaults and no posts, the demo content
-  lives on a content-only `demo` branch, and `.chronicle/` is generated on first launch.
-- One build pipeline for any host: GitHub Pages root or project sites, custom domains, and a documented
-  static `dist/` for any CDN. `SITE_URL` and `BASE_PATH` are resolved automatically in CI.
-- CI you can trust: workspace typechecks, indexer unit tests, two plugin-isolation assertions, a
-  base-path link audit, and a browser-mode CMS end-to-end test.
-- Social and brand assets out of the box: canonical/Open Graph tags, a generated 1200×630 card, a full
-  favicon set, and directory-as-setting icons (or your avatar).
-- A clear upgrade path for forks: `npm run update` follows the `upstream` remote, and this file is the
-  contract for what changed.
+- **Interface polish everywhere.** Blogs-page state in the URL, TOC and navigation details, light-mode
+  colour fixes, slides print/browse fixes, and optimistic comments and likes make browsing feel faster
+  and steadier.
+- **Template-first repository.** `data/` is a clean template, demo content lives on a content-only `demo`
+  branch, and `.chronicle/` is generated on first launch instead of being tracked. Forks and maintainers
+  work on code without dragging demo data along.
+- **Rebuilt build and CI.** One `npm run build:astro` pipeline covers Pages root and project sites plus
+  custom domains, with a base-path audit, plugin-isolation checks and lockfile repair, alongside
+  `preview`, `shots`, `demo:*` and other shortcuts.
+- **Refreshed brand.** A new aurora favicon set and default social card, directory-as-setting icons,
+  avatar-as-icon support, and a new default emerald accent (`#10b981`).
 
 ### Added
 
@@ -67,25 +68,44 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 **Authoring and reading**
 
-- **Blogs page rebuilt.** Timeline mode, tag filter, sort (newest / oldest / title), expand-all, result
-  count, clear-filter, and a separate "no posts match this filter" state. Filter and sort live in the URL
-  (`?featured`, `?sort=`) so refresh, sharing and the back button keep them.
+- **Blogs page rebuilt.** Tag filter, expand-all, result count, clear-filter, and a separate "no posts
+  match this filter" state; filter and sort state live in the URL so refresh, sharing and the back button
+  keep them.
+- **Timeline and sorting on `blogs/`.** A new timeline layout plus a sort control (newest / oldest /
+  title), persisted as `?sort=` next to the existing tag filter.
 - **Homepage card columns.** `homepage.cardColumns` replaces the single-column toggle: each of up to three columns declares its own ordered card list (`cards: [{type: intro}, {type: recent}]`, repeats allowed). Width ratios apply when two or three columns render, max-width applies in every layout, and cards from a column that cannot fit append to the last surviving column; old `singleColumnHomepage` / `cardVisibility` configs keep working when `cardColumns` is absent.  `homepage.cardFlowMaxWidth` caps the whole card flow in every homepage mode, and the shell now fills the available width up to that cap (previously `cards` mode shrank to its content). A drag-and-drop editor in the CMS manages the columns.
 - **Collapsible `<details>` blocks.** Insert action in the editor ribbon, localized default summary (a real
   `<summary>` is injected when the author omits one), styled glass header and chevron in posts and the TOC.
-- Optional build-time AI summaries: a schema-driven `ai-enhance` plugin plus `scripts/ai-summaries.mjs`;
-  disabled by default and removable like every other plugin.
+- **AI Enhance plugin (default off).** A schema-driven `ai-enhance` plugin plus `scripts/ai-summaries.mjs`;
+  it generates build-time summaries (no runtime API key), is disabled by default and removable like every
+  other plugin.
 - Comment likes and comment submissions give immediate feedback: the vote or comment appears at once and
   is never rolled back, whether or not the request reaches the server. Comments and reaction counts are
   fetched once per visit and served from an in-memory session cache, so soft navigation does not re-query.
-- Soft-navigation progress indicator, with the accent colour preserved across page transitions.
 - Light-mode accent and featured colour adaptation, including a gold-friendly featured alternative and
   token-based featured detection.
 - TOC polish: summary weight, animated gap, icon, `aria-controls`, and consistent focus styling.
-- Split-homepage, nav-height, cover-wrapping and hint-stacking refinements.
+- Nav-height, cover-wrapping and hint-stacking refinements.
+
+### Deprecated
+
+- `homepage.singleColumnHomepage` and `homepage.cardVisibility` are deprecated in favour of
+  `homepage.cardColumns`. They are still read (the renderer falls back to them and the CMS derives the
+  new columns on load), preserved on save, and will only be removed in 4.0.0.
 
 ### Changed
 
+- **Split homepage redesign.** The split hero and card area were re-laid out (sticky hero, card deck
+  below) and the card flow is now configurable instead of a fixed two-column deck: up to three columns
+  with per-column width and max width.
+- **Markdown reading polish.** Collapsible `<details>` blocks use a glass header and chevron, and heading,
+  list, quote, table and code spacing was retuned for readability in posts and the TOC.
+- **Search opening behaviour.** The global floating search now opens from the dedicated trigger instead of
+  replacing the inline search box, and loads its index lazily on first use.
+- **Gold accents keep featured readable.** When the accent is gold-toned, featured badges and highlights
+  switch to neon pink instead of blending into the accent.
+- **Soft-navigation loading effect.** Internal link clicks show a progress indicator, and the accent colour
+  is preserved across page transitions.
 - `SITE_URL` is build-time configuration resolved in CI: repository variable → Pages settings (`origin`
   from `actions/configure-pages`) → root-Pages repo name → hard error. A custom domain needs no manual
   configuration; a production build that still contains `localhost` fails the deploy.
@@ -109,6 +129,8 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 - The blogs page could show both "no posts match this filter" and the site-wide "start writing" empty
   state at the same time; the filter message now appears only when posts exist but none match.
+- **Multi-collection posts.** The collection switcher now moves between every collection a post belongs
+  to; previously it stayed on the first one.
 - `reset:site` referenced `template-settings.schema.json`, which no longer exists after the settings
   split, so `npm run init:clean` died on its first step.
 - Shell scripts were checked out with CRLF on Windows, which made `bash` fail on `update-app.sh` and
