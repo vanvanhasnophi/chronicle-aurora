@@ -70,6 +70,7 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 - **Blogs page rebuilt.** Timeline mode, tag filter, sort (newest / oldest / title), expand-all, result
   count, clear-filter, and a separate "no posts match this filter" state. Filter and sort live in the URL
   (`?featured`, `?sort=`) so refresh, sharing and the back button keep them.
+- **Homepage card columns.** `homepage.cardColumns` replaces the single-column toggle: each of up to three columns declares its own ordered card map (`cards: {intro: {}, recent: {}}`). Width ratios apply when two columns render, max-width applies in every layout; old `singleColumnHomepage` / `cardVisibility` configs keep working when `cardColumns` is absent. A drag-and-drop editor in the CMS manages the columns.
 - **Collapsible `<details>` blocks.** Insert action in the editor ribbon, localized default summary (a real
   `<summary>` is injected when the author omits one), styled glass header and chevron in posts and the TOC.
 - Optional build-time AI summaries: a schema-driven `ai-enhance` plugin plus `scripts/ai-summaries.mjs`;
