@@ -2,18 +2,25 @@
 /**
  * Guard against mojibake in tracked text files.
  *
- * UTF-8 text that was decoded as GBK/ANSI and re-encoded leaves a very
- * characteristic trail (鈥 / 鈹 / 闂 / 鏂 / 锛 …). This has silently damaged
- * hand-written comments before, so fail fast in CI instead of discovering it
- * in a later diff.
+ * UTF-8 text decoded as GBK/ANSI leaves a distinctive trail of CJK code points
+ * that do not occur in normal Chinese prose. Fail fast in CI instead of
+ * discovering the damage in a later diff.
  */
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 
 const TEXT_FILE = /\.(ya?ml|md|json|ts|mts|astro|vue|css|mjs|cjs|js|sh|txt)$/i
 const REPLACEMENT = '\uFFFD'
-// Characters that only show up when UTF-8 bytes were decoded as GBK/ANSI.
-const MOJIBAKE = /[鈥鈹闂閸鐎缂閻閺閹婵鍦鎴鏂锛銆]/g
+// Code points that only show up when UTF-8 bytes were decoded as GBK/ANSI.
+// Kept as numbers so this file never trips its own check.
+const MOJIBAKE_CODEPOINTS = [
+  0x9225, 0x9239, 0x95c2, 0x95b8, 0x940e, 0x7f02, 0x95bb, 0x95ba,
+  0x95b9, 0x5a75, 0x9366, 0x93b4, 0x93c2, 0x951b, 0x9286,
+]
+const MOJIBAKE = new RegExp(
+  `[${MOJIBAKE_CODEPOINTS.map((code) => `\\u{${code.toString(16)}}`).join('')}]`,
+  'gu',
+)
 
 const files = execSync('git ls-files -z', { encoding: 'buffer' })
   .toString('utf8')
