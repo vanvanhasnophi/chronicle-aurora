@@ -8,6 +8,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 import { getDataContext, type PluginDataHooks } from '../../data/pluginHooks';
 import type { PostMeta } from '../../data/types';
+import { withBase } from '../../utils/basePath';
 
 interface CollectionEntry {
   name: string;
@@ -31,7 +32,7 @@ function dataDir(): string {
 
 function resolveAssetUrl(url: string): string {
   if (!url) return '';
-  if (url.startsWith('asset://')) return '/assets/' + url.slice(8);
+  if (url.startsWith('asset://')) return withBase('/assets/' + encodeURI(url.slice(8)));
   if (url.startsWith('post://')) return '/posts/' + url.slice(7);
   return url;
 }

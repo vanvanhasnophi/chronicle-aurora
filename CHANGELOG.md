@@ -10,6 +10,8 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ### Fixed
 
+- Collection covers declared as `asset://…` now follow `BASE_PATH`; sub-path builds no longer link to
+  `/assets/…` at the domain root.
 - CI repairs the lockfile on the Linux runner (`npm install --package-lock-only`) before `npm ci`: npm
   records platform-optional deps (`@emnapi/*` and friends) differently on Windows, so a lockfile
   regenerated on Windows would otherwise fail `npm ci` on Linux.
