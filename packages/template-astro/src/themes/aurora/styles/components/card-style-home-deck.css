@@ -45,6 +45,9 @@
     display: none;
   }
 
+  .home-card-slot{ display: contents; }
+  .home-shell .flow-column[hidden]{ display: none; }
+
   .home-shell .flow-column{
     display: grid;
     gap: 1rem;

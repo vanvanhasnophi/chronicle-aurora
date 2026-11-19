@@ -451,9 +451,17 @@ const cardProps: Record<string, Record<string, unknown>> = {
       >
         {column.cards.map((id) => {
           const Card = cardComponents[id];
-          return Card ? <Card {...cardProps[id]} /> : null;
+          return Card ? (
+            <div class="home-card-slot" data-card-id={id} data-column={index}>
+              <Card {...cardProps[id]} />
+            </div>
+          ) : null;
         })}
-        {index === 0 && FlowCards.map((Card: any) => <Card locale={locale} t={t} />)}
+        {index === 0 && FlowCards.map((Card: any) => (
+          <div class="home-card-slot" data-card-id="plugin" data-column="0">
+            <Card locale={locale} t={t} />
+          </div>
+        ))}
       </div>
     ))}
   </div>
@@ -500,3 +508,63 @@ const cardProps: Record<string, Record<string, unknown>> = {
 </section>
 
 
+
+<script>
+  // Responsive column overflow: when the viewport cannot fit every configured
+  // column, cards from the dropped columns are merged into the remaining ones
+  // (evenly by default, or appended end-to-end). Pure CSS cannot move cards.
+  (() => {
+    let destroy = null;
+
+    function init() {
+      if (destroy) destroy();
+      const flows = document.querySelector('.card-flows');
+      if (!flows) return;
+      const columns = [...flows.querySelectorAll('.flow-column')];
+      if (columns.length < 2) return;
+
+      const slots = [...flows.querySelectorAll('.home-card-slot')];
+      const configured = columns.length;
+      const baseCols = flows.style.getPropertyValue('--home-cols').trim();
+      const twoCols = flows.style.getPropertyValue('--home-cols-2').trim();
+      const original = columns.map((_, index) =>
+        slots.filter((slot) => Number(slot.dataset.column) === index),
+      );
+
+      const layout = () => {
+        const width = window.innerWidth;
+        const target = width <= 900 ? 1 : configured >= 3 && width <= 1200 ? 2 : configured;
+        const visible = original.slice(0, target).map((list) => [...list]);
+        const dropped = original.slice(target).flat();
+
+        if (dropped.length) {
+          // Dropped columns append to the last surviving column, end-to-end.
+          visible[target - 1].push(...dropped);
+        }
+
+        columns.forEach((column, index) => {
+          column.hidden = index >= target;
+          while (column.firstChild) column.removeChild(column.firstChild);
+        });
+        visible.forEach((list, index) => {
+          list.forEach((slot) => columns[index].appendChild(slot));
+        });
+
+        flows.dataset.columns = String(target);
+        flows.style.setProperty(
+          '--home-cols',
+          target === 1 ? '1fr' : target === 2 ? twoCols || baseCols : baseCols,
+        );
+      };
+
+      layout();
+      const onResize = () => window.requestAnimationFrame(layout);
+      window.addEventListener('resize', onResize, { passive: true });
+      destroy = () => window.removeEventListener('resize', onResize);
+    }
+
+    document.addEventListener('astro:page-load', init);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+    else init();
+  })();
+</script>

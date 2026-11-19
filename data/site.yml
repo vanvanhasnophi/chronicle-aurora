@@ -5,7 +5,7 @@
 # Homepage settings (Template settings 闁?Homepage)
 homepage:
   siteName: Chronicle Aurora
-  siteDescription: Chronicle Aurora 闁?a local-first, git-backed Jamstack blog.
+  siteDescription: Chronicle Aurora — a local-first, git-backed Jamstack blog.
   icpNumber: ''
   homepageMode: cards
   cardFlowMaxWidth: 1200
@@ -13,11 +13,13 @@ homepage:
     - width: 300
       cards:
         intro: {}
+        author: {}
+    - width: 200
+      cards:
+        taxonomy: {}
         recent: {}
     - width: 200
       cards:
-        author: {}
-        taxonomy: {}
         activity: {}
   recentUpdates:
     aggregateDays: 7

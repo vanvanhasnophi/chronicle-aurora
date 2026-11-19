@@ -82,7 +82,7 @@
           @change="addCard(columnIndex, $event)"
         >
           <option value="" disabled>{{ t('settings.homepageColumnsAddCard') }}</option>
-          <option v-for="id in cardIds" :key="id" :value="id">{{ cardLabel(id) }}</option>
+          <option v-for="id in cardIds" :key="id" :value="id" :disabled="column.cards.includes(id)">{{ cardLabel(id) }}</option>
         </select>
       </div>
     </div>
