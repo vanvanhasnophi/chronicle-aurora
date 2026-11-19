@@ -193,26 +193,33 @@
                 }
               },
               "cards": {
-                "type": "object",
+                "type": "array",
                 "title": {
                   "en": "Cards",
                   "zh-CN": "卡片"
                 },
                 "description": {
-                  "en": "Card id as child key, in display order. A YAML map cannot repeat a key, so each card appears once per column.",
-                  "zh-CN": "以卡片 id 为子键，按书写顺序展示。YAML 映射不能重复键，因此同一列中每张卡只出现一次。"
+                  "en": "Ordered list of cards. The same card may appear more than once (allowed, but not recommended).",
+                  "zh-CN": "有序卡片列表。同一张卡片可以重复出现（允许，但不建议）。"
                 },
-                "propertyNames": {
-                  "enum": [
-                    "intro",
-                    "recent",
-                    "taxonomy",
-                    "author",
-                    "activity"
-                  ]
-                },
-                "additionalProperties": {
-                  "type": "object"
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "intro",
+                        "recent",
+                        "taxonomy",
+                        "author",
+                        "activity"
+                      ]
+                    }
+                  },
+                  "additionalProperties": true
                 }
               }
             }

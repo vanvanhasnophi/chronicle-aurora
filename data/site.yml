@@ -1,26 +1,27 @@
-# Chronicle Aurora site configuration 闁?written by the CMS settings pages; hand-written comments and untouched keys are preserved
+# Chronicle Aurora site configuration 闂?written by the CMS settings pages; hand-written comments and untouched keys are preserved
 
-# 闁冲厜鍋撻柍鍏夊亾 濞戞挾绮姗€宕洪搹璇℃敤闁挎稑鐗撳顏堝箵閹哄秵顐介柨娑橆槴閺€銏ゅ煘閳?
+# 闂佸啿鍘滈崑鎾绘煃閸忓浜?婵炴垶鎸剧划顖氼熆濮椻偓瀹曟椽鎼圭拠鈩冩暏闂佹寧绋戦悧鎾愁焽椤忓牆绠甸柟鍝勭У椤愪粙鏌ㄥ☉姗嗘Т闁衡偓閵忋倕鐓橀柍?
 
-# Homepage settings (Template settings 闁?Homepage)
+# Homepage settings (Template settings 闂?Homepage)
 homepage:
   siteName: Chronicle Aurora
-  siteDescription: Chronicle Aurora — a local-first, git-backed Jamstack blog.
+  siteDescription: Chronicle Aurora 鈥?a local-first, git-backed Jamstack blog.
   icpNumber: ''
   homepageMode: split
   cardFlowMaxWidth: 1400
   cardColumns:
     - width: 200
       cards:
-        intro: {}
-        author: {}
+        - type: intro
+        - type: author
     - width: 300
       cards:
-        taxonomy: {}
-        recent: {}
+        - type: taxonomy
+        - type: recent
     - width: 200
       cards:
-        activity: {}
+        - type: activity
+        - type: activity
   recentUpdates:
     aggregateDays: 7
     staleDays: 30
@@ -41,7 +42,7 @@ analytics:
   plausibleServerUrl: ''
   plausibleDomain: ''
   baiduId: ''
-# 闁哄倸娲ㄩ悵閿嬨亜闂堟稓鍞ㄧ痪顓涘亾闁挎稑鐗呯€靛矂寮堕崸妤婃殨閻犱焦鎷濈槐姘舵晬濮橆兙浠堥梺顔哄妺娣囧﹪骞?meta
+# 闂佸搫鍊稿ú銊╂偟闁垮浜滈梻鍫熺〒閸炪劎鐥娑樹壕闂佹寧绋戦悧鍛偓闈涚焸瀵爼宕稿Δ濠冩闁荤姳鐒﹂幏婵堟濮樿埖鏅慨姗嗗厵娴犲牓姊洪鍝勫濞ｅ洤锕獮?meta
 post:
   meta:
     metaUpdated: true
@@ -49,8 +50,8 @@ post:
     metaAiBadge: true
     showTags: true
 
-# 闁冲厜鍋撻柍鍏夊亾 闁圭粯甯婂▎銏ゅ礆閸℃瑧鐭嬮柨娑樼墛閻︼繝骞撻幒宥嗩偨濞戞挴鍋撴繛鍫㈩暜缁辨澘顕ｉ埀顒勫礂?+ 闂佹澘绉堕悿鍡涙晬濞戞纾婚柛蹇斿▕閺?= 閻犲洢鍎茶ぐ鍐╃?featureFlag 闁告艾绋勭槐姘跺煘閳ь剟鍩為埀?
-# 濮掓稒顭堥璇差嚕閳ь剟宕ラ銈囩獥search / comments / reading-experience / friends / collections / slides闁挎稒鐭榠-enhance 闁稿繑濞婂Λ?
+# 闂佸啿鍘滈崑鎾绘煃閸忓浜?闂佸湱绮敮濠傗枎閵忋倕绀嗛柛鈩冪懅閻鏌ㄥ☉妯煎闁伙讣绻濋獮鎾诲箳瀹ュ棭鍋ㄦ繛鎴炴尨閸嬫挻绻涢崼銏╂殰缂佽鲸婢橀锝夊焵椤掑嫬绀?+ 闂備焦婢樼粔鍫曟偪閸℃稒鏅繛鎴烆焽绾惧鏌涜箛鏂库枙闁?= 闁荤姴娲㈤崕鑼躲亹閸愨晝顩?featureFlag 闂佸憡鑹剧粙鍕濮樿泛鐓橀柍褜鍓熼崺鐐哄焵?
+# 婵帗绋掗…鍫ヮ敇鐠囧樊鍤曢柍褜鍓熷畷銉╊敍閵堝洨鐛earch / comments / reading-experience / friends / collections / slides闂佹寧绋掗惌姒?enhance 闂佺绻戞繛濠偽?
 search:
   enabled: true
   searchSuggestions: true

@@ -82,7 +82,7 @@
           @change="addCard(columnIndex, $event)"
         >
           <option value="" disabled>{{ t('settings.homepageColumnsAddCard') }}</option>
-          <option v-for="id in cardIds" :key="id" :value="id" :disabled="column.cards.includes(id)">{{ cardLabel(id) }}</option>
+          <option v-for="id in cardIds" :key="id" :value="id">{{ cardLabel(id) }}</option>
         </select>
       </div>
     </div>
@@ -173,15 +173,10 @@ function cardLabel(id: string) {
 }
 
 function cardIdsFrom(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map((id) => String(id)).filter((id) => (cardIds as readonly string[]).includes(id))
-  }
-  if (value && typeof value === 'object') {
-    return Object.keys(value as Record<string, unknown>).filter((id) =>
-      (cardIds as readonly string[]).includes(id),
-    )
-  }
-  return []
+  if (!Array.isArray(value)) return []
+  return value
+    .map((entry) => (entry && typeof entry === 'object' ? (entry as any).type : ''))
+    .filter((id) => (cardIds as readonly string[]).includes(id))
 }
 
 /**
@@ -190,14 +185,11 @@ function cardIdsFrom(value: unknown): string[] {
  */
 function emitUpdate() {
   const payload = columns.value.map((column, index) => {
-    const cards: Record<string, unknown> = {}
-    for (const id of column.cards) {
-      const source = (props.modelValue || [])[index]
-      const existing = source && typeof source.cards === 'object' && !Array.isArray(source.cards)
-        ? (source.cards as Record<string, unknown>)[id]
-        : undefined
-      cards[id] = existing ?? {}
-    }
+    const sourceCards = (props.modelValue || [])[index]?.cards
+    const cards = column.cards.map((id, cardIndex) => {
+      const source = Array.isArray(sourceCards) ? sourceCards[cardIndex] : undefined
+      return source && typeof source === 'object' ? { ...(source as object), type: id } : { type: id }
+    })
     return {
       ...(column.width ? { width: column.width } : {}),
       ...(column.maxWidth ? { maxWidth: column.maxWidth } : {}),

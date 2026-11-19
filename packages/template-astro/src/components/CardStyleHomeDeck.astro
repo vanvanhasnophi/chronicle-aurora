@@ -385,7 +385,11 @@ const columns = (configuredColumns ?? legacyColumns)
   .map((column: any) => ({
     width: Number(column?.width),
     maxWidth: Number(column?.maxWidth),
-    cards: legacyCards(Array.isArray(column?.cards) ? column.cards : []),
+    cards: legacyCards(
+      Array.isArray(column?.cards)
+        ? column.cards.filter((entry: any) => entry && typeof entry.type === 'string')
+        : [],
+    ),
   }))
   .filter((column: any) => column.cards.length > 0);
 
@@ -450,7 +454,8 @@ const cardProps: Record<string, Record<string, unknown>> = {
           ? `width:100%;max-width:${column.maxWidth}px;margin-inline:auto;`
           : undefined}
       >
-        {column.cards.map((id) => {
+        {column.cards.map((card: any) => {
+          const id = card.type;
           const Card = cardComponents[id];
           return Card ? (
             <div class="home-card-slot" data-card-id={id} data-column={index}>

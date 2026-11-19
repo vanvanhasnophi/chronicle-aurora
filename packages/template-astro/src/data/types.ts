@@ -102,7 +102,11 @@ export interface LocalSettings {
      * relative width and its own ordered card ids. Cards may repeat; when this
      * is present it replaces cardVisibility + singleColumnHomepage.
      */
-    cardColumns?: Array<{ width?: number; maxWidth?: number; cards: string[] }>;
+    cardColumns?: Array<{
+      width?: number;
+      maxWidth?: number;
+      cards: Array<{ type: string; [key: string]: unknown }>;
+    }>;
     /** Overall max width (px) of the homepage card flow, footer included. */
     cardFlowMaxWidth?: number;
     recentUpdates?: { staleDays?: number; aggregateDays?: number };

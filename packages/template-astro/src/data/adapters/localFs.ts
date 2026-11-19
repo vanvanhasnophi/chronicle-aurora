@@ -505,15 +505,17 @@ function normalizeHomeColumns(value: unknown): Array<{ width?: number; maxWidth?
     .slice(0, 3)
     .map((entry) => {
       const source = (entry ?? {}) as { cards?: unknown; width?: unknown };
-      // Cards are a child map (order = key order). The string-array form is
-      // still accepted so repositories created during the preview keep working.
+      // Cards are ordered child objects (`{ type: intro }`) so the same card
+      // may repeat.
       const rawCards = source.cards;
-      const cardIds = Array.isArray(rawCards)
-        ? rawCards.map((id) => String(id))
-        : rawCards && typeof rawCards === 'object'
-          ? Object.keys(rawCards as Record<string, unknown>)
-          : [];
-      const cards = cardIds.filter((id) => (HOME_CARD_IDS as readonly string[]).includes(id));
+      const cards = (Array.isArray(rawCards) ? rawCards : [])
+        .map((entry) =>
+          entry && typeof entry === 'object' && typeof (entry as any).type === 'string'
+            ? { ...(entry as Record<string, unknown>), type: String((entry as any).type) }
+            : null,
+        )
+        .filter(Boolean)
+        .filter((entry) => (HOME_CARD_IDS as readonly string[]).includes(entry!.type));
       const width = Number(source.width);
       const maxWidth = Number(source.maxWidth);
       return {
