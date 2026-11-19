@@ -472,6 +472,9 @@ function setupWalineForm(
     const author = authorInput.value.trim();
     const content = contentInput.value.trim();
     const email = emailInput?.value.trim() || '';
+    const website = websiteInput?.value.trim() || '';
+    const parent = parentInput?.value || '';
+    const rootId = rootInput?.value || '';
     // Email is required: a null `mail` breaks Waline's avatar renderer (Nunjucks trim(null)).
     if (!author || !content || !email) return;
 
@@ -502,39 +505,37 @@ function setupWalineForm(
     onOptimistic({
       author,
       email: email || undefined,
-      website: websiteInput?.value.trim() || undefined,
+      website: website || undefined,
       content: finalContent,
-      parent: parentInput?.value || null,
-      rootId: rootInput?.value || null,
+      parent: parent || null,
+      rootId: rootId || null,
     });
+
+    // Treat the comment as sent: clear the form and confirm immediately. The
+    // network request is fire-and-forget — the optimistic entry stays even if
+    // it fails, and the list is never re-fetched until a hard refresh.
+    form.reset();
+    attachments.length = 0;
+    renderAttachments();
+    setReplyTo(null, null, '');
+    if (note) {
+      note.textContent = i18n.submitted || 'Comment submitted.';
+      note.classList.remove('cs-form-note--error');
+      note.hidden = false;
+    }
 
     try {
       await submitWalineComment(serverUrl, path, {
         author,
-        email: emailInput?.value.trim() || undefined,
-        website: websiteInput?.value.trim() || undefined,
+        email: email || undefined,
+        website: website || undefined,
         content: finalContent,
-        parent: parentInput?.value || undefined,
-        rootId: rootInput?.value || undefined,
+        parent: parent || undefined,
+        rootId: rootId || undefined,
       });
-      form.reset();
-      attachments.length = 0;
-      renderAttachments();
-      setReplyTo(null, null, '');
-      if (note) {
-        note.textContent = i18n.submitted || 'Comment submitted.';
-        note.classList.remove('cs-form-note--error');
-        note.hidden = false;
-      }
     } catch (err) {
-      if (note) {
-        const detail = err instanceof Error ? err.message : '';
-        note.textContent = detail
-          ? `${i18n.submitError || 'Submission failed.'} (${detail})`
-          : i18n.submitError || 'Submission failed.';
-        note.classList.add('cs-form-note--error');
-        note.hidden = false;
-      }
+      // Keep the optimistic state; log for debugging only.
+      console.warn('[comments] submit failed:', err);
     } finally {
       submitBtn.disabled = false;
     }
