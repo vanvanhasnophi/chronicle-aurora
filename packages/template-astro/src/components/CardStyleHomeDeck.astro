@@ -394,17 +394,18 @@ if (columns.length === 0) {
 }
 
 const columnCount = Math.min(columns.length, 3);
-const columnWidths = columns.slice(0, 2).map((column: any, index: number) =>
-  Number.isFinite(column.width) && column.width > 0
-    ? column.width
-    : columnCount === 2
-      ? [1.45, 0.85][index]
-      : 1,
+const columnWidths = columns.map((column: any) =>
+  Number.isFinite(column.width) && column.width > 0 ? column.width : 1,
 );
+const defaultTwoWidths = [1.45, 0.85];
+const widths =
+  columnCount === 2 && columnWidths.length === 2 && columns.every((column: any) => !(Number(column.width) > 0))
+    ? defaultTwoWidths
+    : columnWidths;
 let gridStyle = '--home-cols:1fr';
-if (columnCount === 2) gridStyle = `--home-cols:${columnWidths[0]}fr ${columnWidths[1]}fr`;
+if (columnCount === 2) gridStyle = `--home-cols:${widths[0]}fr ${widths[1]}fr`;
 if (columnCount === 3) {
-  gridStyle = `--home-cols:1fr 1fr 1fr;--home-cols-2:${columnWidths[0] ?? 1}fr ${columnWidths[1] ?? 1}fr`;
+  gridStyle = `--home-cols:${widths[0]}fr ${widths[1]}fr ${widths[2]}fr;--home-cols-2:${widths[0]}fr ${widths[1]}fr`;
 }
 
 const cardProps: Record<string, Record<string, unknown>> = {

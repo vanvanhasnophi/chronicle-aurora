@@ -440,7 +440,7 @@
     "pluginRemoveFailed": "Remove failed",
     "homepageColumnsColumn": "Column {n}",
     "homepageColumnsWidth": "Width",
-    "homepageColumnsWidthHint": "Width is a relative ratio and only applies when the page renders two columns (100 : 50 = 2 : 1). Three columns are always equal; one column ignores width.",
+    "homepageColumnsWidthHint": "Width is a relative ratio (100 : 50 = 2 : 1) and applies whenever two or three columns render; a single column ignores width.",
     "homepageColumnsMaxWidth": "Max width (px)",
     "homepageColumnsAddCard": "Add card",
     "homepageColumnsAddColumn": "Add column",

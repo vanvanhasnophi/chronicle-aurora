@@ -446,7 +446,7 @@
     "pluginRemoveFailed": "删除失败",
     "homepageColumnsColumn": "第 {n} 列",
     "homepageColumnsWidth": "宽度",
-    "homepageColumnsWidthHint": "宽度是相对比例，仅在页面渲染两列时生效（100 : 50 = 2 : 1）。三列永远均分；一列忽略宽度。",
+    "homepageColumnsWidthHint": "宽度是相对比例（100 : 50 = 2 : 1），两列或三列时都生效；一列忽略宽度。",
     "homepageColumnsMaxWidth": "最大宽度（px）",
     "homepageColumnsAddCard": "添加卡片",
     "homepageColumnsAddColumn": "添加列",
