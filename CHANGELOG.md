@@ -8,18 +8,6 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ## [Unreleased]
 
-### Fixed
-
-- Collection covers declared as `asset://…` now follow `BASE_PATH`; sub-path builds no longer link to
-  `/assets/…` at the domain root.
-- CI repairs the lockfile on the Linux runner (`npm install --package-lock-only`) before `npm ci`: npm
-  records platform-optional deps (`@emnapi/*` and friends) differently on Windows, so a lockfile
-  regenerated on Windows would otherwise fail `npm ci` on Linux.
-- `npm run update` now fetches `upstream` before detecting its default branch; a freshly added remote no
-  longer falls back to a non-existent `master`.
-- `npm run update` no longer aborts while restoring `.chronicle/`: since 3.1.0 that directory is ignored, so
-  it is restored on disk without being staged (and the merge commit stays clean).
-
 ## [3.1.0] — 2026-11-18
 
 **Highlights**
@@ -126,6 +114,15 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 - The nav popup switch had insufficient contrast in the light theme.
 - The accent colour could reset after a soft navigation; it is now preserved.
 - A featured accent expressed as a token was not detected as gold, mis-selecting the featured alternative.
+- Collection covers declared as `asset://…` now follow `BASE_PATH`; sub-path builds no longer link to
+  `/assets/…` at the domain root.
+- CI repairs the lockfile on the Linux runner (`npm install --package-lock-only`) before `npm ci`: npm
+  records platform-optional deps (`@emnapi/*` and friends) differently on Windows, so a lockfile
+  regenerated on Windows would otherwise fail `npm ci` on Linux.
+- `npm run update` now fetches `upstream` before detecting its default branch; a freshly added remote no
+  longer falls back to a non-existent `master`.
+- `npm run update` no longer aborts while restoring `.chronicle/`: since 3.1.0 that directory is ignored, so
+  it is restored on disk without being staged (and the merge commit stays clean).
 
 ### Upgrade notes
 
