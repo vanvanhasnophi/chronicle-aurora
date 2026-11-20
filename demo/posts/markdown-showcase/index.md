@@ -156,17 +156,17 @@ Optional extras: a `title` in quotes becomes the caption, and an `=WxH` suffix h
 
 Drop the file next to `index.md` and reference it by filename. No prefix needed:
 
-`![Attachment example: Waterfall](waterfall.jpg "Huangguoshu Waterfall, Guizhou, China")`
+`![Attachment example: Waterfall](waterfall.jpg "Huangguoshu Waterfall, Guizhou, China" =x300)`
 
-![Attachment example: Waterfall](waterfall.jpg "Huangguoshu Waterfall, Guizhou, China")
+![Attachment example: Waterfall](waterfall.jpg "Huangguoshu Waterfall, Guizhou, China" =x300)
 
 ### 2. Shared assets — `asset://` from `data/assets/`
 
 Upload once to `data/assets/` and reuse it from any post via the `asset://` protocol. Perfect for logos and photos shared across posts:
 
-`![Asset example: Kitten](asset://meow.jpg "A cute kitten from data/assets/")`
+`![Asset example: Kitten](asset://meow.jpg "A cute kitten from data/assets/" =x300)`
 
-![Asset example: Kitten](asset://meow.jpg "A cute kitten from data/assets/")
+![Asset example: Kitten](asset://meow.jpg "A cute kitten from data/assets/" =x300)
 
 ### 3. External URLs — any image on the web
 
