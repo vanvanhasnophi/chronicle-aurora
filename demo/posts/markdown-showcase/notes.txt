@@ -1,0 +1,8 @@
+Chronicle Aurora — file card demo attachment
+============================================
+
+This .txt file exists so the Markdown showcase can demonstrate a real file
+card (and the `open:` prefix that turns the same URL back into a plain link).
+
+Anything with a card extension is previewable: .txt, .pdf, .zip, .docx,
+.mp3, .mp4, …

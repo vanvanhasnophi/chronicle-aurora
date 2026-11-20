@@ -1,7 +1,7 @@
 ---
 title: Markdown Showcase
 date: 2026-08-03
-updatedAt: 2026-08-17T12:00:00.000Z
+updatedAt: 2026-11-20T12:00:00.000Z
 tags: markdown, demo, featured
 author: 
 aiGenerated: false
@@ -80,8 +80,38 @@ The `:---` markers control column alignment — left, center, and right, as show
 
 - External: [Chronicle](https://chr.eightyfor.top)
 - Internal post: [Welcome to Chronicle](post://welcome-to-chronicle)
+- Shared asset: [meow.jpg](asset://meow.jpg)
+- Markdown document: [README](https://github.com/vanvanhasnophi/chronicle-aurora/blob/main/README.md)
 
 The `post://<id>` protocol links to another post by its **id** — the same id that appears in the address bar and keys `posts/index.json`. Because the id never changes, internal links stay valid across renames.
+
+**Links and file cards are two different things.** A URL that ends in a previewable extension (`.pdf`, `.txt`, `.zip`, `.docx`, audio, video …) becomes a file card. Everything else stays a plain inline link — including Markdown documents, so `[English](README.md)` is always a link and never a card.
+
+To force a plain link for a URL that *looks* like a file, prefix it with `open:`:
+
+- Card: [notes.txt](notes.txt) — the extension turns it into a card
+- Same file, forced link: [notes.txt as a plain link](open:notes.txt)
+
+## File Cards
+
+A card shows an icon, the link text, and the file type. The type comes from the extension, or from a `type:` prefix when the URL has no useful one:
+
+[notes.txt](notes.txt)
+
+When a card shares its line with text it shrinks to a compact inline pill — grab the [notes.txt](notes.txt) attachment, or the [waterfall photo](document:waterfall.jpg), and keep reading.
+
+| Prefix | Card type |
+|:--|:--|
+| `audio:` | Audio |
+| `video:` | Video |
+| `document:` / `doc:` | Document |
+| `text:` / `code:` | Code / Text |
+| `archive:` | Archive |
+| `attach:` / `file:` | File |
+| `link:` | Link — opens in a new tab |
+| `mailto:` | Email |
+
+Prefixes win over the extension, so `document:waterfall.jpg` renders a Document card pointing at the image. Cards are clickable: audio and video play in place, PDFs and text open in the preview overlay.
 
 ## Code Blocks
 
@@ -116,7 +146,9 @@ Inline code — like `npm run build` or `data/posts/<id>/index.md` — uses back
 
 ## Images
 
-Chronicle supports three ways to reference images, and every one of them passes through the image pipeline (lazy loading, placeholder, and a broken-image fallback). External URLs are fetched through the pipeline's proxy.
+Chronicle supports five ways to reference images, and every one of them passes through the image pipeline (lazy loading, placeholder, and a broken-image fallback). External URLs are fetched through the pipeline's proxy.
+
+An image **alone on its line** is a figure: it gets a wrapper, a loading placeholder and an optional caption. An image that **shares its line with text** stays inline — no wrapper, no placeholder, natural size — so it behaves like a glyph in the sentence instead of breaking the paragraph.
 
 Optional extras: a `title` in quotes becomes the caption, and an `=WxH` suffix hints at dimensions so the renderer can reserve space while loading — e.g. `![alt](image.png "Caption" =600x400)`.
 
@@ -141,6 +173,20 @@ Upload once to `data/assets/` and reuse it from any post via the `asset://` prot
 Hotlink from a CDN or image host; the build fetches and optimizes it:
 
 ![External example](https://picsum.photos/id/29/800/600 "Photo by Lorem Picsum — processed by the pipeline proxy")
+
+### 4. Inline images — an image inside a sentence
+
+Put the image on the same line as the text and it stays inline, at its natural size. This is the right form for icons, emoji-style marks and small badges:
+
+Type ![inline icon](icon.svg) sits in the sentence like a glyph, and several can share one line: ![a](icon.svg) ![b](icon.svg).
+
+### 5. Linked images — an image that is also a link
+
+Wrap an image in a link and the image stays inline while the click follows the link — a badge never opens the image viewer:
+
+[![Chronicle](icon.svg)](https://chr.eightyfor.top)
+
+The same rule applies to real badges. `[![Version](https://img.shields.io/badge/version-3.1.0-2f855a)](CHANGELOG.md)` renders the badge inline and points it at the changelog.
 
 ## Math with KaTeX
 
