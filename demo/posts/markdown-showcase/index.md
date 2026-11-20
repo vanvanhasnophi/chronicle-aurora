@@ -39,7 +39,38 @@ Footnotes are supported, too: this sentence carries a note[^1] that renders at t
 >
 > — The Chronicle Aurora team
 
-Blockquotes are styled as callouts, and they nest naturally — put a `>` inside a `>` for a nested quote.
+A quote is marked by a single 2px rail and secondary text — no box, no background. Nested quotes indent naturally: put a `>` inside a `>`.
+
+### Alerts
+
+Start a quote with `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` and it becomes a coloured callout with a title line. Text after the marker replaces the default title.
+
+> [!NOTE]
+> Useful information that readers should know, even when skimming.
+
+> [!TIP]
+> Helpful advice for doing things better or more easily.
+
+> [!IMPORTANT] Read this first
+> Key information readers need to know to achieve their goal.
+
+> [!WARNING]
+> Urgent information that needs immediate attention.
+
+> [!CAUTION]
+> Advises about risks or negative outcomes of certain actions.
+
+An alert can hold more than one block — only the first paragraph carries the marker:
+
+> [!NOTE]
+> Everything below the marker line stays a normal blockquote body.
+>
+> - a list inside an alert
+> - still styled by the alert colour
+>
+> ```js
+> const works = true
+> ```
 
 ## Lists
 
