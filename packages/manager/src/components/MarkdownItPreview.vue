@@ -238,6 +238,10 @@ function handleClick(e: MouseEvent) {
   }
 
   if (target.tagName === 'IMG') {
+    // An image wrapped in a link is a badge / linked image
+    // (`[![alt](img)](url)`) — the click belongs to the link, not to the image
+    // viewer. Let the browser follow it instead of hijacking with a modal.
+    if (target.closest('a')) return
     e.stopPropagation()
     const src = (target as HTMLImageElement).src
     const hook = (window as any).__CHRONICLE_OPEN_IMAGE_VIEWER__

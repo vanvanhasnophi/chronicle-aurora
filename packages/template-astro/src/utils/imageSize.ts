@@ -32,8 +32,9 @@ function getDataDir(): string | null {
 
 /**
  * Map a local image URL (as written in the rendered HTML) to a file under data/.
- * Supports post attachments (/post_attachment/<id>/<file>), assets
- * (/data/assets/...) and the about page (/about/<file>). External URLs → null.
+ * Supports post attachments (/post_attachment/<id>/<file>), shared assets
+ * (/assets/<file> on the site, /data/assets/<file> in the CMS) and the about
+ * page (/about/<file>). External URLs → null.
  */
 export function localImagePath(src: string): string | null {
   const dir = getDataDir();
@@ -43,7 +44,9 @@ export function localImagePath(src: string): string | null {
   const m = clean.match(/^\/post_attachment\/([^/]+)\/(.+)$/);
   if (m) rel = path.join('posts', m[1], decodeURIComponent(m[2]));
   else {
-    const a = clean.match(/^\/data\/assets\/(.+)$/);
+    // `asset://meow.jpg` renders as /assets/meow.jpg on the site and as
+    // /data/assets/meow.jpg in the CMS — both live in data/assets/.
+    const a = clean.match(/^(?:\/data)?\/assets\/(.+)$/);
     if (a) rel = path.join('assets', decodeURIComponent(a[1]));
     else {
       const ab = clean.match(/^\/about\/(.+)$/);

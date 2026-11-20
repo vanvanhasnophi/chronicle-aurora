@@ -298,13 +298,25 @@ h6{
     font-variation-settings: 'wght' var(--app-heading-wght, 570);
     font-weight: 600;
   }
-  html:not(.is-mobile) .interactive.scalable:hover{
-    transform: scale(1.02);
+  /* Capability gate: the recipes below all require .interactive. Modifiers say
+     *what happens*, not how a theme draws it — .interactive--hl is emphasis
+     feedback (glow/border/accent here), .interactive--motion is movement. */
+  .interactive{
+    cursor: pointer;
   }
-  html.is-mobile .interactive.scalable:active{
-    transform: scale(1.04);
+  html:not(.is-mobile) .interactive.interactive--motion:hover{
+    transform: scale(var(--hover-scale, 1.02));
   }
-  html:not(.is-mobile) .interactive.glowable:hover, html.is-mobile .interactive.glowable:active{
+  html.is-mobile .interactive.interactive--motion:active{
+    transform: scale(var(--hover-scale-mobile, 1.04));
+  }
+  @media (prefers-reduced-motion: reduce){
+    html:not(.is-mobile) .interactive.interactive--motion:hover,
+    html.is-mobile .interactive.interactive--motion:active{
+      transform: none;
+    }
+  }
+  html:not(.is-mobile) .interactive.interactive--hl:hover, html.is-mobile .interactive.interactive--hl:active{
     box-shadow: var(--card-glow);
     border-color: var(--comp-text-sec-hl);
   }
@@ -321,10 +333,10 @@ h6{
     background: var(--comp-bg-glass-active);
     box-shadow: var(--glass-shadow-elev-3);
   }
-  html:not(.is-mobile) .mtl-surface.interactive.glowable:hover{
+  html:not(.is-mobile) .mtl-surface.interactive.interactive--hl:hover{
     box-shadow: var(--card-glow), var(--glass-shadow-elev-2);
   }
-  html.is-mobile .mtl-surface.interactive.glowable:active{
+  html.is-mobile .mtl-surface.interactive.interactive--hl:active{
     box-shadow: var(--card-glow), var(--glass-shadow-elev-3);
   }
   .mtl-container{
@@ -345,10 +357,10 @@ h6{
     background: var(--comp-bg-blur-active);
     box-shadow: var(--shadow-elev-3);
   }
-  html:not(.is-mobile) .mtl-container.interactive.glowable:hover{
+  html:not(.is-mobile) .mtl-container.interactive.interactive--hl:hover{
     box-shadow: var(--card-glow), var(--shadow-elev-2);
   }
-  html.is-mobile .mtl-container.interactive.glowable:active{
+  html.is-mobile .mtl-container.interactive.interactive--hl:active{
     box-shadow: var(--card-glow), var(--shadow-elev-3);
   }
   button{

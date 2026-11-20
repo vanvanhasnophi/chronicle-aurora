@@ -98,7 +98,7 @@ const metaDescription =
           const hasAvatar = Boolean(card.avatar);
           return (
             <article
-              class={`friend-card mtl-surface interactive glowable scalable friend-card--${card.style}`}
+              class={`friend-card mtl-surface interactive interactive--hl interactive--motion friend-card--${card.style}`}
               onclick={`if(!event.target.closest('.friend-card__story')){const h='${String(card.homeUrl || "").replace(/'/g, "\\'")}'; if(h) window.open(h,'_blank');}`}
             >
               <div

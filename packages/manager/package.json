@@ -1,7 +1,7 @@
 {
   "name": "@chronicle/manager",
   "private": true,
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Chronicle CMS — Markdown editor, content manager, and site settings",
   "author": {
     "name": "Eightyfor",
@@ -14,11 +14,11 @@
     "dev": "vite",
     "typecheck": "vue-tsc --noEmit",
     "build:dev": "vue-tsc -b && vite build",
-    "build": "node --max_old_space_size=1536 ../../node_modules/.bin/vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "electron:install": "npm install electron electron-builder --save-dev",
     "electron:dev": "kill $(lsof -ti :5173) 2>/dev/null || true; ELECTRON=true NODE_ENV=development vite --port 5173 & sleep 4 && NODE_ENV=development electron . --dev --no-sandbox",
-    "electron:build": "ELECTRON=true vite build && npx electron-builder",
+    "electron:build": "vite build --mode electron && electron-builder",
     "electron:start": "npx electron . --no-sandbox"
   },
   "build": {

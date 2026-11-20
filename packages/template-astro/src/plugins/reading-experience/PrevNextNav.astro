@@ -81,7 +81,7 @@ const renderNav = nextOnly ? true : (!!showPrev || !!showNext);
   <nav class:list={['prevnext-nav', nextOnly ? 'prevnext-nav--next-only' : '']}>
     {!nextOnly && (
       showPrev ? (
-        <a class="pn-card mtl-surface interactive glowable pn-prev" href={`${withBase(`/${lang}`)}/post/${encodeURIComponent(showPrev.id)}`}>
+        <a class="pn-card mtl-surface interactive interactive--hl pn-prev" href={`${withBase(`/${lang}`)}/post/${encodeURIComponent(showPrev.id)}`}>
           <span class="pn-label">{t('postPage.prevPost')}</span>
           <span class="pn-title">{showPrev.title}</span>
         </a>
@@ -93,7 +93,7 @@ const renderNav = nextOnly ? true : (!!showPrev || !!showNext);
       )
     )}
     {showNext ? (
-      <a class="pn-card mtl-surface interactive glowable pn-next" href={`${withBase(`/${lang}`)}/post/${encodeURIComponent(showNext.id)}`}>
+      <a class="pn-card mtl-surface interactive interactive--hl pn-next" href={`${withBase(`/${lang}`)}/post/${encodeURIComponent(showNext.id)}`}>
         <span class="pn-label">{t('postPage.nextPost')}</span>
         <span class="pn-title">{showNext.title}</span>
       </a>

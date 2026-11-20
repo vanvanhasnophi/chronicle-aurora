@@ -12,6 +12,9 @@
 }
 
 /* 可点击（头像/预览触发） */
+/* 可点击：cursor: pointer
+   @deprecated — 用 `.interactive`（同样给 pointer，并启用 hover/focus 反馈）。
+   保留一个版本用于平滑迁移，下个 minor 移除。 */
 .u-clickable { cursor: pointer; }
 
 /* 可放大（点击查看大图） */

@@ -46,7 +46,18 @@ const md = new MarkdownIt({
 
 // Explicit protocol whitelist (P3-6): the old trailing [a-zA-Z][a-zA-Z0-9+.-]*:
 // branch accepted ANY protocol (e.g. javascript:). Now only known-safe ones pass.
-md.validateLink = (url: string) => /^(https?:|file:|mailto:|tel:|sms:|\/|#|asset:|post:)/i.test(String(url));
+//
+// Relative destinations must pass too: markdown-it's link rule gives up entirely
+// when validateLink rejects the href, which silently turned `[English](README.md)`
+// into literal text whenever normalizeLink could not make it absolute (no post
+// id yet → unsaved / new document).
+const HAS_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
+const SAFE_SCHEME = /^(?:https?:|file:|mailto:|tel:|sms:|asset:|post:)/i;
+md.validateLink = (url: string) => {
+  const u = String(url).trim();
+  if (!HAS_SCHEME.test(u)) return true;   // relative path, /root, #anchor, ?query
+  return SAFE_SCHEME.test(u);
+};
 
 // ── Custom protocol resolution ─────────────────────────
 // Hook into normalizeLink — EVERY link/image URL passes through here.
@@ -82,7 +93,7 @@ md.normalizeLink = (url: string) => {
   if (url.startsWith('asset://')) return resolveAssetUrl(url.slice(8));
   if (url.startsWith('post://')) return resolvePostUrl(url.slice(7));
   // Relative path → resolve to post attachment directory
-  if (_currentPostId && !url.startsWith('/') && !/^[a-zA-Z][\w+.-]*:/.test(url)) {
+  if (_currentPostId && !url.startsWith('/') && !url.startsWith('#') && !/^[a-zA-Z][\w+.-]*:/.test(url)) {
     const base = withBase(_currentPostId === '__about__' ? '/about' : `/post_attachment/${_currentPostId}`);
     return `${base}/${encodeFilename(url)}`;
   }
@@ -92,6 +103,63 @@ md.normalizeLink = (url: string) => {
 };
 
 md.use(markdownItFootnote);
+
+/**
+ * GitHub-style alerts: `> [!NOTE]` / TIP / IMPORTANT / WARNING / CAUTION as the
+ * first line of a blockquote. The marker becomes a title paragraph inside the
+ * quote (text after the marker wins over the default label) and the quote is
+ * tagged with `data-alert`, which the stylesheet colours per type.
+ *
+ * Mirrored in packages/manager/src/utils/markdownPreview.ts — change both.
+ */
+const ALERT_LABELS: Record<string, string> = {
+  note: 'Note', tip: 'Tip', important: 'Important', warning: 'Warning', caution: 'Caution',
+};
+
+function chronicleAlerts(state: any) {
+  const tokens = state.tokens;
+  for (let i = 0; i < tokens.length; i++) {
+    const open = tokens[i];
+    if (open.type !== 'blockquote_open') continue;
+    const paraOpen = tokens[i + 1];
+    const inline = tokens[i + 2];
+    const paraClose = tokens[i + 3];
+    if (paraOpen?.type !== 'paragraph_open' || inline?.type !== 'inline' || paraClose?.type !== 'paragraph_close') continue;
+    const lineEnd = inline.content.indexOf('\n');
+    const firstLine = (lineEnd === -1 ? inline.content : inline.content.slice(0, lineEnd)).trim();
+    const match = /^\[!(note|tip|important|warning|caution)\](?:[ \t]+(.*))?$/i.exec(firstLine);
+    if (!match) continue;
+
+    const type = match[1].toLowerCase();
+    const title = (match[2] || '').trim() || ALERT_LABELS[type];
+    const rest = lineEnd === -1 ? '' : inline.content.slice(lineEnd + 1);
+
+    open.attrSet('class', `md-alert md-alert--${type}`);
+    open.attrSet('data-alert', type);
+
+    const titleOpen = new state.Token('paragraph_open', 'p', 1);
+    titleOpen.attrSet('class', 'md-alert-title');
+    titleOpen.block = true;
+    const titleInline = new state.Token('inline', '', 0);
+    titleInline.content = title;
+    const titleText = new state.Token('text', '', 0);
+    titleText.content = title;
+    titleInline.children = [titleText];
+    const titleClose = new state.Token('paragraph_close', 'p', -1);
+
+    if (!rest.trim()) {
+      // The marker line was the whole paragraph → replace it with the title.
+      tokens.splice(i + 1, 3, titleOpen, titleInline, titleClose);
+    } else {
+      inline.content = rest.trim();
+      inline.children = [];
+      state.md.inline.parse(inline.content, state.md, state.env, inline.children);
+      tokens.splice(i + 1, 0, titleOpen, titleInline, titleClose);
+    }
+  }
+}
+
+md.core.ruler.push('chronicle_alerts', chronicleAlerts);
 
 // ── post:// links: open in new tab ──────────────────────
 // post://<slug> normalizes to /post/<slug> (cross-post detail page).
@@ -187,6 +255,15 @@ md.inline.ruler.before('image', 'chronicle_image_size', (state: any, silent: boo
   if (pos >= state.posMax || state.src.charCodeAt(pos) !== 0x29) return false;
   pos++;
 
+  // Does this image share its line with other content? (`Text ![x](a.png) more`)
+  // The image then belongs to the text flow and must not become a block figure
+  // with a 2:1 placeholder — see markInlineImages() in the post-process pass.
+  // `state.pos` is still the `!` here (only the local `pos` moved past `)`).
+  const lineStart = state.src.lastIndexOf('\n', state.pos - 1) + 1;
+  const hasTextBefore = /\S/.test(state.src.slice(lineStart, state.pos));
+  const endsLine = /^[ \t]*(\r?\n|$)/.test(state.src.slice(pos, state.posMax));
+  const isInlineImage = hasTextBefore || !endsLine;
+
   if (!silent) {
     const content = state.src.slice(labelStart, labelEnd);
     state.pos = labelStart;
@@ -201,6 +278,7 @@ md.inline.ruler.before('image', 'chronicle_image_size', (state: any, silent: boo
     if (title) token.attrs.push(['title', title]);
     if (width) token.attrs.push(['width', width]);
     if (height) token.attrs.push(['height', height]);
+    if (isInlineImage) token.attrs.push(['data-inline', '1']);
   }
 
   state.pos = pos;
@@ -208,21 +286,24 @@ md.inline.ruler.before('image', 'chronicle_image_size', (state: any, silent: boo
   return true;
 });
 
-// ── File-card interception (inline rule) ─────────────────
-// Runs BEFORE markdown-it's built-in "link" rule.
-// When [text](audio:...) or [text](file.ext) is detected,
-// produces html_inline directly so the default link rule never sees it.
-
+// ── File-card type prefixes ──────────────────────────────
+// A leading `type:` forces the card type regardless of the extension.
+// (`open:` is not here — it forces a plain link, see FORCE_LINK_PREFIX.)
 const TYPE_PREFIXES: [string, string, string][] = [
   ['audio:',    'Audio',     'audio'],
   ['video:',    'Video',     'video'],
   ['document:', 'Document',  'document'],
   ['doc:',      'Document',  'document'],
   ['text:',     'Code/Text', 'codeText'],
+  ['code:',     'Code/Text', 'codeText'],
   ['archive:',  'Archive',   'archive'],
   ['link:',     'Link',      'link'],
   ['mailto:',   'Email',     'person'],
   ['attach:',   'File',      'link'],
+  // The CMS inserts `file:` for extension-less / unknown types (getTypePrefix
+  // in useFileTypes.ts) — without this entry those links fell through to
+  // markdown-it and became dead `file:…` hrefs.
+  ['file:',     'File',      'link'],
 ];
 
 function getPrefixIcon(key: string): string {
@@ -234,20 +315,57 @@ function getPrefixIcon(key: string): string {
   return map[key] || Icons.link;
 }
 
-const FILE_EXTENSIONS = [
+// ── Link classification ──────────────────────────────────
+// `open:` forces a plain inline <a> (navigate) even when the URL looks like a
+// file — the counterpart of `file:` / `audio:` / `video:`, which force a
+// preview card. Example: [manual](open:manual.pdf#page=3).
+
+const FORCE_LINK_PREFIX = 'open:';
+
+// Extensions that default to a file CARD (preview affordance).
+// Markdown documents are deliberately absent: a .md file is a navigation
+// target, not a preview target, so `[English](README.md)` stays a link.
+// Force a card for one with `text:` / `attach:`.
+const CARD_EXTENSIONS = [
   'mp3','wav','ogg','m4a','flac','aac',
   'mp4','webm','mkv','mov','avi',
   'pdf','doc','docx','ppt','pptx','xls','xlsx',
-  'txt','md','js','ts','json','c','cpp','py','java','html','css','vue','log','xml','yaml',
+  'txt','js','ts','json','c','cpp','py','java','html','css','vue','log','xml','yaml',
   'zip','rar','7z','tar','gz',
 ];
 
-function hasFileExtension(href: string): boolean {
-  const m = href.match(/\.([0-9a-z]+)($|\?)/i);
-  return m ? FILE_EXTENSIONS.includes(m[1].toLowerCase()) : false;
+/**
+ * Extension of a link's last *path* segment — stricter than a bare `\.ext`:
+ *   - query and fragment are ignored:      a.pdf?dl=1, a.pdf#page=2
+ *   - the host is never read:             https://example.md/ is a site, not a file
+ *   - 2–6 alphanumerics, segment non-empty (no `.hidden`, no `.PDFx`)
+ * `asset://` and `post://` carry a bare path, so all of it is the path.
+ */
+function getLinkExtension(url: string): string {
+  let p = String(url).split('#')[0].split('?')[0];
+  if (/^asset:\/\//i.test(p)) p = p.slice(8);
+  else if (/^post:\/\//i.test(p)) p = p.slice(7);
+  else {
+    const scheme = p.indexOf('://');
+    if (scheme >= 0) {
+      const slash = p.indexOf('/', scheme + 3);
+      p = slash >= 0 ? p.slice(slash) : '';   // no path → no file
+    }
+  }
+  const seg = p.slice(p.lastIndexOf('/') + 1);
+  const m = seg.match(/^[^.\/]+\.([0-9a-z]{2,6})$/i);
+  return m ? m[1].toLowerCase() : '';
+}
+
+/** Does `[text](url)` render as a file card (preview) rather than a link? */
+function isCardLink(url: string): boolean {
+  const ext = getLinkExtension(url);
+  return !!ext && CARD_EXTENSIONS.includes(ext);
 }
 
 function parseTypePrefix(href: string): { type: string; icon: string; actualUrl: string } | null {
+  // `file:///…` is the URL scheme (Electron local paths), not the CMS type tag.
+  if (/^file:\/\//i.test(href)) return null;
   const lower = href.toLowerCase();
   for (const [prefix, type, iconKey] of TYPE_PREFIXES) {
     if (lower.startsWith(prefix)) {
@@ -257,40 +375,85 @@ function parseTypePrefix(href: string): { type: string; icon: string; actualUrl:
   return null;
 }
 
+// ── File-card interception (inline rule) ─────────────────
+// Runs BEFORE markdown-it's built-in "link" rule.
+//   [text](audio:…)      → file card, type forced by the prefix
+//   [text](report.pdf)   → file card, type from the extension
+//   [text](README.md)    → plain link (markdown docs are navigation targets)
+//   [text](open:any.url) → plain link, forced (escapes the extension check)
+//   [![badge](img)](url) → plain link around an image — never a card
 md.inline.ruler.before('link', 'chronicle_file_card', (state: any, silent: boolean) => {
   const pos = state.pos;
   const src = state.src;
 
   if (src.charCodeAt(pos) !== 0x5B) return false;
 
-  // ── Parse link text: [ ... ] ──
-  let i = pos + 1;
-  let linkText = '';
-  while (i < state.posMax) {
-    const ch = src.charCodeAt(i);
-    if (ch === 0x5C) { linkText += src[i + 1] || ''; i += 2; continue; }
-    if (ch === 0x5D) { i++; break; }
-    linkText += src[i]; i++;
-  }
-  if (i >= state.posMax) return false;
+  // ── Label: [ … ] ──
+  // markdown-it's own helper, so nested constructs are skipped correctly —
+  // the naive scan stopped at the first `]` and mangled `[![badge](img)](url)`.
+  const labelStart = pos + 1;
+  const labelEnd = state.md.helpers.parseLinkLabel(state, pos, false);
+  if (labelEnd < 0) return false;
+  const labelSrc = src.slice(labelStart, labelEnd);
 
-  // ── Parse URL: ( ... ) ──
-  if (src.charCodeAt(i) !== 0x28) return false;
+  // ── Destination: ( url "title" ) ──
+  let i = labelEnd + 1;
+  if (i >= state.posMax || src.charCodeAt(i) !== 0x28) return false;
   i++;
-  let href = '';
-  let depth = 1;
-  while (i < state.posMax && depth > 0) {
-    const ch = src.charCodeAt(i);
-    if (ch === 0x5C) { href += src[i + 1] || ''; i += 2; continue; }
-    if (ch === 0x28) depth++;
-    if (ch === 0x29) { depth--; if (depth === 0) { i++; break; } }
-    href += src[i]; i++;
-  }
-  if (depth > 0) return false;
 
-  // ── Intercept: type-prefix OR file-extension ──
+  const destRes = state.md.helpers.parseLinkDestination(src, i, state.posMax);
+  if (!destRes.ok) return false;
+  const href = destRes.str;
+  i = destRes.pos;
+
+  while (i < state.posMax && isSpace(src.charCodeAt(i))) i++;
+  const titleGap = i;
+  const titleRes = state.md.helpers.parseLinkTitle(src, i, state.posMax);
+  const title = (titleRes.ok && i > titleGap) ? titleRes.str : '';
+  if (title) i = titleRes.pos;
+  while (i < state.posMax && isSpace(src.charCodeAt(i))) i++;
+  if (i >= state.posMax || src.charCodeAt(i) !== 0x29) return false;
+  const end = i + 1;   // past ')'
+
+  // ── Forced plain link: open:<url> ──
+  // Emit the same token shape markdown-it's `link` rule would (see link.mjs):
+  // link_open → inline label → link_close. That keeps normalizeLink (asset://,
+  // post://, relative, base path), link validation, `linkLevel` nesting guard
+  // and nested inline markup identical to a normal link.
+  //
+  // NB: rewriting state.src/posMax in place is NOT an option — tokenize()
+  // captures `end = state.posMax` once, so a shorter source makes the loop run
+  // off the end and emit literal "undefined" text.
+  if (href.toLowerCase().startsWith(FORCE_LINK_PREFIX)) {
+    if (!silent) {
+      const max = state.posMax;
+      let dest = state.md.normalizeLink(href.slice(FORCE_LINK_PREFIX.length));
+      if (!state.md.validateLink(dest)) dest = '';
+
+      state.pos = labelStart;
+      state.posMax = labelEnd;
+      const tokenO = state.push('link_open', 'a', 1);
+      const attrs: [string, string][] = [['href', dest]];
+      if (title) attrs.push(['title', title]);
+      tokenO.attrs = attrs;
+
+      state.linkLevel++;
+      state.md.inline.tokenize(state);
+      state.linkLevel--;
+
+      state.push('link_close', 'a', -1);
+      state.posMax = max;
+    }
+    state.pos = end;
+    return true;
+  }
+
+  // A link wrapping an image is a badge / linked image, not a file card.
+  if (labelSrc.includes('![')) return false;
+
+  // ── Card: type-prefix OR card extension ──
   const prefixMatch = parseTypePrefix(href);
-  if (!prefixMatch && !hasFileExtension(href)) return false;
+  if (!prefixMatch && !isCardLink(href)) return false;
 
   if (!silent) {
     // mailto: keeps the full href as data-url; link:/mailto: show stripped URL as subtitle
@@ -305,10 +468,17 @@ md.inline.ruler.before('link', 'chronicle_file_card', (state: any, silent: boole
                        : rawUrl);
     const subtitle = (isMailto || isLink) ? (prefixMatch?.actualUrl || href) : undefined;
 
+    // A card sharing its line with prose renders compact ("mini"); a card that
+    // is alone on its line keeps the full block treatment.
+    const lineStart = src.lastIndexOf('\n', pos - 1) + 1;
+  const hasTextBefore = /\S/.test(src.slice(lineStart, pos));
+    const endsLine = /^[ \t]*(\r?\n|$)/.test(src.slice(end, state.posMax));
+    const mini = hasTextBefore || !endsLine;
+
     const token = state.push('html_inline', '', 0);
-    token.content = renderFileCard(cardUrl, linkText.trim(), prefixMatch?.type, subtitle);
+    token.content = renderFileCard(cardUrl, labelSrc.trim(), prefixMatch?.type, subtitle, mini);
   }
-  state.pos = i;
+  state.pos = end;
   return true;
 });
 
@@ -570,8 +740,14 @@ function renderImageWrapper(src: string, alt?: string, title?: string, width?: s
   // Auto-detected ratio → inline aspect-ratio beats the 2:1 placeholder rule in
   // chronicle-markdown.css; the wrapper scales responsively with the real ratio.
   // Explicit relative hints (e.g. `=70%`, `=x50%`) are inlined alongside it.
+  //
+  // A height-only hint (`=x300`) must NOT be turned into width:100%: an explicit
+  // width together with an explicit height overrides aspect-ratio and stretches
+  // the image. resolveImageDims derives a px width from the real ratio instead;
+  // only when there is no usable width hint at all does the figure fill the column.
+  const fillColumn = !width && (!height || height.includes('%'));
   const wrapperStyle = (autoRatio && ratio)
-    ? ` style="aspect-ratio:${ratio};${width ? 'width:' + cssDim(width) + ';' : 'width:100%;'}${height ? 'height:' + cssDim(height) + ';' : ''}max-width:100%"`
+    ? ` style="aspect-ratio:${ratio};${width ? 'width:' + cssDim(width) + ';' : ''}${fillColumn ? 'width:100%;' : ''}${height ? 'height:' + cssDim(height) + ';' : ''}max-width:100%"`
     : (width || height)
       ? ` style="${width ? 'width:' + cssDim(width) + ';' : ''}${height ? 'height:' + cssDim(height) + ';' : ''}max-width:100%"`
       : '';
@@ -584,13 +760,15 @@ function renderImageWrapper(src: string, alt?: string, title?: string, width?: s
 
   // Generate <picture> with WebP/AVIF sources for images with known extensions (not SVG or external)
   const hasExt = /\.(jpg|jpeg|png|gif)(\?|$)/i.test(src);
+  // Fixed height without a width basis → letterbox instead of stretching.
+  const imgClass = (height && !width) ? 'md-image md-image-contain' : 'md-image';
   const imgTag = hasExt
     ? `<picture>
       <source srcset="${escapeAttr(src.replace(/\.(jpg|jpeg|png|gif)$/i, '.avif'))}" type="image/avif">
       <source srcset="${escapeAttr(src.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp'))}" type="image/webp">
-      <img src="${escapeAttr(src)}" alt="${escapeAttr(alt || '')}" class="md-image"${dimAttrs} loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.closest('.md-image-wrapper').dataset.error='1'" />
+      <img src="${escapeAttr(src)}" alt="${escapeAttr(alt || '')}" class="${imgClass}"${dimAttrs} loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.closest('.md-image-wrapper').dataset.error='1'" />
     </picture>`
-    : `<img src="${escapeAttr(src)}" alt="${escapeAttr(alt || '')}" class="md-image"${dimAttrs} loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.closest('.md-image-wrapper').dataset.error='1'" />`;
+    : `<img src="${escapeAttr(src)}" alt="${escapeAttr(alt || '')}" class="${imgClass}"${dimAttrs} loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.closest('.md-image-wrapper').dataset.error='1'" />`;
 
   return `<div class="md-image-container">
     <div class="md-image-wrapper" data-placeholder-text="Loading..."${wrapperStyle}>
@@ -603,22 +781,14 @@ function renderImageWrapper(src: string, alt?: string, title?: string, width?: s
 
 /**
  * Check if a URL looks like a file link that should render as a file card.
+ * Kept as a thin alias of {@link isCardLink} for callers outside this module.
  */
 function isFileCardUrl(url: string): boolean {
-  const extMatch = url.match(/\.([0-9a-z]+)($|\?)/i);
-  if (!extMatch) return false;
-  const ext = extMatch[1].toLowerCase();
-  const fileExts = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac',       // audio
-    'mp4', 'webm', 'mkv', 'mov', 'avi',                               // video
-    'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx',              // documents
-    'txt', 'md', 'js', 'ts', 'json', 'c', 'cpp', 'py', 'java', 'html', 'css', 'vue', 'log', 'xml', 'yaml', // code
-    'zip', 'rar', '7z', 'tar', 'gz',                                   // archives
-  ];
-  return fileExts.includes(ext);
+  return isCardLink(url);
 }
 
 function getFileCardType(url: string): { type: string; icon: string } {
-  const ext = (url.match(/\.([0-9a-z]+)($|\?)/i) || [])[1]?.toLowerCase() || '';
+  const ext = getLinkExtension(url);
 
   if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].includes(ext))
     return { type: 'Audio', icon: Icons.audio };
@@ -626,7 +796,7 @@ function getFileCardType(url: string): { type: string; icon: string } {
     return { type: 'Video', icon: Icons.video };
   if (['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(ext))
     return { type: 'Document', icon: Icons.document };
-  if (['txt', 'md', 'js', 'ts', 'json', 'c', 'cpp', 'py', 'java', 'html', 'css', 'vue', 'log', 'xml', 'yaml'].includes(ext))
+  if (['txt', 'md', 'markdown', 'mdx', 'js', 'ts', 'json', 'c', 'cpp', 'py', 'java', 'html', 'css', 'vue', 'log', 'xml', 'yaml'].includes(ext))
     return { type: 'Code/Text', icon: Icons.codeText };
   if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext))
     return { type: 'Archive', icon: Icons.archive };
@@ -634,7 +804,16 @@ function getFileCardType(url: string): { type: string; icon: string } {
   return { type: 'File', icon: Icons.link };
 }
 
-function renderFileCard(url: string, displayName?: string, forcedType?: string, customSubtitle?: string): string {
+/**
+ * Render a file card.
+ *
+ * `mini` = the card shares its line with prose. It then becomes a single-line
+ * pill (icon + name, no subtitle) built from <span>s, so it can live inside a
+ * <p> without the block-card markup breaking the paragraph. Both variants stay
+ * `<span>`-based: a <div> inside <p> is invalid HTML and browsers reparent it,
+ * which used to split the surrounding paragraph.
+ */
+function renderFileCard(url: string, displayName?: string, forcedType?: string, customSubtitle?: string, mini = false): string {
   const detected = getFileCardType(url);
   // forcedType from prefix (audio:/video:/document: etc.) wins over extension detection
   const type = forcedType || detected.type;
@@ -647,19 +826,60 @@ function renderFileCard(url: string, displayName?: string, forcedType?: string, 
   const safeName = escapeAttr(name);
   // Subtitle: custom (link:/mailto: stripped URL) > detected type label
   const safeSubtitle = escapeAttr(customSubtitle || type);
+  const cls = mini ? 'file-card file-card-mini' : 'file-card';
+  // The mini card drops the subtitle; keep the type as a tooltip instead.
+  const subtitleHtml = mini ? '' : `<span class="file-card-subtitle">${safeSubtitle}</span>`;
+  const titleAttr = mini ? ` title="${safeSubtitle}"` : '';
 
-  return `<div class="file-card" data-url="${safeUrl}" data-name="${safeName}" data-type="${escapeAttr(type)}">
-    <div class="file-card-icon">${icon}</div>
-    <div class="file-card-info">
-      <div class="file-card-title">${safeName}</div>
-      <div class="file-card-subtitle">${safeSubtitle}</div>
-    </div>
-  </div>`;
+  return `<span class="${cls}" data-url="${safeUrl}" data-name="${safeName}" data-type="${escapeAttr(type)}"${titleAttr}>` +
+    `<span class="file-card-icon">${icon}</span>` +
+    `<span class="file-card-info"><span class="file-card-title">${safeName}</span>${subtitleHtml}</span>` +
+    `</span>`;
 }
 
 // ═══════════════════════════════════════════════════════════
 //  Post-processing pipeline
 // ═══════════════════════════════════════════════════════════
+
+/** An <img> that already went through one of the passes below. */
+const IMG_ALREADY_RENDERED = /\bmd-image(-inline)?\b/;
+
+/**
+ * Mark images that are wrapped in a link (`[![alt](img)](url)`) as inline.
+ *
+ * Badges and other clickable images must not become block image containers:
+ * the wrapper carries a 2:1 placeholder, a caption and `opacity:0` until
+ * `onload` fires — inside an <a> that is pure breakage, and the image is a
+ * glyph on the text baseline, not a figure.
+ */
+function inlineLinkedImages(html: string): string {
+  return html.replace(
+    /(<a\b[^>]*>)(\s*)(<img\b[^>]*>)(\s*<\/a>)/g,
+    (m, open: string, before: string, img: string, after: string) => {
+      if (IMG_ALREADY_RENDERED.test(img)) return m;
+      return `${open}${before}${img.replace(/^<img\b/, '<img class="md-image-inline"')}${after}`;
+    }
+  );
+}
+
+/**
+ * Turn every "this image belongs to a text line" case into an inline image.
+ *
+ * Two sources set the inline flag:
+ *   1. linked images — `[![alt](img)](url)`, handled by inlineLinkedImages()
+ *   2. an image sharing its line with prose (`Text ![x](a.png) more`), flagged
+ *      with `data-inline="1"` by the image-size inline rule at parse time
+ *
+ * Both skip the block image wrapper below, so the paragraph around them is not
+ * split by a <div> and no 2:1 placeholder/caption is injected.
+ */
+function markInlineImages(html: string): string {
+  const out = inlineLinkedImages(html);
+  return out.replace(/<img\b[^>]*\sdata-inline="1"[^>]*>/g, (tag) => {
+    if (IMG_ALREADY_RENDERED.test(tag)) return tag;
+    return tag.replace(/^<img\b/, '<img class="md-image-inline" loading="lazy" decoding="async"');
+  });
+}
 
 function postProcessHtml(html: string): string {
   let result = html;
@@ -687,18 +907,24 @@ function postProcessHtml(html: string): string {
     }
   );
 
-  // 2. Images → image wrapper (title attr → caption, width/height from imsize
-  //    hints, plus auto-detected real ratio for local files to reserve space)
+  // Shared by the two image passes below: title attr → caption, width/height
+  // from imsize hints, plus auto-detected real ratio for local files.
   const resolveImageDims = (src: string, hintW: string, hintH: string) => {
     // Both hints present → legacy fixed-dim behavior (e.g. `=500x300`, `=70%x50%`).
     if (hintW && hintH) return { width: hintW, height: hintH, autoRatio: false, ratio: undefined };
     const dims = getLocalImageSize(src);
     if (dims) {
-      // Auto ratio + explicit RELATIVE hints are both inlined (e.g. `=70%` keeps
-      // its width; `=x50%` keeps its height) — only the missing dimension is
-      // filled by the real aspect ratio.
+      // Height-only hint (`=x300`): derive the width from the real aspect ratio
+      // instead of emitting width:100%. With an explicit width *and* height the
+      // wrapper would override aspect-ratio and stretch the image.
+      const pxHeight = /^[0-9.]+$/.test(hintH) ? Number(hintH) : null;
+      const derivedW = (!hintW && pxHeight && dims.height)
+        ? String(Math.round(pxHeight * (dims.width / dims.height)))
+        : '';
+      // A relative height (`=x50%`) has no px basis to derive from — the wrapper
+      // keeps filling the column, and renderImageWrapper emits width:100% for it.
       return {
-        width: hintW || '100%',
+        width: hintW || derivedW,
         height: hintH || '',
         autoRatio: true,
         ratio: `${dims.width}/${dims.height}`,
@@ -706,10 +932,17 @@ function postProcessHtml(html: string): string {
     }
     return { width: hintW, height: hintH, autoRatio: false, ratio: undefined };
   };
+  // 2. Linked images (`[![badge](img)](url)`) and images that share a line with
+  //    prose stay inline: the block wrapper below would turn them into a
+  //    full-width 2:1 placeholder box and split the surrounding paragraph.
+  result = markInlineImages(result);
+
+  // 3. Images → image wrapper (title attr → caption, width/height hints, plus
+  //    auto-detected real ratio for local files so the space is reserved).
   result = result.replace(
     /<p><img\s[^>]*src="([^"]+)"[^>]*>\s*(<span[^>]*>[^<]*<\/span>\s*)?(<\/p>)?/g,
     (_m, src) => {
-      if (_m.includes('class="md-image"')) return _m;
+      if (IMG_ALREADY_RENDERED.test(_m)) return _m;
       const d = resolveImageDims(src, extractAttr(_m, 'width'), extractAttr(_m, 'height'));
       return renderImageWrapper(src, extractAttr(_m, 'alt'), extractAttr(_m, 'title'), d.width, d.height, d.autoRatio, d.ratio);
     }
@@ -719,7 +952,7 @@ function postProcessHtml(html: string): string {
     /(?:<picture>[\s\S]*?<\/picture>)|(<img\s[^>]*src="([^"]+)"[^>]*>)/g,
     (_m, imgTag, src) => {
       if (!imgTag) return _m; // <picture> block — leave as-is
-      if (_m.includes('class="md-image"')) return imgTag;
+      if (IMG_ALREADY_RENDERED.test(imgTag)) return imgTag;
       const d = resolveImageDims(src, extractAttr(_m, 'width'), extractAttr(_m, 'height'));
       return renderImageWrapper(src, extractAttr(_m, 'alt'), extractAttr(_m, 'title'), d.width, d.height, d.autoRatio, d.ratio);
     }

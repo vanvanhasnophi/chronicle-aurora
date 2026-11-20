@@ -48,6 +48,15 @@ jobs:
       - name: Check text encoding
         run: npm run check:encoding
 
+      - name: Check command docs
+        run: npm run check:commands
+
+      - name: Check markdown renderer parity (SSG vs CMS)
+        run: npm run check:markdown
+
+      - name: Check export packaging and print output
+        run: npm run check:export
+
       - name: Unit tests
         run: npm test
 

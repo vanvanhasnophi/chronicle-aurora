@@ -34,6 +34,8 @@ import {
 import { createCloudSave } from '../cloud/useCloudSave'
 import { savePost, saveDraft as _saveDraft, clearDraft as _clearDraft, saveAbout } from '../cloud/useCloudRelay'
 import type { DraftMeta } from '../cloud/useCloudRelay'
+import { buildExportPackage, readAssetBytes, resolveSlideImageUrls } from '../../../utils/exportBundle'
+import { neutralizeForPrint } from '../../../utils/printSanitize'
 
 /**
  * useEditorFile 的依赖注入选项。
@@ -310,20 +312,45 @@ export function useEditorFile(options: EditorFileOptions) {
     return true
   }
 
-  /** 导出为自包含 HTML 文件（无外部依赖）。Slides 使用 Marp 渲染。 */
+  /**
+   * 导出 HTML：有本地附件时打成 ZIP（包内固定 index.html + image1.png…）；
+   * 没有附件可复制时直接输出单个 `<标题>.html`，省去无意义的压缩包。
+   * Slides 由 Marp 渲染，图片路径先解析到 /data/ 再走同一套打包。
+   */
   async function exportAsHTML() {
     try {
-      const ext = '.html'
-      const filename = safeFilename(postTitle.value || (editorType.value === 'slides' ? 'slides' : 'untitled')) + ext
-      let fullHtml: string
-      if (editorType.value === 'slides') {
+      const base = safeFilename(postTitle.value || (editorType.value === 'slides' ? 'slides' : 'untitled'))
+      const lang = locale.value || 'en'
+      const isSlides = editorType.value === 'slides'
+
+      let bodyHtml: string
+      let wrap: (body: string) => string
+      if (isSlides) {
         const { html, css } = await renderSlidesToHTML(localValue.value)
-        fullHtml = buildSlidesStandaloneHtml(postTitle.value, html, css, locale.value || 'en')
+        bodyHtml = resolveSlideImageUrls(html, postId.value || '')
+        wrap = (body) => buildSlidesStandaloneHtml(postTitle.value, body, css, lang)
       } else {
-        const renderedHtml = await renderStaticHTML(localValue.value)
-        fullHtml = buildArticleStandaloneHtml(postTitle.value, renderedHtml, locale.value || 'en', postFont.value)
+        bodyHtml = await renderStaticHTML(localValue.value)
+        wrap = (body) => buildArticleStandaloneHtml(postTitle.value, body, lang, postFont.value)
       }
-      await writeOrDownload(fullHtml, filename, 'text/html')
+
+      const pkg = await buildExportPackage({
+        bodyHtml,
+        htmlName: 'index.html',
+        wrap,
+        readBytes: readAssetBytes,
+        locale: lang,
+      })
+      if (pkg.missing.length) {
+        console.warn('[export] assets could not be read, references left as URLs:', pkg.missing)
+      }
+
+      if (pkg.assets.length > 0) {
+        console.log(`[export] packaged ${pkg.assets.length} asset(s):`, pkg.assets.map((a) => a.name).join(', '))
+        await writeOrDownload(pkg.zip, base + '.zip', 'application/zip')
+      } else {
+        await writeOrDownload(pkg.html, base + '.html', 'text/html')
+      }
       activeModal.value = 'none'
     } catch (e) { console.error('exportAsHTML failed', e) }
   }
@@ -588,7 +615,7 @@ export function useEditorFile(options: EditorFileOptions) {
         const renderedHtml = await renderStaticHTML(localValue.value || '')
         // Print output exposes every <details> — same spirit as Mermaid fences
         // being prerendered instead of printed as code.
-        printHtml = buildStandalonePrintHtml(postTitle.value || '', openAllDetails(renderedHtml), locale.value || 'en', postFont.value)
+        printHtml = buildStandalonePrintHtml(postTitle.value || '', neutralizeForPrint(openAllDetails(renderedHtml)), locale.value || 'en', postFont.value)
       }
       // 确保页面有 @media print 规则隐藏编辑器，只暴露打印层
       const printStyleId = 'chronicle-print-media-style'

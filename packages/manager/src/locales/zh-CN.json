@@ -577,7 +577,7 @@
       "local": "本地",
       "savedToFile": "已保存到文件",
       "saveAsMarkdown": "保存为 Markdown",
-      "exportAsHtml": "导出为 HTML",
+      "exportAsHtml": "导出 HTML（有附件时打包 ZIP）",
       "exportAsPptx": "导出为 PPTX",
       "exportIntro": "保存或导出当前文档。",
       "newArticleLocal": "本地文章",

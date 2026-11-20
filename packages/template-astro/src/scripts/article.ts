@@ -139,6 +139,19 @@ function initMermaidCodeBlocks() {
   const blocks = document.querySelectorAll('.code-chunk-container.mermaid');
   if (!blocks || blocks.length === 0) return;
 
+  /**
+   * Mermaid measures label boxes with the font family from its config, while the
+   * stylesheet renders SVG text with the app stack. Both must be the same family
+   * or the box comes out a few pixels narrow and the label's tail gets clipped.
+   */
+  const appFontStack = (() => {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue('--app-font-stack').trim();
+      if (v) return v;
+    } catch {}
+    return 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+  })();
+
   blocks.forEach((block: Element) => {
     if (!(block instanceof HTMLElement)) return;
     if (block.dataset.mermaidEnhanced === '1') return;
@@ -185,7 +198,14 @@ function initMermaidCodeBlocks() {
         container.innerHTML = '<div class="mermaid-loading">Rendering…</div>';
         const mm = await import('mermaid');
         const mermaidLib = (mm as any).default || mm;
-        mermaidLib.initialize({ startOnLoad: false, theme: 'base' });
+        // Measure with the same family the stylesheet renders with, and wait for
+        // the (subsetted) webfont before mermaid takes its measurements.
+        try { await (document as any).fonts?.ready; } catch {}
+        mermaidLib.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          themeVariables: { fontFamily: appFontStack },
+        });
         const id = 'mermaid_client_' + Math.random().toString(36).slice(2, 8);
         const { svg } = await mermaidLib.render(id, codeText);
         lastRenderedSvg = svg;
@@ -265,7 +285,7 @@ function initMermaidCodeBlocks() {
             `svg { background: ${vars['--comp-bg-glass']}; }`,
             `rect { fill: ${vars['--comp-bg-glass']}; stroke: ${vars['--app-text-pri']}; }`,
             `path { stroke: ${vars['--comp-text-pri']}; fill: none; }`,
-            `text { fill: ${vars['--comp-text-pri']}; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; }`,
+            `text { fill: ${vars['--comp-text-pri']}; font-family: ${appFontStack}; }`,
           ].join('\n');
           const prevStyle = svgEl.querySelector('style[data-chronicle-inline]');
           if (prevStyle) prevStyle.remove();

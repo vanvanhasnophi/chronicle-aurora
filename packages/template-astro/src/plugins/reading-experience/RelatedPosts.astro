@@ -35,7 +35,7 @@ const related = [...strong, ...fill].slice(0, 3);
     <h2 class="related-title">{t('postPage.relatedPosts')}</h2>
     <div class="related-grid">
       {related.map((p: any) => (
-        <a class="related-card mtl-surface interactive glowable scalable" href={`${withBase(`/${lang}`)}/post/${encodeURIComponent(p.id)}`}>
+        <a class="related-card mtl-surface interactive interactive--hl interactive--motion" href={`${withBase(`/${lang}`)}/post/${encodeURIComponent(p.id)}`}>
           <span class="related-card-title">{p.title}</span>
           <span class="related-card-date">{new Date(p.date).toLocaleDateString(locale)}</span>
           {(p.tags || []).length > 0 && (

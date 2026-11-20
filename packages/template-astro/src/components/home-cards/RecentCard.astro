@@ -23,7 +23,7 @@ const { posts, blogsHref, locale, t } = Astro.props;
     {posts.length ? (
       posts.map((post) => (
         <a href={postUrl(locale, post.id)} class="stream-card-link">
-          <article class="stream-card mtl-surface interactive glowable scalable">
+          <article class="stream-card mtl-surface interactive interactive--hl interactive--motion">
             <div class="stream-card__date">{formatHomeDate(new Date(post.date), locale)}</div>
             <div class="stream-card__body">
               <div class="stream-card__top">

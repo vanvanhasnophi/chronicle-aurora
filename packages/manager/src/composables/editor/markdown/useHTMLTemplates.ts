@@ -224,6 +224,7 @@ export function buildStandalonePrintHtml(title: string, renderedHtml: string, la
 <style>:root{color-scheme:light}</style>
 <style>${CHRONICLE_CSS}</style>
 <style>${EXPORT_OVERRIDE}</style>
+<style>[data-print-static],.file-card,.file-card-mini{cursor:default!important}[data-print-static]{pointer-events:none}</style>
 ${katexTag}
 </head>
 <body${font ? ` data-font="${font}"` : ''}>

@@ -606,7 +606,7 @@ export function initSearchExperience(config: SearchEngineConfig) {
                 : "";
 
             return `
-            <article class="result-card mtl-surface interactive glowable scalable" data-post-id="${esc(String(post.id))}" data-href="${esc(postHref)}">
+            <article class="result-card mtl-surface interactive interactive--hl interactive--motion" data-post-id="${esc(String(post.id))}" data-href="${esc(postHref)}">
               <div class="s__post-header">
                 <h3 class="card-post-title">${highlightMatches(post.title, query)}</h3>
                 <span class="post-date">${new Date(post.date).toLocaleDateString(locale)}</span>

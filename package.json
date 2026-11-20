@@ -5,7 +5,7 @@
     "yaml": "^2.9.0"
   },
   "name": "chronicle-aurora",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -37,6 +37,9 @@
     "shots": "node scripts/screenshots.mjs",
     "assets": "node scripts/brand-assets.mjs",
     "check:base": "node scripts/check-base-links.mjs",
+    "check:markdown": "node scripts/markdown-parity.mjs",
+    "check:export": "node scripts/check-export.mjs",
+    "check:commands": "node scripts/check-commands.mjs",
     "preview": "node scripts/serve-dist.mjs",
     "stop": "bash scripts/stop.sh"
   }

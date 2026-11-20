@@ -5,6 +5,7 @@ import 'katex/dist/katex.min.css'
 import App from './App.vue'
 import router from './router'
 import { createI18n } from 'vue-i18n'
+import { APP_VERSION, APP_BUILD_TIME } from './version'
 
 // Load locale messages
 import en from './locales/en.json'
@@ -81,6 +82,13 @@ if (isElectron) {
 ;(window as any).__chronicle = {
   isElectron,
   platform: isElectron ? (window as any).chronicleElectron?.platform : 'browser',
+  version: APP_VERSION,
+  buildTime: APP_BUILD_TIME,
 }
+
+// Which copy am I? There are several (dev server, dist via preview, Electron,
+// deployed) and they look identical — this line is the discriminator. Open
+// DevTools console and check it before debugging "the CMS didn't change".
+console.info(`[Chronicle] v${APP_VERSION} · build ${APP_BUILD_TIME} · ${isElectron ? 'electron' : 'web'}`)
 
 app.mount('#app')

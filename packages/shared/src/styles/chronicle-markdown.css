@@ -167,17 +167,59 @@
    5. Block Elements
    ═══════════════════════════════════════════════════════════ */
 
+/* Blockquote — no surface, no radius: a single 2px rail in a muted accent tint
+   marks the block and the body drops one step to secondary text. Nesting adds
+   indentation (and its own rail) instead of stacking containers. Horizontal
+   padding is symmetric so wide children (tables, code) stop before the rail
+   rather than running to the article's right edge. */
 .chr-md blockquote {
-  border-left: 4px solid var(--accent);
-  background: var(--active);
-  padding: 0.5em 1em;
-  margin: 0.5em 0;
-  border-radius: 4px;
+  margin: 1.75rem 0;
+  padding: 0 1.15rem;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 38%, var(--comp-text-sec));
+  color: var(--comp-text-sec);
 }
 
+/* Prose rhythm inside a quote: reset the children's own margins, then add one
+   consistent gap between blocks (paragraphs, lists, tables, nested quotes).
+   `> *` and `> * + *` share specificity with `.chr-md p` above, so order wins. */
+.chr-md blockquote > * { margin: 0; }
+.chr-md blockquote > * + * { margin-top: 0.8em; }
+
 .chr-md blockquote p{
-  margin: .4rem;
-  line-height: 1.5;
+  line-height: 1.65;
+}
+
+/* Nested quotes: more indent on a quieter rail. */
+.chr-md blockquote blockquote {
+  margin: 0.8em 0 0;
+  padding-left: 1.15rem;
+  border-left-color: color-mix(in srgb, var(--accent) 22%, var(--comp-text-sec));
+}
+
+/* Quotes that live inside a list item shouldn't tear the list apart. */
+.chr-md li > blockquote {
+  margin: 0.5em 0;
+}
+
+/* Alerts (GitHub `> [!NOTE]`) — the quote keeps its rail and gains a type tint
+   plus a title line. The palette is deliberately independent of the theme
+   accent so "warning" never reads as a brand colour. */
+.chr-md blockquote[data-alert] {
+  padding: 0.7rem 1.15rem;
+  border-left-color: var(--alert-color);
+  background: color-mix(in srgb, var(--alert-color) 7%, transparent);
+}
+
+.chr-md blockquote[data-alert="note"] { --alert-color: #3b82f6; }
+.chr-md blockquote[data-alert="tip"] { --alert-color: #10b981; }
+.chr-md blockquote[data-alert="important"] { --alert-color: #8b5cf6; }
+.chr-md blockquote[data-alert="warning"] { --alert-color: #f59e0b; }
+.chr-md blockquote[data-alert="caution"] { --alert-color: #ef4444; }
+
+.chr-md .md-alert-title {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--alert-color, var(--accent));
 }
 
 .chr-md hr {
@@ -453,9 +495,41 @@
   transition: opacity 0.3s ease, filter 0.3s ease-out;
 }
 
+/* Height-only hint with no known aspect ratio (external URL, CMS preview): the
+   wrapper is column-wide with a fixed height, so filling it would stretch the
+   image. Letterbox instead. */
+.chr-md .md-image-contain {
+  object-fit: contain;
+}
+
 .chr-md .md-image.loaded {
   opacity: 1;
   filter: blur(0);
+}
+
+/* Images that belong to a text line stay inline: badges inside a link
+   (`[![badge](img)](url)`) and icons sharing a line with prose
+   (`Text ![icon](a.png) more`). They are glyphs on the text baseline, not
+   figures — no wrapper, no caption, no 2:1 placeholder, no blur-in.
+   Must come after .md-image to win the width/height/display reset. */
+.chr-md .md-image-inline {
+  display: inline-block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  margin: 0 2px;
+  border-radius: 8px;
+  vertical-align: middle;
+  opacity: 1;
+  filter: none;
+  object-fit: contain;
+}
+
+/* Badges are small and sit flush against text — no rounding. */
+.chr-md a > .md-image-inline {
+  border: 0;
+  border-radius: 0;
+  text-decoration: none;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -533,6 +607,45 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Mini card — a card that shares its line with prose. One line: icon + name,
+   no subtitle, no hover lift (a translateY inside a text line jitters the
+   baseline). The full block card is for a card alone on its line. */
+.chr-md .file-card-mini {
+  display: inline-flex;
+  align-items: center;
+  height: 1.7em;
+  padding: 0 0.6em;
+  margin: 0 0.4em;
+  border-radius: 6px;
+  font-size: 0.85em;
+  line-height: 1;
+  vertical-align: -0.2em;
+  max-width: 100%;
+}
+
+.chr-md .file-card-mini:hover,
+.chr-md .file-card-mini:active,
+.chr-md .file-card-mini:focus {
+  transform: none;
+}
+
+.chr-md .file-card-mini .file-card-icon {
+  width: 1em;
+  height: 1em;
+  margin-right: 0.35em;
+}
+
+.chr-md .file-card-mini .file-card-icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+.chr-md .file-card-mini .file-card-title {
+  font-size: inherit;
+  font-weight: 500;
+  line-height: 1;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -793,6 +906,35 @@
 .chr-md .mermaid-preview svg,
 .chr-md .mermaid-preview svg * {
   font-family: inherit !important;
+}
+
+/* Mermaid sizes an HTML label from ITS OWN font metrics, then the rules above
+   render it with `font-family: inherit`. When the two disagree (custom app font
+   stack, subsetted webfont) the box ends up a few pixels too narrow and the
+   default `overflow: hidden` of <foreignObject> cuts the tail of the text —
+   "Write Markdowr", "Deploy to CDN" with half an N. Let the label spill out of
+   its box instead of clipping it; the configured font is aligned in article.ts
+   as well, so the box is normally right and this only absorbs rounding. */
+.chr-md .mermaid-preview svg foreignObject,
+.chr-md .mermaid-svg svg foreignObject,
+.chr-md .mermaid-preview svg text,
+.chr-md .mermaid-svg svg text {
+  overflow: visible;
+}
+
+/* Node labels sit one step below body text so boxes stay compact and the
+   diagram matches the surrounding type scale. Mermaid 11 puts the HTML label in
+   an unclassed <div> inside <foreignObject>, so target it structurally; older
+   output uses a classed .nodeLabel / <text>. */
+.chr-md .mermaid-preview svg foreignObject > div,
+.chr-md .mermaid-preview svg foreignObject > span,
+.chr-md .mermaid-preview svg .nodeLabel,
+.chr-md .mermaid-preview svg .edgeLabel,
+.chr-md .mermaid-svg svg foreignObject > div,
+.chr-md .mermaid-svg svg foreignObject > span,
+.chr-md .mermaid-svg svg .nodeLabel,
+.chr-md .mermaid-svg svg .edgeLabel {
+  font-size: 0.98em;
 }
 
 .chr-md .mermaid-loading {

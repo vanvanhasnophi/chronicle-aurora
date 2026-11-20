@@ -43,3 +43,6 @@ demo/
 
 # Local build output (demo / screenshots / base-path / isolation checks)
 dist-*/
+# Staging directory used by the generator while copying a build; a failed
+# rename (file lock, antivirus) leaves it behind instead of producing dist/.
+dist.stage-*/

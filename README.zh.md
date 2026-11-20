@@ -1,6 +1,6 @@
 # Chronicle Aurora
 
-[![Version](https://img.shields.io/badge/version-3.1.0-2f855a)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.1.1-2f855a)](CHANGELOG.md)
 
 中文 [English](README.md)
 
@@ -120,6 +120,118 @@ reset 命令在改过内容之后仍然有用（都支持 `--dry-run`，如 `npm
 5. **写文章** — `data/posts/<slug>/index.md` 加 YAML frontmatter，或用 CMS（`npm run dev:cms`）。frontmatter 里加 `image: /assets/cover.jpg`（或绝对地址）即可作为社交分享图，`twitter:card` 也会升级为 `summary_large_image`。
 6. **提交推送** — CI 构建并部署。
 
+## Markdown 语法
+
+渲染器在 CommonMark 之上支持下列扩展。演示文章 *Markdown Showcase* 展示了其中大部分，
+`npm run check:markdown` 保证构建期与编辑器的两套实现一致。
+
+**文本与块**
+
+| 写法 | 效果 |
+|:--|:--|
+| `## Heading` | 标题；锚点 id 保留大小写（`## Section two` → `#Section-two`），并用于目录 |
+| `**粗体**` · `*斜体*` · `~~删除线~~` · `` `行内代码` `` | 强调、删除线、行内代码 |
+| `- 项目` · `1. 项目` · `- [x] 完成` | 列表与任务列表 |
+| `\| a \| b \|` | 表格 |
+| `> 引用` | 引用块 —— 2px 竖线、次级文字、无容器 |
+| `> [!NOTE]` · `[!TIP]` · `[!IMPORTANT]` · `[!WARNING]` · `[!CAUTION]` | 提示框，自带标题行；可自定义：`> [!WARNING] 注意` |
+| `---` | 分隔线 |
+| `<details><summary>…</summary>…</details>` | 折叠区块 |
+| `文字[^1]` + `[^1]: 注释` | 脚注 |
+| `$x^2$` · `$$ … $$` | 行内 / 块级公式（KaTeX） |
+| ` ```mermaid ` | 图表，打印与导出前渲染成静态图 |
+| `<kbd>Ctrl</kbd>` | 行内 HTML 走白名单过滤 |
+
+**图片**
+
+| 写法 | 效果 |
+|:--|:--|
+| `![alt](pic.png)` | 块级图片；title 变成图注：`![alt](pic.png "图注")` |
+| `![alt](pic.png =800x600)` | 固定尺寸。`=800x` 只给宽，`=x600` 只给高（另一侧按真实比例推算），`=70%x` / `=x50%` 用相对值 |
+| `文字 ![icon](a.png) 继续` | 行内图片 —— 与文字同行，不另起块 |
+| `[![badge](b.svg)](CHANGELOG.md)` | 图片链接：行内渲染，点击跳链接而不是弹预览 |
+| `![alt](asset://logo.svg)` | 共享素材，来自 `data/assets/` |
+
+**链接与文件卡片**
+
+| 写法 | 效果 |
+|:--|:--|
+| `[report](report.pdf)` | 文件卡片（扩展名白名单；`.md` 渲染为普通链接） |
+| `[listen](audio:ep.mp3)` | 强制卡片类型：`file:` · `audio:` · `video:` · `code:`（别名 `text:`） |
+| `现在下载 [report](report.pdf) 吧。` | 迷你卡片 —— 与正文同行的单行卡片 |
+| `[manual](open:manual.pdf#page=3)` | 强制普通行内链接，不做卡片 |
+| `[other](post://hello-world)` | 链接到另一篇文章 |
+| `[site](https://example.com)` | 外链 |
+| `[top](#Section-two)` | 页内锚点（区分大小写，见上） |
+
+## 导出与打印
+
+| 操作 | 产物 |
+|:--|:--|
+| 有本地附件时导出 | `<标题>.zip` —— `index.html` 与 `image1.png`、`image2.jpg`、`attachment1.pdf` 等同层平铺，HTML 内引用已重写 |
+| 没有本地附件时导出 | 单个 `<标题>.html` |
+| 打印 | 隐藏的全屏浅色框架：文件卡片与内链不可点，外链在 PDF 中仍可点 |
+
+## 命令速查
+
+根 `package.json` 里的全部脚本都在这里——`npm run` 列名字，这张表说明每个命令干什么。（demo 站的 *Getting Started* 只放日常高频的十条，这里才是全量。）
+
+**安装与开发**
+
+| 命令 | 作用 |
+|:--|:--|
+| `npm run init` | 安装所有 workspace 依赖（一次性） |
+| `npm run dev:cms` | 浏览器里的 CMS → http://localhost:5173 |
+| `npm run dev:astro` | 博客模板 + 热更新 → http://localhost:4321 |
+| `npm run stop` | 释放开发端口（5173 / 4321） |
+| `npm run typecheck` | 类型检查 manager / gen / shared |
+
+**构建、预览与 demo 内容**
+
+| 命令 | 作用 |
+|:--|:--|
+| `npm run build:astro` | SSG 构建 → `dist/`（可部署产物） |
+| `npm run preview` | 本地伺服构建好的 `dist/` |
+| `npm run demo:fetch` | 把 demo 内容拉到 git-ignored 的 `demo/` |
+| `npm run dev:demo` | 用 `demo/` 内容启动开发服务器 |
+| `npm run build:demo` | `demo:fetch` + 构建 → `dist-demo/` |
+| `npm run preview:demo` | 本地伺服 `dist-demo/` |
+| `npm run demo:commit` | 把 `demo/` 改动提交到 `demo` 分支（`--push` 推送） |
+
+**维护与上游同步**
+
+| 命令 | 作用 |
+|:--|:--|
+| `npm run update` | 合并上游框架更新，保留 `data/` 与 `.chronicle/` |
+| `npm run reset:site` | 把设置 YAML 重置为 schema 默认值 |
+| `npm run reset:cms` | 重置 `.chronicle/` 的 CMS 状态 |
+| `npm run reset:data` | 删除内容：文章、评论、媒体、about 页 |
+| `npm run init:clean` | `reset:site` + `reset:cms` + `reset:data` |
+| `npm run migrate -- <data.tar.gz>` | 导入 pre-Aurora 的 `data/` 归档（先备份到 `data.bak/`） |
+| `npm run assets` | 重新生成品牌资源（社交卡片、favicon 集、manifest） |
+| `npm run release` | 版本号 + CHANGELOG + tag（维护者用） |
+
+**自检**
+
+| 命令 | 作用 |
+|:--|:--|
+| `npm test` | 文章索引器单测 |
+| `npm run test:cms` | 浏览器模式 CMS 端到端（需要 Chrome） |
+| `npm run check:base -- --dir dist --base /repo/` | 所有绝对链接都带 base 前缀 |
+| `npm run check:encoding` | 检测源码与内容里的乱码/编码损坏 |
+| `npm run check:markdown` | SSG 与 CMS 两套 markdown 渲染器对拍（43 条语料） |
+| `npm run check:export` | 导出打包（ZIP 结构、重命名、CRC）与打印剥离 |
+| `npm run check:commands` | 有脚本没写进这张表时报错 |
+| `npm run verify:isolation` | 关闭 collections 后无页面/布局/索引/CSS 残留 |
+| `npm run verify:isolation:all` | 关闭全部可选插件后无残留 |
+
+**内容工具**
+
+| 命令 | 作用 |
+|:--|:--|
+| `npm run ai:summaries` | 为文章生成 AI 摘要（需开启 `ai-enhance`） |
+| `npm run shots` | 重新生成 `demo-desktop.png` / `demo-mobile.png` |
+
 ## 自检
 
 ```bash
@@ -128,6 +240,9 @@ npm test                      # 文章索引器单测
 npm run verify:isolation      # 关闭 collections 后无页面/布局/索引/CSS 残留
 npm run verify:isolation:all  # 关闭全部可选插件后无残留
 npm run check:base -- --dir dist --base /repo/   # 所有绝对链接都带 base 前缀
+npm run check:markdown        # SSG 与 CMS 两套 markdown 渲染器对拍（43 条语料）
+npm run check:export          # 导出 ZIP 结构 + 打印剥离
+npm run check:commands        # 每个 package.json 脚本都有文档
 npm run test:cms              # 浏览器模式 CMS：图标设置 + 头像上传，端到端（需要 Chrome）
 ```
 

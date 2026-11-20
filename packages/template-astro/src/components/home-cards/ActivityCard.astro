@@ -47,7 +47,7 @@ const { items, updateTimeLabel, isStale, icons, t } = Astro.props;
         items.map((item) =>
           item.href ? (
             <a
-              class:list={['activity-item', item.tone, 'mtl-surface interactive glowable scalable']}
+              class:list={['activity-item', item.tone, 'mtl-surface interactive interactive--hl interactive--motion']}
               href={item.href}
               target={item.external ? '_blank' : undefined}
               rel={item.external ? 'noopener noreferrer' : undefined}

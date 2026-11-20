@@ -1,6 +1,6 @@
 # Chronicle Aurora
 
-[![Version](https://img.shields.io/badge/version-3.1.0-2f855a)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.1.1-2f855a)](CHANGELOG.md)
 
 [中文](README.zh.md) English
 
@@ -120,6 +120,117 @@ Then make it yours:
 5. **Write posts** — `data/posts/<slug>/index.md` with YAML frontmatter, or use the CMS (`npm run dev:cms`). Add `image: /assets/cover.jpg` (or an absolute URL) for the post's social-preview card; it also upgrades `twitter:card` to `summary_large_image`.
 6. **Commit and push** — CI builds and deploys.
 
+## Markdown
+
+The renderer covers CommonMark plus the extensions below. The demo post *Markdown Showcase* shows most of these live, and `npm run check:markdown` keeps the build-time and editor renderers in sync.
+
+**Text and blocks**
+
+| Syntax | Result |
+|:--|:--|
+| `## Heading` | Headings; ids preserve case (`## Section two` → `#Section-two`) and feed the table of contents |
+| `**bold**` · `*italic*` · `~~struck~~` · `` `code` `` | Emphasis, strikethrough, inline code |
+| `- item` · `1. item` · `- [x] done` | Lists and task lists |
+| `\| a \| b \|` | Tables |
+| `> quote` | Blockquote — 2px rail, secondary text, no box |
+| `> [!NOTE]` · `[!TIP]` · `[!IMPORTANT]` · `[!WARNING]` · `[!CAUTION]` | Alert with a title line; give it your own: `> [!WARNING] Careful` |
+| `---` | Horizontal rule |
+| `<details><summary>…</summary>…</details>` | Collapsible section |
+| `text[^1]` + `[^1]: note` | Footnotes |
+| `$x^2$` · `$$ … $$` | Inline / block math (KaTeX) |
+| ` ```mermaid ` | Diagram, rendered before print and export |
+| `<kbd>Ctrl</kbd>` | Inline HTML passes the sanitiser whitelist |
+
+**Images**
+
+| Syntax | Result |
+|:--|:--|
+| `![alt](pic.png)` | Block image; the title becomes the caption: `![alt](pic.png "caption")` |
+| `![alt](pic.png =800x600)` | Fixed size. `=800x` width only, `=x600` height only (the other side follows the real ratio), `=70%x` / `=x50%` relative |
+| `Text ![icon](a.png) more` | Inline image — stays on the text line |
+| `[![badge](b.svg)](CHANGELOG.md)` | Linked image: inline, and clicking follows the link instead of opening the preview |
+| `![alt](asset://logo.svg)` | Shared asset from `data/assets/` |
+
+**Links and file cards**
+
+| Syntax | Result |
+|:--|:--|
+| `[report](report.pdf)` | File card (extension whitelist; `.md` renders as a plain link) |
+| `[listen](audio:ep.mp3)` | Force a card type: `file:` · `audio:` · `video:` · `code:` (alias `text:`) |
+| `Download the [report](report.pdf) now.` | Mini card — a card sharing a line with prose |
+| `[manual](open:manual.pdf#page=3)` | Force a plain inline link instead of a card |
+| `[other](post://hello-world)` | Link to another post |
+| `[site](https://example.com)` | External link |
+| `[top](#Section-two)` | In-page anchor (case-sensitive, as above) |
+
+## Export and print
+
+| Action | Output |
+|:--|:--|
+| Export with local assets | `<title>.zip` — `index.html` plus `image1.png`, `image2.jpg`, `attachment1.pdf`, … flat at the archive root, references rewritten |
+| Export without local assets | a single `<title>.html` |
+| Print | hidden fullscreen light-mode frame: file cards and internal links are not clickable, external links stay clickable in the PDF |
+
+## Commands
+
+Every script in the root `package.json`, in one place — `npm run` lists the names, this table says what they do. (The demo post *Getting Started* carries only the handful you type daily; this is the reference.)
+
+**Setup and development**
+
+| Command | What it does |
+|:--|:--|
+| `npm run init` | Install every workspace package (one-time setup) |
+| `npm run dev:cms` | CMS in the browser → http://localhost:5173 |
+| `npm run dev:astro` | Blog template with live reload → http://localhost:4321 |
+| `npm run stop` | Free the dev ports (5173 / 4321) |
+| `npm run typecheck` | Type-check manager / gen / shared |
+
+**Build, preview and demo content**
+
+| Command | What it does |
+|:--|:--|
+| `npm run build:astro` | SSG build → `dist/` — the deployable site |
+| `npm run preview` | Serve the built `dist/` locally |
+| `npm run demo:fetch` | Pull the demo content into the git-ignored `demo/` |
+| `npm run dev:demo` | Dev server rendering `demo/` content |
+| `npm run build:demo` | `demo:fetch` + build → `dist-demo/` |
+| `npm run preview:demo` | Serve `dist-demo/` |
+| `npm run demo:commit` | Commit `demo/` changes onto the `demo` branch (`--push` to publish) |
+
+**Maintenance and upstream**
+
+| Command | What it does |
+|:--|:--|
+| `npm run update` | Merge upstream framework changes, keeping `data/` and `.chronicle/` |
+| `npm run reset:site` | Reset settings YAML to schema defaults |
+| `npm run reset:cms` | Reset `.chronicle/` CMS state |
+| `npm run reset:data` | Delete content: posts, comments, media, about page |
+| `npm run init:clean` | `reset:site` + `reset:cms` + `reset:data` |
+| `npm run migrate -- <data.tar.gz>` | Import a pre-Aurora `data/` archive (backs up to `data.bak/`) |
+| `npm run assets` | Regenerate brand assets (social card, favicon set, manifest) |
+| `npm run release` | Version bump + changelog + tag (maintainers only) |
+
+**Checks**
+
+| Command | What it does |
+|:--|:--|
+| `npm test` | Post indexer unit tests |
+| `npm run test:cms` | Browser-mode CMS end-to-end (needs Chrome) |
+| `npm run check:base -- --dir dist --base /repo/` | Every absolute link carries the base path |
+| `npm run check:encoding` | Detect mojibake / broken encoding in sources and content |
+| `npm run check:markdown` | SSG vs CMS markdown renderer parity (43-case corpus) |
+| `npm run check:export` | Export packaging (ZIP layout, renaming, CRC) + print sanitisation |
+| `npm run check:commands` | Fail when a `package.json` script is missing from this table |
+| `npm run verify:isolation` | Collections disabled → no page/layout/index/CSS residue |
+| `npm run verify:isolation:all` | Every optional plugin disabled → no residue |
+
+**Content tools**
+
+| Command | What it does |
+|:--|:--|
+| `npm run ai:summaries` | Generate AI summaries for posts (needs `ai-enhance` enabled) |
+| `npm run shots` | Regenerate `demo-desktop.png` / `demo-mobile.png` |
+
 ## Checks
 
 ```bash
@@ -128,6 +239,9 @@ npm test                      # post indexer unit tests
 npm run verify:isolation      # collections disabled → no page/layout/index/CSS residue
 npm run verify:isolation:all  # every optional plugin disabled
 npm run check:base -- --dir dist --base /repo/   # every absolute link carries the base path
+npm run check:markdown        # SSG vs CMS markdown renderer parity (43-case corpus)
+npm run check:export          # export ZIP layout + print sanitisation
+npm run check:commands        # every package.json script documented
 npm run test:cms              # browser-mode CMS: icon setting + avatar upload, end to end (needs Chrome)
 ```
 

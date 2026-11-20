@@ -56,7 +56,7 @@ const tags = sortTagsList(post.tags);
 ---
 
 <a href={buildLocalizedPath(routeLang, `/post/${encodeURIComponent(post.id)}`)} style={`text-decoration:none; color:inherit;`}>
-  <article class:list={['post-card', 'mtl-surface', 'interactive', 'glowable', 'scalable', featured ? 'featured-card' : 'compact-card']}>
+  <article class:list={['post-card', 'mtl-surface', 'interactive', 'interactive--hl', 'interactive--motion', featured ? 'featured-card' : 'compact-card']}>
     {featured ? (
       <div class="featured-card-layout">
         <div class="featured-card-date">{dateText}</div>

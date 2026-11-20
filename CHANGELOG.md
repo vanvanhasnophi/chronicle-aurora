@@ -8,6 +8,117 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ## [Unreleased]
 
+## [3.1.1] — 2026-11-20
+
+### Added
+
+**Export & print**
+
+- **Article and slide export are self-contained packages.** When the document references local assets,
+  the export is a ZIP whose document is always named `index.html` (so unzipping into a folder gives a
+  directly openable page) alongside canonically renamed copies: `image1.png`, `image2.jpg`,
+  `attachment1.pdf`, … The HTML is rewritten to those names, so the package works wherever it is
+  unzipped. Only `/data/…` URLs are copied — external URLs stay absolute. `post://` links become the
+  site's canonical `/<locale>/post/<slug>`; assets that cannot be read keep their original URL and are
+  reported in the console instead of silently breaking. **With no local assets the export stays a single
+  file named after the post title** — no pointless archive. Written by a dependency-free store-only ZIP
+  writer with fixed timestamps, so repeated exports are byte-identical.
+- **Slide images are packaged too.** Marp keeps image sources exactly as authored (`asset://logo.png`,
+  bare `pic.png`), which used to export as dead `src` values; both are resolved to the `data/` space
+  before packaging, then renamed and copied like article assets.
+- **Print output is read-only.** File cards and internal links lose their target (a printed page can't
+  navigate the CMS) while external links and `mailto:` stay clickable in the PDF. The print frame was
+  already a hidden fullscreen iframe with forced light mode; neutralised elements now also drop the
+  pointer cursor.
+
+**Markdown**
+
+- **GitHub-style alerts.** `> [!NOTE]` / `[!TIP]` / `[!IMPORTANT]` / `[!WARNING]` / `[!CAUTION]`
+  render as a tinted, colour-coded callout with a title line; text after the marker becomes a custom
+  title (`> [!WARNING] Careful`). The marker line is consumed, so multi-paragraph alerts work, and
+  the type palette is independent of the theme accent. Implemented in both renderers by convention
+  and covered by `check:markdown`.
+
+- **`open:` link prefix** — `[manual](open:manual.pdf#page=3)` renders a plain inline link even when
+  the URL ends in a card extension. Counterpart of the `file:` / `audio:` / `video:` card prefixes.
+- **Inline “mini” file cards** — a card that shares its line with prose
+  (`Download the [report](report.pdf) today.`) renders as a single-line pill instead of a full-width
+  block. A card alone on its line keeps the block treatment.
+- **`code:` is an alias of `text:`** — both force a Code/Text card, so
+  `[readme](code:README.md)` works as expected instead of producing a dead `code:` href.
+- **`file:` is a real card type** — the CMS already emitted it for extension-less / unknown files,
+  but the renderer ignored it and produced dead `file:…` hrefs.
+
+### Changed
+
+- **Blockquotes redesigned.** The 1.x look (4px accent bar on `--active`, an *interaction-state* colour
+  used as a content surface) is gone — and so is the box. A quote is now one 2px rail in a muted accent
+  tint (`color-mix(in srgb, var(--accent) 38%, var(--comp-text-sec))`), square: no radius, no
+  background, no shadow. The body drops one step to `--comp-text-sec`, indents `1.15rem` on both sides
+  (so tables and code blocks stop before the rail instead of running to the article's right edge) with
+  `1.75rem` outer margins, and inner blocks are reset then spaced by a single `0.8em` gap. Nested
+  quotes indent on a quieter rail (22% accent); quotes inside list items keep a tighter margin. Pure
+  CSS, no renderer change.
+- **Interaction utilities renamed** (internal to the theme, not part of any content API):
+  `glowable` → `interactive--hl`, `scalable` → `interactive--motion`. The old names described *how* a
+  theme draws the effect, which made them wrong for any other theme; the new ones describe *what
+  happens* and stay bound to the `.interactive` capability gate. `.interactive` now also carries
+  `cursor: pointer`, the scale values moved into `--hover-scale` / `--hover-scale-mobile`, and
+  `scale()` is disabled under `prefers-reduced-motion`. `.u-clickable` is deprecated (use
+  `.interactive`). No compatibility aliases were kept: these classes never appeared in Markdown, only
+  in the theme's own card components.
+- **A linked image behaves as a plain link.** `[![Version](badge.svg)](CHANGELOG.md)` no longer opens the
+  image viewer on click — the image is inside an `<a>`, so the click belongs to the link. Applies to the
+  site (`FilePreviewModal`) and to the CMS preview (`MarkdownItPreview`); images that are *not* inside a
+  link still open the viewer.
+- **Images that share a line with text stay inline.** `Text ![icon](a.png) more` renders an inline `<img>`
+  instead of a block image container, so the surrounding paragraph is no longer split by a `<div>` and no
+  2:1 placeholder/caption is injected. Applies in every block type (paragraph, list item, blockquote,
+  table) and in both renderers; an image alone on its line keeps the full block treatment with the
+  placeholder and caption.
+- **Markdown documents are links, not preview cards.** `[English](README.md)` now renders an inline
+  `<a>`; force a card with `text:` or `attach:`.
+- **Images inside a link stay inline.** `[![Version](…)](CHANGELOG.md)` keeps the badge at natural
+  size instead of wrapping it in a full-width 2:1 image container.
+- **Stricter file-extension detection.** The extension is read from the last path segment only, so
+  `https://example.md/` is a site rather than a `.md` file; `?query` and `#fragment` are ignored; the
+  extension must be 2–6 alphanumerics.
+- **File cards are `<span>`-based.** A `<div>` inside `<p>` is invalid HTML and browsers split the
+  surrounding paragraph around it.
+
+### Fixed
+
+- **`=x300` no longer stretches an image to the full column.** A height-only hint used to fall back to a
+  `width:100%` wrapper, and an explicit width *plus* height overrides `aspect-ratio` — so the image was
+  stretched to column width × 300px. The width is now derived from the real file aspect ratio
+  (`=x300` → `width:225px;height:300px` when the file is 1279×1706), `asset://` images are resolved to
+  `data/assets/` so they get a ratio too, and the few cases without a ratio basis (external URLs, the CMS
+  preview) letterbox with `object-fit: contain` instead of distorting.
+- **In-page anchors stay anchors.** `[x](#section)` inside a post used to be resolved as a relative
+  file, producing `/post_attachment/<slug>/#section`; both renderers now leave `#…` targets alone.
+- **The CMS preview wraps standalone images in quotes, lists and tables** the way the build does, so
+  the placeholder / aspect-ratio treatment no longer disappears outside paragraphs.
+- **Mermaid node labels no longer lose their last character.** The diagram measures a label box with
+  the font family from its config, but the stylesheet rendered the label with `font-family: inherit`
+  (the app stack). When the two differ — a custom stack, a subsetted webfont — the box comes out a few
+  pixels narrow and `<foreignObject>`'s default `overflow: hidden` cuts the tail off ("Write Markdowr",
+  "Deploy to CDN" with half an N). The client renderer now measures with the resolved
+  `--app-font-stack` and waits for `document.fonts.ready`, the exported SVG uses the same family, and
+  the shared stylesheet lets mermaid labels overflow their box instead of clipping. Node and edge
+  labels now render at `0.98em`, one step below body text.
+- **Relative links no longer vanish outside `data/posts/`.** markdown-it aborts an entire link when
+  `validateLink` rejects the destination, and the whitelist had no "plain relative path" case while
+  `normalizeLink` can only absolutize a relative href when it knows the post slug. So
+  `[English](README.md)` rendered as literal text in new articles and in locally opened files (no
+  slug), and `[![badge](img)](CHANGELOG.md)` degraded to `[` + image + `](CHANGELOG.md)`.
+  `validateLink` is now context-free: scheme-less destinations always pass, only the known schemes
+  (`http(s)`, `file`, `mailto`, `tel`, `sms`, `asset`, `post`) are allowed. The CMS copy had also
+  drifted (a catch-all `[a-z]+:` branch accepted *any* scheme, e.g. `code:`), which is why the same
+  markdown could render differently in the preview and on the site — both copies now share one rule.
+- File-card labels containing nested markup (`[![badge](img)](url)`) were mangled by a naive `]`
+  scan. Card and link destinations are now parsed with markdown-it's own helpers, so labels, titles
+  and the `<dest>` form behave like a normal link.
+
 ## [3.1.0] — 2026-11-19
 
 **Highlights**

@@ -165,12 +165,14 @@ export async function renderStaticHTML(md: string): Promise<string> {
     container.replaceWith(frag)
   }
 
-  // file-card：div → a 标签，恢复链接跳转
+  // file-card：div → a 标签，恢复链接跳转（classes 保留，否则 mini 卡片会退回整块尺寸）
   for (const card of Array.from(root.querySelectorAll('.file-card'))) {
     const url = card.getAttribute('data-url') || card.getAttribute('href')
     if (!url) continue
     const anchor = doc.createElement('a')
-    anchor.className = 'file-card'
+    anchor.className = card.className
+    anchor.setAttribute('data-name', card.getAttribute('data-name') || '')
+    anchor.setAttribute('data-type', card.getAttribute('data-type') || '')
     anchor.href = url
     anchor.target = '_blank'
     anchor.rel = 'noopener'

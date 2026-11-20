@@ -571,7 +571,7 @@
       "local": "Local",
       "savedToFile": "Saved to file",
       "saveAsMarkdown": "Save as Markdown",
-      "exportAsHtml": "Export as HTML",
+      "exportAsHtml": "Export HTML (ZIP when assets exist)",
       "exportAsPptx": "Export as PPTX",
       "exportIntro": "Save or export the current document.",
       "newArticleLocal": "Local Article",

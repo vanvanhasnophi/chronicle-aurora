@@ -59,7 +59,7 @@ const hasMoreCollections = allSummaries.length > COLLECTION_LIMIT;
   <div class="taxonomy-list">
     {collectionSummaries.map((collection) => (
       <a
-        class="mtl-surface interactive glowable scalable"
+        class="mtl-surface interactive interactive--hl interactive--motion"
         href={collectionPath + "#" + encodeURIComponent(collection.name)}
       >
         <span>{collection.name}</span>

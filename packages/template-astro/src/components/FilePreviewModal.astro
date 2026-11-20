@@ -133,6 +133,9 @@ import chronicleMarkdownCssUrl from '@chronicle/shared/src/styles/chronicle-mark
   document.addEventListener('click', (e: Event) => {
     const img = (e.target as HTMLElement).closest?.('img.md-image') as HTMLImageElement | null;
     if (!img) return;
+    // Linked images (badges: `[![alt](img)](url)`) are plain links — following
+    // the href wins over opening the image viewer.
+    if (img.closest('a')) return;
     e.preventDefault();
     e.stopPropagation();
     _fpEnsure().then(() => _fpOpen!({ url: img.src, title: img.alt || '', type: 'image' }));
