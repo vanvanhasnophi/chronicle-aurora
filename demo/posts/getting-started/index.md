@@ -1,7 +1,7 @@
 ---
 title: Getting Started
 date: 2026-08-02
-updatedAt: 2026-08-17T12:00:00.000Z
+updatedAt: 2026-11-20T12:30:00.000Z
 tags: guide, setup
 author: 
 aiGenerated: false
@@ -91,6 +91,28 @@ Hand-edit these files or use the CMS Settings panels — both work. Editor-only 
 - [Profile Configuration](link:post://profile-config)
 - [Collections Guide](link:post://c8n-config)
 - [Friends Management](link:post://friend-config)
+
+## Common Commands
+
+Every script lives in the root `package.json` and runs from the repository root. The handful you will actually type:
+
+| Command | What it does |
+|:--|:--|
+| `npm run init` | Install every workspace package (one-time setup) |
+| `npm run dev:cms` | CMS → http://localhost:5173 (browser mode) |
+| `npm run dev:astro` | Blog template → http://localhost:4321, live reload from `data/` |
+| `npm run build:astro` | SSG build → `dist/` — the deployable output |
+| `npm run preview` | Serve the built `dist/` locally, to check it before deploying |
+| `npm run update` | Merge upstream framework changes, keeping `data/` and `.chronicle/` untouched |
+| `npm run typecheck` | Type-check manager / gen / shared |
+| `npm run stop` | Free the dev ports (5173 / 4321) |
+| `npm run reset:site` | Reset settings to schema defaults (`reset:cms`, `reset:data`, `init:clean`) |
+| `npm run demo:fetch` | Pull the demo content into the git-ignored `demo/` directory |
+
+`npm run` on its own lists everything, and `README.md` documents each script — including `--dry-run` for the reset commands. Two of them deserve a warning:
+
+- **`npm run update`** merges `upstream/main` with `-X theirs`: conflicts resolve in favour of upstream, then `data/` and `.chronicle/` are restored from a backup. Commit your work first.
+- **`npm run reset:data`** deletes posts, comments, media and the about page (the YAML settings stay). Try `npm run reset:data -- --dry-run` first.
 
 ## Next Steps
 
