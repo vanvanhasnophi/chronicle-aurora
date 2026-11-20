@@ -38,7 +38,7 @@
     /* Solid backing panel + a definite height so the inner flex column
        (.overlay-experience → .content-wrapper flex:1) gets real space for
        the tag cloud / suggestions / results panels to fill. */
-    height: min(70vh, 640px);
+    height: 70vh;
     display: flex;
     flex-direction: column;
     border-radius: 16px;
@@ -47,7 +47,7 @@
     /* Enter/exit: slide down + slight scale (fade is inherited from the
        overlay shell's opacity transition). */
     transform: translateY(-16px) scale(0.98);
-    transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), margin-top 0.2s ease, height 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), margin-top 0.1s ease;
   }
   .global-search-overlay.is-open .global-search-panel {
     transform: translateY(0) scale(1);

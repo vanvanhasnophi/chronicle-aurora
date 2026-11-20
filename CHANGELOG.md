@@ -88,6 +88,10 @@ Downstream repos: `npm run update` merges `upstream/main` into your branch and k
 
 ### Fixed
 
+- **Search overlay panel height** is now `70vh`. The `640px` cap left the results panel short
+  on tall screens, and the open transition no longer animates `height` (only `transform` plus a
+  0.1s `margin-top`).
+
 - **`=x300` no longer stretches an image to the full column.** A height-only hint used to fall back to a
   `width:100%` wrapper, and an explicit width *plus* height overrides `aspect-ratio` — so the image was
   stretched to column width × 300px. The width is now derived from the real file aspect ratio
