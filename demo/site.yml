@@ -8,11 +8,17 @@ homepage:
   siteDescription: Chronicle Aurora — a local-first, git-backed Jamstack blog.
   icpNumber: ''
   homepageMode: split
-  singleColumnHomepage: false
-  cardVisibility:
-    activity: true
-    taxonomy: true
-    author: true
+  cardFlowMaxWidth: 1200
+  cardColumns:
+    - width: 300
+      cards:
+        - type: intro
+        - type: recent
+    - width: 200
+      cards:
+        - type: author
+        - type: taxonomy
+        - type: activity
   recentUpdates:
     aggregateDays: 7
     staleDays: 30
