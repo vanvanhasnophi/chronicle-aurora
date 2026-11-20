@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Chronicle Aurora 鈥?Markdown renderer parity check
+ * Chronicle Aurora — Markdown renderer parity check
  *
  * The SSG renderer (template-astro/src/utils/chronicleMarkdown.ts) and the CMS
  * renderer (manager/src/utils/markdownPreview.ts) are two hand-synced copies of
@@ -8,7 +8,7 @@
  * the output after normalising the differences that are *by design*
  * (link bases, KaTeX rendering vs placeholder, <picture> sources, ...).
  *
- * Anything left over is real drift 鈥?the kind that turned `[English](README.md)`
+ * Anything left over is real drift — the kind that turned `[English](README.md)`
  * into literal text in the CMS while the site rendered a link.
  *
  * Usage:
@@ -24,7 +24,7 @@ import { pathToFileURL } from 'node:url'
 
 const verbose = process.argv.includes('--verbose')
 
-// 鈹€鈹€ Corpus: one line per feature 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── Corpus: one line per feature ─────────────────────────────
 const CASES = [
   ['headings', '## h2\n\n### h3 with `code`'],
   ['emphasis', '**bold** *italic* ~~del~~ `code`'],
@@ -71,7 +71,7 @@ const CASES = [
   ['strikethrough in table', '| ~~x~~ |\n| --- |\n| y |'],
 ]
 
-// 鈹€鈹€ Normalisation: things that are ALLOWED to differ 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── Normalisation: things that are ALLOWED to differ ────────────────────
 const normalise = (html) =>
   html
     // link bases: CMS uses filesystem paths, SSG uses public routes
@@ -103,7 +103,7 @@ const normalise = (html) =>
     .replace(/> </g, '><')
     .trim()
 
-// 鈹€鈹€ Build both renderers to temp ESM 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── Build both renderers to temp ESM ────────────────────────────────────
 async function bundle(entry, outfile, extra = {}) {
   await build({
     entryPoints: [entry],
@@ -150,7 +150,7 @@ const renderCms = (md) => {
   return cms.renderPreview(md)
 }
 
-// 鈹€鈹€ Diff 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── Diff ────────────────────────────────────────────────────────────────
 // ── Diff ───────────────────────────────────────────────────
 // Differences that are by design until the renderers are unified:
 //   code fence*  — the site inlines highlight.js output, the CMS leaves the code
